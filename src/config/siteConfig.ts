@@ -90,6 +90,8 @@ export const siteConfig: SiteConfig = {
 		followTheme: false,
 		// 导航栏是否固定在顶部并始终可见
 		stickyNavbar: true,
+		// 灵动岛样式：导航栏收窄为居中悬浮胶囊，四周留白 + 全圆角 + 毛玻璃 + 阴影（仅桌面端生效）
+		islandStyle: true,
 	},
 
 	// 站点开始日期，用于统计运行天数

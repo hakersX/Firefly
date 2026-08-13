@@ -342,3 +342,97 @@ body.wallpaper-transparent #navbar-wrapper #navbar[data-full-width="true"] > div
         display: none !important;
     }
 }
+
+/* ============================================
+ * 灵动岛模式 (Island / floating pill navbar)
+ * 桌面端 (≥1024px)：导航栏收窄为居中的悬浮胶囊，
+ * 四周留白 + 全圆角 + 毛玻璃 + 阴影；滚动后阴影加深。
+ * 移动端维持原有通栏样式。
+ * ============================================ */
+@media (min-width: 1024px) {
+
+    /* 1) 外层条状容器完全透明、不再绘制背景，仅保留定位上下文 */
+    html body #navbar[data-navbar-style="island"] > div {
+        height: auto !important;
+        padding: 0.5rem 0.75rem 0.5rem !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        --navbar-surface-blur: 0px !important;
+    }
+
+    /* 2) 覆盖 banner 各透明模式 / 暗色主题 / 滚动态对条状容器的样式 */
+    html[data-has-wallpaper] #navbar[data-navbar-style="island"][data-transparent-mode] > div,
+    html[data-has-wallpaper] #navbar[data-navbar-style="island"][data-transparent-mode].scrolled > div,
+    :root.dark[data-has-wallpaper] #navbar[data-navbar-style="island"][data-transparent-mode] > div,
+    :root.dark[data-has-wallpaper] #navbar[data-navbar-style="island"][data-transparent-mode].scrolled > div {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        --navbar-surface-blur: 0px !important;
+    }
+
+    /* 3) 胶囊本体：基础布局与无壁纸（纯色背景）时的外观 */
+    html body #navbar[data-navbar-style="island"] .navbar-island {
+        position: relative;
+        z-index: 0;
+        height: 3.5rem;
+        width: calc(100% - 2rem);
+        max-width: calc(var(--page-width) - 2rem);
+        border-radius: var(--radius-full, 9999px);
+        background: var(--card-bg);
+        border: 1px solid var(--line-divider, rgba(0, 0, 0, 0.08));
+        box-shadow: var(--shadow-navbar, 0 4px 16px rgba(0, 0, 0, 0.1));
+        --navbar-surface-blur: 0px;
+        transition:
+            background-color 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+            border-color 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* 胶囊毛玻璃层（::before 承接 blur，避免影响下拉菜单的定位与裁切） */
+    html body #navbar[data-navbar-style="island"] .navbar-island::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        pointer-events: none;
+        backdrop-filter: blur(var(--navbar-surface-blur, 0px));
+    }
+
+    /* 有壁纸时：胶囊呈半透明毛玻璃质感 */
+    html[data-has-wallpaper] body #navbar[data-navbar-style="island"] .navbar-island {
+        background: color-mix(in oklch, var(--card-bg) calc(var(--opacity-55, 0.55) * 100%), transparent);
+        --navbar-surface-blur: var(--navbar-glass-blur, 20px);
+    }
+
+    /* Overlay 全屏透明模式：胶囊跟随卡片透明样式 */
+    body.wallpaper-transparent #navbar[data-navbar-style="island"] .navbar-island {
+        background: var(--card-bg-transparent) !important;
+        --navbar-surface-blur: 20px !important;
+    }
+
+    /* 暗色主题胶囊阴影 */
+    :root.dark html body #navbar[data-navbar-style="island"] .navbar-island {
+        box-shadow: var(--shadow-navbar-dark, 0 4px 16px rgba(0, 0, 0, 0.2));
+    }
+
+    /* 4) 滚动后阴影加深，增强「灵动」反馈 */
+    html body #navbar[data-navbar-style="island"].island-scrolled .navbar-island {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    }
+    :root.dark html body #navbar[data-navbar-style="island"].island-scrolled .navbar-island {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 5) 主题切换期间禁用胶囊过渡与毛玻璃，避免闪烁 */
+    .is-theme-transitioning #navbar[data-navbar-style="island"] .navbar-island {
+        transition: none !important;
+    }
+    .is-theme-transitioning #navbar[data-navbar-style="island"] .navbar-island::before {
+        backdrop-filter: none !important;
+    }
+}

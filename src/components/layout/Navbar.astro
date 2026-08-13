@@ -44,6 +44,8 @@ const navbarTitle = siteConfig.navbar.title || siteConfig.title;
 const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
 const navbarMenuAlign = siteConfig.navbar.menuAlign ?? "center";
 const isNavbarMenuCentered = navbarMenuAlign === "center";
+// 灵动岛样式：导航栏收窄为居中悬浮胶囊（仅桌面端生效）
+const islandStyle = siteConfig.navbar.islandStyle ?? false;
 
 // 检查是否为首页
 const isHomePageCheck = isHomePage(Astro.url.pathname);
@@ -135,12 +137,15 @@ const logoVariants = await Promise.all(
 		})),
 );
 ---
-<div id="navbar" class="z-50" style={`--navbar-glass-blur: ${navbarBlur}px;`} data-transparent-mode={navbarTransparentMode} data-is-home={isHomePageCheck} data-full-width={navbarWidthFull}>
+<div id="navbar" class="z-50" style={`--navbar-glass-blur: ${navbarBlur}px;`} data-transparent-mode={navbarTransparentMode} data-is-home={isHomePageCheck} data-full-width={navbarWidthFull} data-navbar-style={islandStyle ? "island" : "bar"}>
     <div class:list={[
         className,
         "overflow-visible! h-18 px-4"
     ]}>
-        <div class="mx-auto h-full w-full max-w-(--page-width) grid grid-cols-[auto_minmax(0,1fr)_auto] items-center">
+        <div class:list={[
+            "mx-auto h-full w-full max-w-(--page-width) grid grid-cols-[auto_minmax(0,1fr)_auto] items-center",
+            islandStyle && "navbar-island",
+        ]}>
             <a href={url('/')} class="btn-plain scale-animation rounded-lg h-13 px-3 md:px-5 font-bold active:scale-95">
                 <div class:list={[
                     "flex flex-row items-center text-md",
@@ -327,6 +332,33 @@ function loadButtonScript() {
 }
 
 loadButtonScript();
+
+// 灵动岛模式：滚动后收紧悬浮胶囊，增强「灵动」反馈
+(function initIslandScrollDetection() {
+    if (window.islandScrollInit) return;
+    const navbar = document.getElementById("navbar");
+    if (!navbar || navbar.getAttribute("data-navbar-style") !== "island") return;
+    window.islandScrollInit = true;
+
+    let ticking = false;
+    const threshold = 24;
+
+    function update() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        navbar!.classList.toggle("island-scrolled", scrollTop > threshold);
+        ticking = false;
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(update);
+            ticking = true;
+        }
+    }
+
+    window.addEventListener("scroll", requestTick, { passive: true });
+    update();
+})();
 
 // 为semifull模式添加滚动检测逻辑
 function initSemifullScrollDetection() {
