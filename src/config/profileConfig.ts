@@ -12,7 +12,7 @@ export const profileConfig: ProfileConfig = {
 	name: "猫神X",
 
 	// 个人签名
-	bio: "我终于来了.",
+	bio: "你终于来了.",
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons
