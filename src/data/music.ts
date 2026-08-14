@@ -22,11 +22,11 @@ export interface MusicTrack {
 
 export const musicPlaylist: MusicTrack[] = [
 	{
-		name: "使一颗心免于哀伤",
-		artist: "知更鸟 / HOYO-MiX / Chevy",
-		url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
-		cover: "/assets/music/cover/109951169585655912.webp",
-		lrc: "/assets/music/lrc/使一颗心免于哀伤.lrc",
+		name: "微弱的信号",
+		artist: "猫神X",
+		url: "/assets/music/微弱的信号.mp3",
+		cover: "/assets/music/cover/65a7b5e3d0ce6f226a66887eeb7c7654.jpg",
+		lrc: "/assets/music/lrc/微弱的信号.lrc",
 	},
 	{
 		name: "等一句我在",
@@ -34,5 +34,12 @@ export const musicPlaylist: MusicTrack[] = [
 		url: "/assets/music/等一句我在.mp3",
 		cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
 		lrc: "/assets/music/lrc/等一句我在.lrc",
+	},
+	{
+		name: "使一颗心免于哀伤",
+		artist: "知更鸟 / HOYO-MiX / Chevy",
+		url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
+		cover: "/assets/music/cover/109951169585655912.webp",
+		lrc: "/assets/music/lrc/使一颗心免于哀伤.lrc",
 	},
 ];
