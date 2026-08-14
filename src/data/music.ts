@@ -22,6 +22,13 @@ export interface MusicTrack {
 
 export const musicPlaylist: MusicTrack[] = [
 	{
+		name: "那首没听过的歌",
+		artist: "猫神X",
+		url: "/assets/music/那首没听过的歌.mp3",
+		cover: "/assets/music/cover/那首没听过的歌.jpg",
+		lrc: "/assets/music/lrc/那首没听过的歌.lrc",
+	},
+	{
 		name: "微弱的信号",
 		artist: "猫神X",
 		url: "/assets/music/微弱的信号.mp3",
