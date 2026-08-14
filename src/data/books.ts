@@ -31,13 +31,13 @@ export const bookshelf: BookItem[] = [
 	// 	pdf: "/assets/books/demo.pdf",
 	// 	cover: "/assets/books/cover/demo.jpg",
 	// },
-	{
-    id: "cljs18",
-    title: "查理九世18",
-    author: "雷欧幻像",
-    description: "",
-    pdf: "/assets/books/18•地狱温泉的诅咒.pdf",  // 可选，不写会显示毛玻璃占位
-  },
+// 	{
+//     id: "cljs18",
+//     title: "查理九世18",
+//     author: "雷欧幻像",
+//     description: "",
+//     pdf: "/assets/books/18•地狱温泉的诅咒.pdf",  // 可选，不写会显示毛玻璃占位
+//   },
 	{
     id: "cljs27",
     title: "查理九世27",
