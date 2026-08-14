@@ -38,12 +38,12 @@ export const bookshelf: BookItem[] = [
 //     description: "",
 //     pdf: "/assets/books/18•地狱温泉的诅咒.pdf",  // 可选，不写会显示毛玻璃占位
 //   },
-	{
-    id: "cljs27",
-    title: "查理九世27",
-    author: "雷欧幻像",
-    description: "",
-    pdf: "/assets/books/27•九尾灵猫.pdf",  // 可选，不写会显示毛玻璃占位
-  },
+// 	{
+//     id: "cljs27",
+//     title: "查理九世27",
+//     author: "雷欧幻像",
+//     description: "",
+//     pdf: "/assets/books/27•九尾灵猫.pdf",  // 可选，不写会显示毛玻璃占位
+//   },
   
 ];
