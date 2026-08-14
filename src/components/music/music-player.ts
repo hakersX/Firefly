@@ -90,6 +90,17 @@ let dragging = false;
 const ripples: Ripple[] = [];
 const handlers: Record<string, EventListener> = {};
 
+// 用户手动拖动状态：拖动后一段时间内不自动覆盖滚动位置
+let lyricUserOffset: number | null = null;
+let lyricResumeTimer: number | null = null;
+let isDraggingLyrics = false;
+let lyricDragStartY = 0;
+let lyricDragStartTransform = 0;
+
+let timelineUserScrolling = false;
+let timelineResumeTimer: number | null = null;
+let timelineProgrammaticScroll = false;
+
 if (!mgr) {
 	// MusicManager 未加载（极端情况），降级提示
 	songName.textContent = "播放器未就绪";
@@ -138,8 +149,16 @@ if (!mgr) {
 		tracks.forEach((el, i) => {
 			el.classList.toggle("active", i === index);
 		});
+		// 用户正在手动滚动查看时，不强制把当前歌滚回视口
+		if (timelineUserScrolling) return;
 		const active = tracks[index] as HTMLElement | undefined;
-		if (active) active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+		if (active) {
+			timelineProgrammaticScroll = true;
+			active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+			window.setTimeout(() => {
+				timelineProgrammaticScroll = false;
+			}, 600);
+		}
 	}
 
 	// ===== 歌词 =====
@@ -177,8 +196,13 @@ if (!mgr) {
 			lyricEls[activeLyricIdx].classList.remove("active");
 		if (index >= 0 && lyricEls[index]) {
 			lyricEls[index].classList.add("active");
-			if (lyricOffsets[index] !== undefined)
+			// 用户手动拖动期间/拖动后冷却期内，不强制覆盖位置
+			if (
+				lyricUserOffset === null &&
+				lyricOffsets[index] !== undefined
+			) {
 				lyricsContent.style.transform = `translateY(${-lyricOffsets[index]}px)`;
+			}
 		}
 		activeLyricIdx = index;
 	}
@@ -244,6 +268,69 @@ if (!mgr) {
 		) as HTMLElement | null;
 		if (line) mgr.seekToTime(Number.parseFloat(line.dataset.time || "0"));
 	});
+
+	// ===== 歌词面板手动拖动 =====
+	function getLyricTranslateY(): number {
+		const m = lyricsContent.style.transform.match(
+			/translateY\((-?\d+(?:\.\d+)?)px\)/,
+		);
+		return m ? Number(m[1]) : 0;
+	}
+	function pauseLyricAutoFollow(ms: number) {
+		lyricUserOffset = getLyricTranslateY();
+		if (lyricResumeTimer) window.clearTimeout(lyricResumeTimer);
+		lyricResumeTimer = window.setTimeout(() => {
+			lyricUserOffset = null;
+			// 冷却结束立即回到当前歌词位置
+			if (activeLyricIdx >= 0 && lyricOffsets[activeLyricIdx] !== undefined) {
+				lyricsContent.style.transform = `translateY(${-lyricOffsets[activeLyricIdx]}px)`;
+			}
+		}, ms);
+	}
+	lyricsPanel.addEventListener("pointerdown", (e) => {
+		// 点击具体歌词行时是 seek，不进入拖动
+		if ((e.target as HTMLElement).closest(".lyric-line")) return;
+		isDraggingLyrics = true;
+		lyricDragStartY = e.clientY;
+		lyricDragStartTransform = getLyricTranslateY();
+		lyricsContent.style.transition = "none";
+		try {
+			lyricsPanel.setPointerCapture(e.pointerId);
+		} catch {
+			/* noop */
+		}
+	});
+	lyricsPanel.addEventListener("pointermove", (e) => {
+		if (!isDraggingLyrics) return;
+		const dy = e.clientY - lyricDragStartY;
+		lyricsContent.style.transform = `translateY(${lyricDragStartTransform + dy}px)`;
+	});
+	const endLyricDrag = (e: PointerEvent) => {
+		if (!isDraggingLyrics) return;
+		isDraggingLyrics = false;
+		lyricsContent.style.transition = "";
+		try {
+			lyricsPanel.releasePointerCapture(e.pointerId);
+		} catch {
+			/* noop */
+		}
+		// 用户拖动后冷却 3 秒再恢复自动跟随
+		pauseLyricAutoFollow(3000);
+	};
+	lyricsPanel.addEventListener("pointerup", endLyricDrag);
+	lyricsPanel.addEventListener("pointercancel", endLyricDrag);
+
+	// ===== 时间线歌曲列表手动滚动 =====
+	timeline.addEventListener("scroll", () => {
+		// scrollIntoView 触发的程序滚动不视为用户操作
+		if (timelineProgrammaticScroll) return;
+		timelineUserScrolling = true;
+		if (timelineResumeTimer) window.clearTimeout(timelineResumeTimer);
+		timelineResumeTimer = window.setTimeout(() => {
+			timelineUserScrolling = false;
+		}, 3000);
+	});
+	// 触摸滑动也走 scroll 事件，无需单独处理
 
 	// ===== 进度条拖拽 =====
 	function seekTo(clientX: number) {
