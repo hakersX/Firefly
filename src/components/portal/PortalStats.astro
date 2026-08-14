@@ -5,6 +5,7 @@ interface StatItem {
 	icon: string;
 	target: number;
 	label: string;
+	url: string;
 }
 interface Props {
 	stats: StatItem[];
@@ -16,11 +17,11 @@ const { stats, hue } = Astro.props;
 <section class="portal-section stats-section" style={`--hue: ${hue};`}>
 	<div class="stats-grid">
 		{stats.map((s) => (
-			<div class="stat-card reveal">
+			<a class="stat-card reveal" href={s.url} aria-label={`查看${s.label}`}>
 				<Icon name={s.icon} class="stat-icon" />
 				<span class="stat-number" data-target={s.target}>0</span>
 				<span class="stat-label">{s.label}</span>
-			</div>
+			</a>
 		))}
 	</div>
 </section>
@@ -46,7 +47,10 @@ const { stats, hue } = Astro.props;
 		background: hsl(var(--hue) 50% 50% / 0.05);
 		border: 1px solid hsl(var(--hue) 50% 50% / 0.12);
 		backdrop-filter: blur(12px);
-		transition: transform 0.3s, box-shadow 0.3s;
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+		transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 	}
 	.stat-card:hover {
 		transform: translateY(-6px);

@@ -1,0 +1,26 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<div class="reader-overlay" id="reader-overlay" aria-hidden="true">
+	<div class="reader-backdrop" id="reader-backdrop" />
+
+	<div class="book-flip" id="book-flip">
+		<div class="reader-frame">
+			<iframe
+				id="reader-iframe"
+				class="reader-iframe"
+				title="PDF 阅读器"
+				src="about:blank"
+			/>
+		</div>
+	</div>
+
+	<button type="button" class="reader-close" id="reader-close" aria-label="合上书">
+		<span class="reader-close-ripple" />
+		<span class="reader-close-icon">
+			<Icon name="material-symbols:close-rounded" />
+		</span>
+		<span class="reader-close-text">合上书</span>
+	</button>
+</div>

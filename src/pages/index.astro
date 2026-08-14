@@ -69,17 +69,19 @@ const announcementMessages = [
 
 // 统计卡片
 const stats = [
-	{ icon: "material-symbols:article", target: postCount, label: "文章" },
+	{ icon: "material-symbols:article", target: postCount, label: "文章", url: "/articles/" },
 	{
 		icon: "material-symbols:folder-open-rounded",
 		target: categoryCount,
 		label: "分类",
+		url: "/categories/",
 	},
-	{ icon: "material-symbols:tag-rounded", target: tagCount, label: "标签" },
+	{ icon: "material-symbols:tag-rounded", target: tagCount, label: "标签", url: "/tags/" },
 	{
 		icon: "material-symbols:calendar-month-rounded",
 		target: runningDays,
 		label: "运行天数",
+		url: "/archive/",
 	},
 ];
 ---

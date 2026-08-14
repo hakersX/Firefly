@@ -83,6 +83,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		children: [
 			// 音乐
 			LinkPresets.Music,
+			// 书籍
+			LinkPresets.Books,
 			//相册
 			LinkPresets.Gallery,
 		],
@@ -245,6 +247,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/music/",
 		icon: "material-symbols:music-note-rounded",
 		pageKey: "music",
+	},
+	Books: {
+		name: "书籍",
+		url: "/books/",
+		icon: "material-symbols:menu-book-rounded",
+		pageKey: "books",
 	},
 };
 

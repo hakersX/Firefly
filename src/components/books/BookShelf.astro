@@ -1,0 +1,76 @@
+---
+import { Icon } from "astro-icon/components";
+import BookReader from "./BookReader.astro";
+import "./book-shelf.css";
+
+interface BookItem {
+	id: string;
+	title: string;
+	author: string;
+	description: string;
+	pdf: string;
+	cover?: string;
+}
+interface Props {
+	books: BookItem[];
+	hue: number;
+}
+const { books, hue } = Astro.props;
+const isEmpty = books.length === 0;
+---
+
+<div class="book-page" style={`--hue: ${hue};`}>
+	<header class="shelf-header">
+		<div class="shelf-header-icon">
+			<Icon name="material-symbols:menu-book-rounded" />
+		</div>
+		<h1 class="shelf-title">书架</h1>
+		<p class="shelf-subtitle">收藏的书籍 · 点击翻阅</p>
+	</header>
+
+	{isEmpty ? (
+		<div class="shelf-empty">
+			<Icon name="material-symbols:book-2-rounded" />
+			<p>书架空空如也</p>
+			<span>在 src/data/books.ts 添加书籍</span>
+		</div>
+	) : (
+		<div class="shelf-grid" id="shelf-grid">
+			{books.map((book) => (
+				<button
+					type="button"
+					class="book-card"
+					data-pdf={book.pdf}
+					data-title={book.title}
+					aria-label={`打开《${book.title}》`}
+				>
+					<div class="book-cover">
+						{book.cover ? (
+							<img src={book.cover} alt={book.title} loading="lazy" />
+						) : (
+							<div class="book-cover-placeholder">
+								<Icon name="material-symbols:menu-book-rounded" />
+							</div>
+						)}
+						<div class="book-cover-glow" />
+					</div>
+					<div class="book-info">
+						<h3 class="book-title">{book.title}</h3>
+						<p class="book-author">{book.author}</p>
+						<p class="book-desc">{book.description}</p>
+					</div>
+					<div class="book-open-hint">
+						<Icon name="material-symbols:open-in-new-rounded" />
+						<span>翻阅</span>
+					</div>
+				</button>
+			))}
+		</div>
+	)}
+
+	<BookReader />
+</div>
+
+<script>
+	import "./book-shelf.ts";
+</script>

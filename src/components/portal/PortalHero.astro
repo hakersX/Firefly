@@ -34,6 +34,16 @@ const { name, bio, avatar, typewriterTexts, hue } = Astro.props;
 			<span class="hero-badge"><i class="dot"></i>在线中</span>
 			<span class="hero-badge">数字花园</span>
 		</div>
+		<div class="hero-cta">
+			<a href="/articles/" class="cta-btn cta-primary">
+				<Icon name="material-symbols:article" />
+				<span>浏览文章</span>
+			</a>
+			<a href="/about/" class="cta-btn cta-ghost">
+				<Icon name="material-symbols:person-rounded" />
+				<span>关于我</span>
+			</a>
+		</div>
 	</div>
 	<a href="#announcement" class="scroll-down" aria-label="向下滚动">
 		<Icon name="material-symbols:keyboard-arrow-down-rounded" />
@@ -205,6 +215,43 @@ const { name, bio, avatar, typewriterTexts, hue } = Astro.props;
 	@keyframes pulse-dot {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.4; }
+	}
+	.hero-cta {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-top: 0.5rem;
+	}
+	.cta-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		padding: 0.7em 1.6em;
+		border-radius: 999px;
+		font-size: 1rem;
+		font-weight: 600;
+		color: #fff;
+		text-decoration: none;
+		transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+	}
+	.cta-primary {
+		background: linear-gradient(135deg, hsl(var(--hue) 80% 55%), hsl(calc(var(--hue) + 60) 80% 55%));
+		box-shadow: 0 8px 24px hsl(var(--hue) 80% 50% / 0.35);
+	}
+	.cta-primary:hover {
+		transform: translateY(-3px) scale(1.03);
+		box-shadow: 0 12px 32px hsl(var(--hue) 80% 50% / 0.5);
+	}
+	.cta-ghost {
+		background: hsl(var(--hue) 50% 50% / 0.08);
+		border: 1px solid hsl(var(--hue) 50% 60% / 0.3);
+		backdrop-filter: blur(12px);
+	}
+	.cta-ghost:hover {
+		transform: translateY(-3px) scale(1.03);
+		border-color: hsl(var(--hue) 60% 65% / 0.5);
+		background: hsl(var(--hue) 50% 50% / 0.14);
 	}
 	.scroll-down {
 		position: absolute;
