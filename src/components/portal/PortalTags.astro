@@ -1,0 +1,78 @@
+---
+import { Icon } from "astro-icon/components";
+import { getTagUrl } from "@/utils/url-utils";
+
+interface Tag {
+	name: string;
+	count: number;
+}
+interface Props {
+	tags: Tag[];
+	hue: number;
+	limit?: number;
+}
+const { tags, hue, limit = 24 } = Astro.props;
+const list = tags.slice(0, limit);
+---
+
+<section class="portal-section" style={`--hue: ${hue};`}>
+	<h2 class="portal-title reveal"><Icon name="material-symbols:tag-rounded" /> 标签</h2>
+	<div class="tags-cloud reveal">
+		{list.map((tag) => (
+			<a
+				href={getTagUrl(tag.name)}
+				class="tag-chip"
+				style={`--tag-size: ${Math.min(1.25, 0.8 + tag.count * 0.06)}rem;`}
+			>
+				{tag.name}
+			</a>
+		))}
+	</div>
+</section>
+
+<style>
+	.portal-section {
+		max-width: var(--page-width, 75rem);
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.portal-title {
+		font-size: clamp(1.5rem, 4vw, 2rem);
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.tags-cloud {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+	}
+	.tag-chip {
+		font-size: var(--tag-size, 0.9rem);
+		padding: 0.3em 0.9em;
+		border-radius: 999px;
+		color: hsl(var(--hue) 30% 40%);
+		background: hsl(var(--hue) 50% 50% / 0.06);
+		transition: all 0.3s;
+	}
+	.tag-chip:hover {
+		color: #fff;
+		background: hsl(var(--hue) 80% 50%);
+		transform: scale(1.1);
+	}
+	.reveal {
+		opacity: 0;
+		transform: translateY(30px);
+		transition: opacity 0.7s ease, transform 0.7s ease;
+	}
+	.reveal.is-visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.reveal { opacity: 1; transform: none; }
+	}
+</style>

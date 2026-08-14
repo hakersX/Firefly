@@ -22,6 +22,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "#",
 		icon: "material-symbols:article",
 		children: [
+			// 文章列表
+			LinkPresets.Posts,
+
 			// 归档
 			LinkPresets.Archive,
 
@@ -47,6 +50,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
+	
+
 	// 我的及其子菜单
 	links.push({
 		name: "我的",
@@ -56,14 +61,12 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			// 动态
 			LinkPresets.Dynamic,
 
-			// 相册
-			LinkPresets.Gallery,
 
 			// 追番
 			LinkPresets.Anime,
 
 			// VNDB
-			LinkPresets.VNDB,
+			// LinkPresets.VNDB,
 
 			// 番组计划
 			LinkPresets.Bangumi,
@@ -72,7 +75,18 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Booknav,
 		],
 	});
-
+    // 记录及其子菜单
+	links.push({
+		name: "记录",
+		url: "#",
+		icon: "material-symbols:book-2-rounded",
+		children: [
+			// 音乐
+			LinkPresets.Music,
+			//相册
+			LinkPresets.Gallery,
+		],
+	});
 	// 关于及其子菜单
 	links.push({
 		name: "关于",
@@ -147,6 +161,11 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/",
 		icon: "material-symbols:home",
 	},
+	Posts: {
+		name: "文章列表",
+		url: "/articles/",
+		icon: "material-symbols:list-alt",
+	},
 	Dynamic: {
 		name: "动态",
 		url: "/dynamic/",
@@ -220,6 +239,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/booknav/",
 		icon: "material-symbols:bookmarks",
 		pageKey: "booknav",
+	},
+	Music: {
+		name: "音乐",
+		url: "/music/",
+		icon: "material-symbols:music-note-rounded",
+		pageKey: "music",
 	},
 };
 

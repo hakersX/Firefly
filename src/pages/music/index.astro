@@ -1,0 +1,33 @@
+---
+import Navbar from "@/components/layout/Navbar.astro";
+import MusicPlayer from "@/components/music/MusicPlayer.astro";
+import { siteConfig } from "@/config";
+import { musicPlaylist } from "@/data/music";
+import Layout from "@/layouts/Layout.astro";
+
+const playlist = musicPlaylist;
+const hue = siteConfig.themeColor.hue;
+const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
+const stickyNavbar = siteConfig.navbar.stickyNavbar ?? false;
+---
+
+<Layout title={`音乐 - ${siteConfig.title}`}>
+	{/* Navbar */}
+	<div
+		id="top-row"
+		class="z-50 pointer-events-none relative transition-all duration-700 mx-auto"
+		class:list={[
+			stickyNavbar ? "h-18 fixed top-0 left-0 right-0 z-80" : "",
+			navbarWidthFull ? "" : "w-full xl:w-[92vw] max-w-(--page-width) px-0 md:px-4",
+		]}
+	>
+		<div
+			id="navbar-wrapper"
+			class:list={["pointer-events-auto transition-all", stickyNavbar ? "" : "sticky top-0"]}
+		>
+			<Navbar></Navbar>
+		</div>
+	</div>
+
+	<MusicPlayer playlist={playlist} hue={hue} />
+</Layout>

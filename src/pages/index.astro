@@ -1,0 +1,158 @@
+---
+import avatarImg from "@/assets/images/avatar.avif";
+import Navbar from "@/components/layout/Navbar.astro";
+import PortalAnnouncement from "@/components/portal/PortalAnnouncement.astro";
+import PortalCategories from "@/components/portal/PortalCategories.astro";
+import PortalHero from "@/components/portal/PortalHero.astro";
+import PortalSocial from "@/components/portal/PortalSocial.astro";
+import PortalStats from "@/components/portal/PortalStats.astro";
+import PortalTags from "@/components/portal/PortalTags.astro";
+import {
+	backgroundWallpaper,
+	displaySettingsConfig,
+	profileConfig,
+	siteConfig,
+} from "@/config";
+import Layout from "@/layouts/Layout.astro";
+import {
+	getCategoryList,
+	getSortedPostsList,
+	getTagList,
+} from "@/utils/content-utils";
+
+// 背景壁纸模式
+const isBannerMode = backgroundWallpaper.mode === "banner";
+const isFullscreenMode = backgroundWallpaper.mode === "fullscreen";
+const isOverlayMode = backgroundWallpaper.mode === "overlay";
+const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
+const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
+const stickyNavbar = siteConfig.navbar.stickyNavbar ?? false;
+
+// 获取数据
+const allPosts = await getSortedPostsList();
+const categories = await getCategoryList();
+const tags = await getTagList();
+
+// 过滤草稿（生产环境）
+const visiblePosts = allPosts.filter((p) =>
+	import.meta.env.PROD ? !p.data.draft : true,
+);
+
+// 统计数据
+const postCount = visiblePosts.length;
+const categoryCount = categories.length;
+const tagCount = tags.length;
+const startDate = new Date(siteConfig.siteStartDate ?? "2026-01-01");
+const today = new Date();
+const runningDays = Math.max(
+	0,
+	Math.floor((today.getTime() - startDate.getTime()) / 86400000),
+);
+
+const hue = siteConfig.themeColor.hue;
+
+// 打字机循环句子
+const typewriterTexts: string[] = [
+	profileConfig.bio ?? "欢迎来到我的博客",
+	"躬身入局，心为主理，行有尺度",
+	"记录技术 · 分享生活 · 探索可能",
+	"用代码构建梦想，用文字传递温度",
+];
+
+// 公告消息
+const announcementMessages = [
+	"欢迎来到我的数字花园",
+	`已撰写 ${postCount} 篇文章，共 ${categoryCount} 个分类，${tagCount} 个标签`,
+	"感谢每一位到访的朋友",
+	"记录技术 · 分享生活 · 探索可能",
+];
+
+// 统计卡片
+const stats = [
+	{ icon: "material-symbols:article", target: postCount, label: "文章" },
+	{
+		icon: "material-symbols:folder-open-rounded",
+		target: categoryCount,
+		label: "分类",
+	},
+	{ icon: "material-symbols:tag-rounded", target: tagCount, label: "标签" },
+	{
+		icon: "material-symbols:calendar-month-rounded",
+		target: runningDays,
+		label: "运行天数",
+	},
+];
+---
+
+<Layout
+	title={siteConfig.title}
+	hasWallpaper={isWallpaperSwitchable || isBannerMode || isFullscreenMode || isOverlayMode}
+>
+
+{/* Navbar */}
+<div
+	id="top-row"
+	class="z-50 pointer-events-none relative transition-all duration-700 mx-auto"
+	class:list={[
+		stickyNavbar ? "h-18 fixed top-0 left-0 right-0 z-80" : "",
+		navbarWidthFull ? "" : "w-full xl:w-[92vw] max-w-(--page-width) px-0 md:px-4",
+	]}
+>
+	<div
+		id="navbar-wrapper"
+		class:list={["pointer-events-auto transition-all", stickyNavbar ? "" : "sticky top-0"]}
+	>
+		<Navbar></Navbar>
+	</div>
+</div>
+
+{/* 主页内容区 */}
+<PortalHero
+		name={profileConfig.name}
+		bio={profileConfig.bio}
+		avatar={avatarImg}
+		typewriterTexts={typewriterTexts}
+		hue={hue}
+	/>
+
+	<PortalAnnouncement messages={announcementMessages} hue={hue} />
+
+	<PortalStats stats={stats} hue={hue} />
+
+	<PortalCategories categories={categories} hue={hue} />
+
+	<PortalTags tags={tags} hue={hue} />
+
+	<PortalSocial links={profileConfig.links} hue={hue} />
+
+	{/* 页脚 */}
+	<footer class="portal-footer">
+		<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; Crafted with passion</p>
+	</footer>
+
+<style>
+	.portal-footer {
+		text-align: center;
+		padding: 3rem 1.5rem;
+		font-size: 0.85rem;
+		opacity: 0.5;
+	}
+</style>
+
+<script>
+	// 全局入场动画：观察所有 .reveal 元素
+	const revealObserver = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					entry.target.classList.add("is-visible");
+					revealObserver.unobserve(entry.target);
+				}
+			}
+		},
+		{ threshold: 0.15 },
+	);
+	document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+</script>
+
+</Layout>

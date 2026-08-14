@@ -1,0 +1,85 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	messages: string[];
+	hue: number;
+}
+const { messages, hue } = Astro.props;
+// 复制两份用于无缝滚动
+const loop = [...messages, ...messages];
+---
+
+<section id="announcement" class="announcement" style={`--hue: ${hue};`}>
+	<div class="announce-bar">
+		<Icon name="material-symbols:campaign-rounded" class="announce-icon" />
+		<div class="announce-track">
+			{loop.map((msg) => (
+				<span class="announce-item">
+					<i class="sep"></i>{msg}
+				</span>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.announcement {
+		padding: 2rem 1rem;
+		max-width: var(--page-width, 75rem);
+		margin: 0 auto;
+	}
+	.announce-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1.25rem;
+		border-radius: 999px;
+		background: hsl(var(--hue) 50% 50% / 0.06);
+		border: 1px solid hsl(var(--hue) 50% 50% / 0.15);
+		backdrop-filter: blur(12px);
+		overflow: hidden;
+	}
+	.announce-icon {
+		flex-shrink: 0;
+		font-size: 1.4rem;
+		color: hsl(var(--hue) 80% 50%);
+		animation: bell-wave 2s ease-in-out infinite;
+	}
+	@keyframes bell-wave {
+		0%, 100% { transform: rotate(0deg); }
+		25% { transform: rotate(-8deg); }
+		75% { transform: rotate(8deg); }
+	}
+	.announce-track {
+		display: flex;
+		gap: 3rem;
+		white-space: nowrap;
+		animation: marquee 30s linear infinite;
+	}
+	.announce-item {
+		display: inline-flex;
+		align-items: center;
+		font-size: 0.9rem;
+		color: hsl(var(--hue) 20% 50%);
+	}
+	.announce-item .sep {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		margin-right: 0.75rem;
+		border-radius: 50%;
+		background: hsl(var(--hue) 80% 50%);
+	}
+	.announce-bar:hover .announce-track {
+		animation-play-state: paused;
+	}
+	@keyframes marquee {
+		from { transform: translateX(0); }
+		to { transform: translateX(-50%); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.announce-track { animation: none; }
+		.announce-icon { animation: none; }
+	}
+</style>

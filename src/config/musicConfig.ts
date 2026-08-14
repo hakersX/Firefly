@@ -1,8 +1,10 @@
+import { musicPlaylist } from "@/data/music";
 import type { MusicPlayerConfig } from "../types/musicConfig";
 
 // 音乐播放器配置
+// 歌单统一来自 src/data/music.ts（唯一数据源），导航栏面板 / 侧边栏 / 音乐页面共享
 export const musicPlayerConfig: MusicPlayerConfig = {
-	// 是否在导航栏显示音乐播放器入口
+	// 是否在导航栏显示音乐播放器入口（点击展开全局播放面板，跨页面持续播放）
 	showInNavbar: true,
 
 	// 是否在侧边栏显示音乐播放器组件
@@ -41,19 +43,8 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	},
 
 	// 本地音乐配置（当 mode 为 'local' 时使用）
-	// 1. 支持传入歌词文件的路径
-	// lrc: "/assets/music/lrc/使一颗心免于哀伤-哼唱.lrc",
-	// 2. 或者直接填入歌词字符串内容
-	// lrc: "[00:00.00]歌词内容...",
+	// 歌单来自 src/data/music.ts —— 在该文件维护，导航栏 / 侧边栏 / 音乐页面共享
 	local: {
-		playlist: [
-			{
-				name: "使一颗心免于哀伤",
-				artist: "知更鸟 / HOYO-MiX / Chevy",
-				url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
-				cover: "/assets/music/cover/109951169585655912.webp",
-				lrc: "",
-			},
-		],
+		playlist: musicPlaylist,
 	},
 };

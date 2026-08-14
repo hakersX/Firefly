@@ -1,0 +1,120 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface StatItem {
+	icon: string;
+	target: number;
+	label: string;
+}
+interface Props {
+	stats: StatItem[];
+	hue: number;
+}
+const { stats, hue } = Astro.props;
+---
+
+<section class="portal-section stats-section" style={`--hue: ${hue};`}>
+	<div class="stats-grid">
+		{stats.map((s) => (
+			<div class="stat-card reveal">
+				<Icon name={s.icon} class="stat-icon" />
+				<span class="stat-number" data-target={s.target}>0</span>
+				<span class="stat-label">{s.label}</span>
+			</div>
+		))}
+	</div>
+</section>
+
+<style>
+	.portal-section {
+		max-width: var(--page-width, 75rem);
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 1.25rem;
+	}
+	.stat-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem 1rem;
+		border-radius: 1rem;
+		background: hsl(var(--hue) 50% 50% / 0.05);
+		border: 1px solid hsl(var(--hue) 50% 50% / 0.12);
+		backdrop-filter: blur(12px);
+		transition: transform 0.3s, box-shadow 0.3s;
+	}
+	.stat-card:hover {
+		transform: translateY(-6px);
+		box-shadow: 0 12px 30px hsl(var(--hue) 50% 50% / 0.15);
+	}
+	.stat-icon {
+		font-size: 2rem;
+		color: hsl(var(--hue) 80% 50%);
+	}
+	.stat-number {
+		font-size: 2.5rem;
+		font-weight: 800;
+		line-height: 1;
+		background: linear-gradient(135deg, hsl(var(--hue) 80% 50%), hsl(calc(var(--hue) + 60) 80% 50%));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	.stat-label {
+		font-size: 0.9rem;
+		opacity: 0.6;
+	}
+	.reveal {
+		opacity: 0;
+		transform: translateY(30px);
+		transition: opacity 0.7s ease, transform 0.7s ease;
+	}
+	.reveal.is-visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.reveal { opacity: 1; transform: none; }
+	}
+</style>
+
+<script>
+	const animateCount = (el: HTMLElement) => {
+		const target = Number(el.dataset.target || "0");
+		if (target <= 0) { el.textContent = "0"; return; }
+		const duration = 1500;
+		const start = performance.now();
+		const step = (now: number) => {
+			const p = Math.min((now - start) / duration, 1);
+			const eased = 1 - Math.pow(1 - p, 3);
+			el.textContent = String(Math.floor(target * eased));
+			if (p < 1) requestAnimationFrame(step);
+			else el.textContent = String(target);
+		};
+		requestAnimationFrame(step);
+	};
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					entry.target.classList.add("is-visible");
+					const num = entry.target.querySelector(".stat-number") as HTMLElement | null;
+					if (num && !num.dataset.done) {
+						num.dataset.done = "1";
+						animateCount(num);
+					}
+					observer.unobserve(entry.target);
+				}
+			}
+		},
+		{ threshold: 0.15 },
+	);
+
+	document.querySelectorAll(".stat-card").forEach((el) => observer.observe(el));
+</script>

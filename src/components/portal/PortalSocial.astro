@@ -1,0 +1,72 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface SocialLink {
+	name: string;
+	icon: string;
+	url: string;
+}
+interface Props {
+	links: SocialLink[];
+	hue: number;
+}
+const { links, hue } = Astro.props;
+---
+
+<section class="portal-section" style={`--hue: ${hue};`}>
+	<h2 class="portal-title center">联系我</h2>
+	<div class="social-links">
+		{links.map((link) => (
+			<a
+				href={link.url}
+				class="social-btn"
+				target={link.url.startsWith("http") ? "_blank" : undefined}
+				rel="noopener noreferrer"
+				aria-label={link.name}
+			>
+				<Icon name={link.icon} />
+			</a>
+		))}
+	</div>
+</section>
+
+<style>
+	.portal-section {
+		max-width: var(--page-width, 75rem);
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.portal-title {
+		font-size: clamp(1.5rem, 4vw, 2rem);
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+	}
+	.portal-title.center {
+		text-align: center;
+	}
+	.social-links {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	.social-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 52px;
+		height: 52px;
+		border-radius: 50%;
+		font-size: 1.4rem;
+		color: hsl(var(--hue) 30% 40%);
+		background: hsl(var(--hue) 50% 50% / 0.08);
+		border: 1px solid hsl(var(--hue) 50% 50% / 0.15);
+		transition: all 0.3s;
+	}
+	.social-btn:hover {
+		color: #fff;
+		background: hsl(var(--hue) 80% 50%);
+		transform: translateY(-4px) scale(1.1);
+		box-shadow: 0 8px 22px hsl(var(--hue) 80% 50% / 0.35);
+	}
+</style>

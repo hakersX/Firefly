@@ -1,0 +1,110 @@
+---
+import { Icon } from "astro-icon/components";
+import "./music-player.css";
+
+interface Song {
+	name: string;
+	artist: string;
+	url: string;
+	cover?: string;
+	lrc?: string;
+}
+interface Props {
+	playlist: Song[];
+	hue: number;
+}
+const { playlist, hue } = Astro.props;
+const playlistJson = JSON.stringify(playlist);
+---
+
+<div class="music-page" style={`--hue: ${hue};`} data-playlist={playlistJson}>
+	{/* 背景层 */}
+	<div class="bg-layer" id="bg-layer"></div>
+
+	{/* 全屏 canvas：可视化 + 涟漪交互 */}
+	<canvas class="visualizer" id="visualizer"></canvas>
+
+	{/* 左侧：歌词（无框浮动） */}
+	<div class="lyrics-overlay">
+		<div class="lyrics-panel" id="lyrics-panel">
+			<div class="lyrics-content" id="lyrics-content">
+				<p class="lyrics-placeholder">歌词加载中...</p>
+			</div>
+		</div>
+	</div>
+
+	{/* 中心：歌名 + 艺术家 */}
+	<div class="center-overlay">
+		<h2 class="song-name" id="song-name">{playlist[0]?.name ?? "未播放"}</h2>
+		<p class="song-artist" id="song-artist">{playlist[0]?.artist ?? "—"}</p>
+	</div>
+
+	{/* 右侧：时间线（浮动半透明） */}
+	<div class="timeline-overlay">
+		<div class="timeline-header">
+			<span>播放列表</span>
+			<i id="track-count">{playlist.length} 首</i>
+		</div>
+		<div class="timeline" id="timeline">
+			<div class="timeline-line"></div>
+			{
+				playlist.map((song, i) => (
+					<div class="track" data-index={i}>
+						<div class="track-node">
+							<i class="node-dot"></i>
+						</div>
+						<div class="track-body">
+							<div class="track-name">{song.name}</div>
+							<div class="track-artist">{song.artist}</div>
+						</div>
+						<span class="track-duration" data-url={song.url}>--:--</span>
+					</div>
+				))
+			}
+		</div>
+	</div>
+
+	{/* 底部药丸播放器 */}
+	<div class="dock-pill" id="dock-pill">
+		<div class="dock-cover" id="dock-cover">
+			<img src={playlist[0]?.cover} alt={playlist[0]?.name} id="cover-img" />
+		</div>
+		<div class="dock-center">
+			<div class="dock-meta">
+				<span class="dock-title" id="song-name-2">{playlist[0]?.name ?? "未播放"}</span>
+			</div>
+			<div class="dock-seek">
+				<span class="dock-time" id="t-cur">0:00</span>
+				<div class="dock-bar" id="dock-seek">
+					<div class="dock-groove"></div>
+					<div class="dock-fill" id="dock-fill"></div>
+					<div class="dock-knob" id="dock-knob"></div>
+				</div>
+				<span class="dock-time" id="t-dur">0:00</span>
+			</div>
+		</div>
+		<div class="dock-actions">
+			<button class="dock-btn" id="b-prev" title="上一首">
+				<Icon name="material-symbols:skip-previous-rounded" />
+			</button>
+			<button class="dock-btn dock-btn-main" id="b-play" title="播放/暂停">
+				<Icon name="material-symbols:play-arrow-rounded" id="ico-play" />
+				<Icon name="material-symbols:pause-rounded" id="ico-pause" />
+			</button>
+			<button class="dock-btn" id="b-next" title="下一首">
+				<Icon name="material-symbols:skip-next-rounded" />
+			</button>
+			<button class="dock-btn" id="b-mode" title="列表循环">
+				<Icon name="material-symbols:repeat-rounded" id="ico-repeat" />
+				<Icon name="material-symbols:repeat-one-rounded" id="ico-repeat-one" />
+				<Icon name="material-symbols:shuffle-rounded" id="ico-shuffle" />
+			</button>
+		</div>
+	</div>
+
+	{/* 全局 audio 由 MusicManager 维护（跨页面持久），本页不再创建独立 audio */}
+</div>
+
+<script>
+	import "./music-player.ts";
+</script>
