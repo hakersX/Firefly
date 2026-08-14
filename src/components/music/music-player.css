@@ -65,7 +65,7 @@
 .lyrics-content {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: center;
 	gap: 0.85rem;
 	/* 上下留白基于视口高度，保证首句/末句都能滚动到面板中线 */
 	padding: 45vh 1rem;
@@ -75,7 +75,7 @@
 .lyric-line {
 	font-size: 1.1rem;
 	color: rgba(255, 255, 255, 0.25);
-	text-align: left;
+	text-align: center;
 	line-height: 1.6;
 	cursor: pointer;
 	transition: color 0.4s, font-size 0.4s, opacity 0.4s;
@@ -167,10 +167,23 @@
 	-webkit-overflow-scrolling: touch;
 	touch-action: pan-y;
 }
-.timeline::-webkit-scrollbar { width: 3px; }
+.timeline::-webkit-scrollbar { width: 4px; }
+.timeline::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.04);
+	border-radius: 4px;
+}
 .timeline::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.2);
-	border-radius: 3px;
+	background: hsl(var(--hue) 60% 55% / 0.4);
+	border-radius: 4px;
+	transition: background 0.2s;
+}
+.timeline::-webkit-scrollbar-thumb:hover {
+	background: hsl(var(--hue) 70% 60% / 0.7);
+}
+/* Firefox */
+.timeline {
+	scrollbar-width: thin;
+	scrollbar-color: hsl(var(--hue) 60% 55% / 0.4) transparent;
 }
 .timeline-line {
 	position: absolute;
@@ -438,9 +451,7 @@
 		transform: translate(-50%, -50%);
 		max-width: 90vw;
 		width: 90vw;
-		text-align: center;
 	}
-	.lyric-line { text-align: center; }
 	.timeline-overlay {
 		position: fixed;
 		right: 1rem;
@@ -449,7 +460,11 @@
 		bottom: 8rem;
 		transform: none;
 		width: auto;
-		max-height: 20vh;
+		max-height: 22vh;
+		overflow: hidden;
+	}
+	.timeline {
+		max-height: calc(22vh - 2.5rem);
 	}
 	.center-overlay {
 		top: 18%;
