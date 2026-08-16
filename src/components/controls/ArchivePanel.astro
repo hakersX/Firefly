@@ -104,7 +104,7 @@ const foldOnFilter = collapseAllButFirst;
         <div class="archive-year-content" hidden={collapsed}>
           {group.posts.map((post) => (
             <a
-              href={getPostUrlBySlug(post.id)}
+              href={getPostUrlBySlug(post.data.slug || post.id)}
               aria-label={post.data.title}
               class="archive-post group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
               data-tags={JSON.stringify(post.data.tags || [])}

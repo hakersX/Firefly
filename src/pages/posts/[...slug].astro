@@ -33,8 +33,9 @@ import { url } from "@/utils/url-utils";
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();
 	return blogEntries.map((entry) => {
-		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
-		const slug = removeFileExtension(entry.id);
+		// 优先使用 frontmatter 中的 slug 字段（支持子文件夹归类但保持短 URL）
+		// 否则将 id 转换为 slug（移除扩展名）以匹配路由参数
+		const slug = entry.data.slug || removeFileExtension(entry.id);
 		return {
 			params: { slug },
 			props: { entry },

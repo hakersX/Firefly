@@ -36,7 +36,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
     {relatedPosts.length > 0 ? (
       relatedPosts.map((post, idx) => (
         <a
-          href={getPostUrlBySlug(post.id)}
+          href={getPostUrlBySlug(post.data.slug || post.id)}
           class:list={[
             "group flex items-center gap-3 px-3 py-3 -mx-1 rounded-lg",
             "transition-all hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98]",
