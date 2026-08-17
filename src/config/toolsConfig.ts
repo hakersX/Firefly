@@ -29,6 +29,28 @@ export interface ToolCategory {
 
 export const toolsConfig: ToolCategory[] = [
 	{
+		name: "免费视频观看",
+		icon: "material-symbols:live-tv-rounded",
+		tools: [
+			{
+				id: "爱壹机",
+				name: "爱壹机",
+				description: "免费在线观看影视剧、综艺等视频内容",
+				url: "https://www.iyf.tv/play/vEQ16j241LF?id=dGMBVfu03pA",
+				icon: "material-symbols:play-circle-rounded",
+				badge: "推荐",
+			},
+			{
+				id: "nbyy",
+				name: "泥巴影院",
+				description: "需翻墙访问，免费在线观看影视资源",
+				url: "https://www.nbyy.cc/detail/332353986.html",
+				icon: "material-symbols:movie-rounded",
+				badge: "需翻墙",
+			},
+		],
+	},
+	{
 		name: "视频下载",
 		icon: "material-symbols:download-rounded",
 		tools: [
