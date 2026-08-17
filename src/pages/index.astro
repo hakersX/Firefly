@@ -15,7 +15,6 @@
  *   cyber-index.css/.ts 提供 reveal 入场 IO + 暗色全局底色
  */
 import "@/components/portal/cyber-index.css";
-import cyberIndexScriptUrl from "@/components/portal/cyber-index.ts?url";
 import Navbar from "@/components/layout/Navbar.astro";
 import CyberMotto from "@/components/portal/CyberMotto.astro";
 import StockVideoBg from "@/components/portal/StockVideoBg.astro";
@@ -178,6 +177,37 @@ const VIDEO_URLS: string[] = [
 	<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; BUILT WITH CATX</p>
 </footer>
 
-<script src={cyberIndexScriptUrl} type="module"></script>
+<script is:inline>
+	function initReveal() {
+		var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		var reveals = Array.from(document.querySelectorAll(".reveal:not(.is-visible)"));
+		if (reveals.length === 0) return;
+
+		if (reduceMotion) {
+			reveals.forEach(function (el) { el.classList.add("is-visible"); });
+			return;
+		}
+
+		var io = new IntersectionObserver(
+			function (entries) {
+				for (var i = 0; i < entries.length; i++) {
+					if (entries[i].isIntersecting) {
+						entries[i].target.classList.add("is-visible");
+						io.unobserve(entries[i].target);
+					}
+				}
+			},
+			{ threshold: 0.08, rootMargin: "0px 0px -10% 0px" }
+		);
+		reveals.forEach(function (el) { io.observe(el); });
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initReveal, { once: true });
+	} else {
+		initReveal();
+	}
+	document.addEventListener("swup:contentReplaced", initReveal);
+</script>
 
 </Layout>

@@ -46,7 +46,7 @@ const { stats, hue = 260 } = Astro.props;
 					</div>
 
 					<div class="ts-number" aria-label={`${s.target}`}>
-						<span class="ts-num-chars">0</span>
+						<span class="ts-num-chars">{s.target}</span>
 					</div>
 
 					<div class="ts-bar">
@@ -58,4 +58,77 @@ const { stats, hue = 260 } = Astro.props;
 	</div>
 </section>
 
-<script src={scriptUrl} type="module"></script>
+<script is:inline>
+	function initTechStats() {
+		var section = document.querySelector(".tech-stats");
+		if (!section || section.dataset.bound) return;
+		section.dataset.bound = "1";
+
+		var cards = Array.from(section.querySelectorAll(".ts-card"));
+		var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		var animate = function (card) {
+			var target = Number(card.dataset.target || "0");
+			var numEl = card.querySelector(".ts-num-chars");
+			var bar = card.querySelector(".ts-bar-fill");
+			if (!numEl || !bar) return;
+
+			bar.style.transformOrigin = "0 50%";
+			bar.style.width = "100%";
+
+			if (reduceMotion || target <= 0) {
+				numEl.textContent = String(target);
+				bar.style.transform = "scaleX(" + Math.min(1, target > 0 ? 1 : 0) + ")";
+				return;
+			}
+
+			// 从 0 动画到 target
+			numEl.textContent = "0";
+			var DURATION = 1400;
+			var start = performance.now();
+			var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
+
+			var frame = function (now) {
+				var t = Math.min(1, (now - start) / DURATION);
+				var val = Math.round(target * easeOut(t));
+				numEl.textContent = String(val);
+				var progress = 0.35 + 0.65 * (val / Math.max(1, target));
+				bar.style.transform = "scaleX(" + Math.min(1, progress) + ")";
+				if (t < 1) requestAnimationFrame(frame);
+			};
+			requestAnimationFrame(frame);
+		};
+
+		var io = new IntersectionObserver(
+			function (entries) {
+				for (var i = 0; i < entries.length; i++) {
+					if (entries[i].isIntersecting) {
+						animate(entries[i].target);
+						io.unobserve(entries[i].target);
+					}
+				}
+			},
+			{ threshold: 0.2 }
+		);
+		cards.forEach(function (c) { io.observe(c); });
+
+		cards.forEach(function (card) {
+			if (!(card instanceof HTMLAnchorElement)) return;
+			card.addEventListener("click", function (ev) {
+				var rect = card.getBoundingClientRect();
+				var r = document.createElement("span");
+				r.className = "ts-ripple";
+				var size = Math.max(rect.width, rect.height);
+				r.style.width = size + "px";
+				r.style.height = size + "px";
+				r.style.left = (ev.clientX - rect.left) + "px";
+				r.style.top = (ev.clientY - rect.top) + "px";
+				card.appendChild(r);
+				setTimeout(function () { r.remove(); }, 800);
+			}, { passive: true });
+		});
+	}
+
+	initTechStats();
+	document.addEventListener("swup:contentReplaced", initTechStats);
+</script>
