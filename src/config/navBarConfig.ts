@@ -35,23 +35,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Tags,
 		],
 	});
-
-	//社交及其子菜单
-	links.push({
-		name: "社交",
-		url: "#",
-		icon: "material-symbols:group",
-		children: [
-			// 友链
-			LinkPresets.Friends,
-
-			// 留言
-			LinkPresets.Guestbook,
-		],
-	});
-
-	
-
 	// 我的及其子菜单
 	links.push({
 		name: "我的",
@@ -87,6 +70,21 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Books,
 			//相册
 			LinkPresets.Gallery,
+		],
+	});
+	// 工具
+	links.push(LinkPresets.Tools);
+	//社交及其子菜单
+	links.push({
+		name: "社交",
+		url: "#",
+		icon: "material-symbols:group",
+		children: [
+			// 友链
+			LinkPresets.Friends,
+
+			// 留言
+			LinkPresets.Guestbook,
 		],
 	});
 	// 关于及其子菜单
@@ -254,6 +252,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/books/",
 		icon: "material-symbols:menu-book-rounded",
 		pageKey: "books",
+	},
+	Tools: {
+		name: "工具",
+		url: "/tools/",
+		icon: "material-symbols:build-rounded",
+		pageKey: "tools",
 	},
 };
 

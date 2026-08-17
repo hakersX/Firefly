@@ -1,0 +1,126 @@
+---
+import { Icon } from "astro-icon/components";
+import ToolCard from "@/components/tools/ToolCard.astro";
+import { siteConfig } from "@/config";
+import { toolsConfig } from "@/config/toolsConfig";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout title={`工具 - ${siteConfig.title}`}>
+	{/* 分类标签栏 */}
+	<div id="tools-category-bar" class="tools-category-bar mb-4 flex flex-wrap gap-2">
+		<button class="tools-cat-btn active" data-category="all">
+			<Icon is:inline name="material-symbols:apps-rounded" class="text-[1.1rem]" />
+			<span>全部</span>
+		</button>
+		{toolsConfig.map((cat) => (
+			<button class="tools-cat-btn" data-category={cat.name}>
+				<Icon is:inline name={cat.icon} class="text-[1.1rem]" />
+				<span>{cat.name}</span>
+			</button>
+		))}
+	</div>
+
+	{/* 工具卡片网格 */}
+	<div id="tools-grid" class="tools-grid">
+		{toolsConfig.map((cat, ci) => (
+			<div class="tools-section" data-category={cat.name}>
+				<h2 class="tools-section-title mb-3 flex items-center gap-2 text-sm font-medium text-[var(--card-description)]">
+					<Icon is:inline name={cat.icon} class="text-[1rem]" />
+					{cat.name}
+					<span class="text-xs text-[var(--card-description)]/60">({cat.tools.length})</span>
+				</h2>
+				<div class="tools-grid-inner grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
+					{cat.tools.map((tool, ti) => (
+						<ToolCard tool={tool} index={ci * 3 + ti} />
+					))}
+				</div>
+			</div>
+		))}
+	</div>
+
+	{/* 空状态 */}
+	<div id="tools-empty" class="hidden py-16 text-center text-[var(--card-description)]">
+		<Icon is:inline name="material-symbols:search-off-rounded" class="text-[3rem] opacity-40" />
+		<p class="mt-2 text-sm">该分类下暂无工具</p>
+	</div>
+</MainGridLayout>
+
+<style is:global>
+	.tools-cat-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.4rem 0.875rem;
+		border-radius: 9999px;
+		border: 1px solid var(--card-border);
+		background: var(--card-bg);
+		font-size: 0.8125rem;
+		color: var(--card-description);
+		cursor: pointer;
+		transition: all 0.25s ease;
+		user-select: none;
+	}
+	.tools-cat-btn:hover {
+		border-color: var(--primary);
+		color: var(--primary);
+	}
+	.tools-cat-btn.active {
+		background: var(--primary);
+		border-color: var(--primary);
+		color: #fff;
+	}
+	.tools-cat-btn.active:hover {
+		color: #fff;
+	}
+	.tools-grid-inner {
+		grid-auto-rows: min-content;
+	}
+	.tools-section {
+		margin-bottom: 1.5rem;
+	}
+	.tools-section.hidden-section {
+		display: none;
+	}
+	.tools-section-title {
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+</style>
+
+<script is:inline>
+	(function () {
+		var bar = document.getElementById("tools-category-bar");
+		var grid = document.getElementById("tools-grid");
+		var empty = document.getElementById("tools-empty");
+		if (!bar || !grid) return;
+
+		var sections = grid.querySelectorAll(".tools-section");
+
+		bar.addEventListener("click", function (e) {
+			var btn = e.target.closest(".tools-cat-btn");
+			if (!btn) return;
+
+			bar.querySelectorAll(".tools-cat-btn").forEach(function (b) {
+				b.classList.remove("active");
+			});
+			btn.classList.add("active");
+
+			var cat = btn.dataset.category;
+			var visibleCount = 0;
+
+			sections.forEach(function (sec) {
+				if (cat === "all" || sec.dataset.category === cat) {
+					sec.classList.remove("hidden-section");
+					visibleCount += sec.querySelectorAll(".tool-card").length;
+				} else {
+					sec.classList.add("hidden-section");
+				}
+			});
+
+			if (empty) {
+				empty.classList.toggle("hidden", visibleCount > 0);
+			}
+		});
+	})();
+</script>

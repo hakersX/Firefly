@@ -1,0 +1,77 @@
+---
+import type { ToolItem } from "@/config/toolsConfig";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	tool: ToolItem;
+	index: number;
+}
+
+const { tool, index } = Astro.props;
+---
+
+<a
+	href={tool.url}
+	target="_blank"
+	rel="noopener noreferrer"
+	class="tool-card group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--primary)] hover:shadow-lg"
+	style={`animation-delay: ${index * 60}ms`}
+>
+	{/* 图标 */}
+	<span
+		class="tool-card-icon flex shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--primary)] group-hover:text-white"
+		style="width: 3rem; height: 3rem;"
+	>
+		<Icon is:inline name={tool.icon} class="text-[1.5rem]" />
+	</span>
+
+	{/* 文本区 */}
+	<span class="flex min-w-0 flex-1 flex-col gap-1">
+		<span class="flex items-center gap-2">
+			<span class="truncate text-[var(--card-title)] font-semibold">
+				{tool.name}
+			</span>
+			{tool.badge && (
+				<span class="shrink-0 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-xs font-medium text-[var(--primary)]">
+					{tool.badge}
+				</span>
+			)}
+		</span>
+		<span class="line-clamp-2 text-sm text-[var(--card-description)]">
+			{tool.description}
+		</span>
+	</span>
+
+	{/* 外链图标 */}
+	<span
+		class="tool-card-arrow shrink-0 self-center text-[var(--card-description)] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100"
+	>
+		<Icon is:inline name="material-symbols:open-in-new-rounded" class="text-[1.1rem]" />
+	</span>
+
+	{/* 底部渐变线 */}
+	<span
+		class="pointer-events-none absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 bg-gradient-to-r from-[var(--primary)] to-transparent transition-transform duration-300 group-hover:scale-x-100"
+	></span>
+</a>
+
+<style>
+	.tool-card {
+		opacity: 0;
+		transform: translateY(16px);
+		animation: tool-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+	@keyframes tool-card-in {
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tool-card {
+			opacity: 1;
+			transform: none;
+			animation: none;
+		}
+	}
+</style>

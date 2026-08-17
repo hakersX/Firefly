@@ -32,7 +32,7 @@ export const siteConfig: SiteConfig = {
 	// 主题色
 	themeColor: {
 		// 主题色的默认色相，范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345
-		hue: 165,
+		hue: 250,
 		// 默认模式："light" 亮色，"dark" 暗色，"system" 跟随系统
 		defaultMode: "system",
 	},
@@ -121,6 +121,8 @@ export const siteConfig: SiteConfig = {
 		dynamic: true,
 		// 书签导航页面开关
 		booknav: true,
+		// 工具箱页面开关
+		tools: true,
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航
