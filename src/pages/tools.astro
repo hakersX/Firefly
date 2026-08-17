@@ -89,11 +89,13 @@ import MainGridLayout from "@/layouts/MainGridLayout.astro";
 </style>
 
 <script is:inline>
-	(function () {
+	function initToolsFilter() {
 		var bar = document.getElementById("tools-category-bar");
 		var grid = document.getElementById("tools-grid");
 		var empty = document.getElementById("tools-empty");
 		if (!bar || !grid) return;
+		if (bar.dataset.bound) return;
+		bar.dataset.bound = "1";
 
 		var sections = grid.querySelectorAll(".tools-section");
 
@@ -122,5 +124,9 @@ import MainGridLayout from "@/layouts/MainGridLayout.astro";
 				empty.classList.toggle("hidden", visibleCount > 0);
 			}
 		});
-	})();
+	}
+
+	initToolsFilter();
+	document.addEventListener("swup:contentReplaced", initToolsFilter);
+	document.addEventListener("astro:page-load", initToolsFilter);
 </script>
