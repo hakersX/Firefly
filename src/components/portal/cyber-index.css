@@ -76,6 +76,15 @@ body::before {
 	content: " ]"; color: hsl(var(--theme-hue, 260) 100% 70% / 0.75);
 }
 
+@media (max-width: 640px) {
+	body::before { background-size: 48px 48px; }
+	.portal-footer {
+		padding: 1.4rem 1rem 2rem;
+		font-size: 0.68rem;
+		letter-spacing: 0.16em;
+	}
+	.portal-section-block { overflow-x: hidden; }
+}
 @media (prefers-reduced-motion: reduce) {
 	.reveal { opacity: 1; transform: none !important; }
 }

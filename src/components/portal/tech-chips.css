@@ -153,5 +153,18 @@
 
 @media (max-width: 560px) {
 	.tc-list { gap: 0.55rem; }
-	.tc-chip { padding: 0.52rem 0.85rem 0.52rem 1.15rem; font-size: 0.82rem; }
+	.tc-chip {
+		padding: 0.52rem 0.85rem 0.52rem 1.15rem;
+		font-size: 0.82rem;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		background:
+			linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
+			rgba(8, 10, 22, 0.82);
+	}
+	.tc-chip:hover { transform: translateY(-1px) scale(1.01); }
+	.tc-head { margin-bottom: 1.1rem; padding-left: 1.2rem; }
+	.tc-tl { width: 3px; }
+	.tc-title { font-size: 1.2rem; }
+	.tc-sub { font-size: 0.7rem; letter-spacing: 0.18em; }
 }

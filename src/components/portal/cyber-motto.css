@@ -25,6 +25,12 @@
 	align-items: center;
 	gap: 2.4rem;
 }
+@media (max-width: 640px) {
+	.cm-inner {
+		padding: 5.5rem 1rem 3.5rem;
+		gap: 1.6rem;
+	}
+}
 
 /* reveal 入场（配合首页 index IO） */
 .reveal {
