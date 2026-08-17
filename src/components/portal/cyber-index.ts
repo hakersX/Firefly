@@ -3,12 +3,15 @@
  *   · 给所有 .reveal 元素加 IntersectionObserver，进入视口触发入场
  *   · 延迟到 DOMContentLoaded 之后再 observe，不抢占首帧关键渲染时间
  *   · 用户 prefers-reduced-motion → 直接显示，不做动画
+ *   · Swup 导航后重新初始化
  */
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const initReveal = () => {
-	const reveals = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+	const reveals = Array.from(
+		document.querySelectorAll<HTMLElement>(".reveal:not(.is-visible)"),
+	);
 	if (reveals.length === 0) return;
 
 	if (reduceMotion) {
@@ -36,5 +39,7 @@ if (document.readyState === "loading") {
 } else {
 	initReveal();
 }
+// Swup 导航后重新初始化
+document.addEventListener("swup:contentReplaced", initReveal);
 
 export {};

@@ -5,10 +5,14 @@
  *   - prefers-reduced-motion → 直接显示最终值，不跑 rAF 循环
  *   - 进度条每帧只改一次 transform（scaleX）代替 width，走 GPU 合成
  *   - 点击涟漪：passive 监听
+ *   - Swup 导航后重新初始化
  */
 
-const section = document.querySelector<HTMLElement>(".tech-stats");
-if (section) {
+function initTechStats() {
+	const section = document.querySelector<HTMLElement>(".tech-stats");
+	if (!section || section.dataset.bound) return;
+	section.dataset.bound = "1";
+
 	const cards = Array.from(section.querySelectorAll<HTMLElement>(".ts-card"));
 	const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -78,5 +82,8 @@ if (section) {
 		);
 	});
 }
+
+initTechStats();
+document.addEventListener("swup:contentReplaced", initTechStats);
 
 export {};
