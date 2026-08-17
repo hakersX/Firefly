@@ -1,0 +1,163 @@
+/* ============================================================
+ * tech-stats.css
+ * 下方模块 — HUD 仪表盘式统计卡片（科技感）
+ * ============================================================ */
+
+.tech-stats {
+	padding: 1.5rem 1.25rem 1rem;
+}
+.ts-grid {
+	max-width: var(--page-width, 1200px);
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 1.2rem;
+}
+
+/* ------- 卡片 ------- */
+.ts-card {
+	position: relative;
+	display: block;
+	text-decoration: none;
+	padding: 1.4rem 1.4rem 1.5rem;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+		rgba(8, 10, 22, 0.6);
+	border: 1px solid hsl(var(--hue) 100% 60% / 0.22);
+	border-radius: 3px;
+	backdrop-filter: blur(14px) saturate(1.25);
+	-webkit-backdrop-filter: blur(14px) saturate(1.25);
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+		0 10px 32px rgba(0, 0, 0, 0.45);
+	overflow: hidden;
+	clip-path: polygon(
+		14px 0, calc(100% - 14px) 0, 100% 14px,
+		100% calc(100% - 14px), calc(100% - 14px) 100%,
+		14px 100%, 0 calc(100% - 14px), 0 14px
+	);
+	transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.ts-card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(135deg, hsl(var(--hue) 100% 70% / 0.12), transparent 55%);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	pointer-events: none;
+}
+.ts-card:hover {
+	transform: translateY(-4px);
+	border-color: hsl(var(--hue) 100% 70% / 0.6);
+	box-shadow:
+		0 0 0 1px hsl(var(--hue) 100% 78% / 0.25) inset,
+		0 20px 52px hsl(var(--hue) 100% 55% / 0.25),
+		0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.ts-card:hover::after { opacity: 1; }
+
+/* 四角 HUD 装饰 */
+.ts-cor {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	border: 1.5px solid hsl(var(--hue) 100% 72% / 0.85);
+	pointer-events: none;
+}
+.ts-cor.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.ts-cor.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+.ts-cor.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+.ts-cor.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+.ts-head {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	color: hsl(var(--hue) 10% 90% / 0.85);
+	font-size: 0.82rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	margin-bottom: 1.1rem;
+}
+.ts-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 4px;
+	background: hsl(var(--hue) 100% 70% / 0.12);
+	border: 1px solid hsl(var(--hue) 100% 70% / 0.28);
+	color: hsl(var(--hue) 100% 84%);
+	font-size: 1.05rem;
+	text-shadow: 0 0 14px hsl(var(--hue) 100% 70% / 0.55);
+}
+
+/* 大数字 */
+.ts-number {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: clamp(2.2rem, 4vw, 3.2rem);
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: 0.02em;
+	margin-bottom: 1.1rem;
+}
+.ts-num-chars {
+	background: linear-gradient(
+		180deg,
+		#ffffff 0%,
+		hsl(var(--hue) 100% 86%) 50%,
+		hsl(var(--hue) 96% 68%) 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 0 18px hsl(var(--hue) 100% 60% / 0.45));
+	font-variant-numeric: tabular-nums;
+}
+
+/* 底部短发光条 */
+.ts-bar {
+	height: 3px;
+	background: rgba(255, 255, 255, 0.06);
+	border-radius: 2px;
+	overflow: hidden;
+}
+.ts-bar-fill {
+	display: block;
+	height: 100%;
+	width: 100%;
+	background: linear-gradient(
+		90deg,
+		hsl(var(--hue) 100% 62%),
+		hsl(calc(var(--hue) + 50) 96% 62%)
+	);
+	box-shadow: 0 0 10px hsl(var(--hue) 100% 62% / 0.5);
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	will-change: transform;
+}
+
+/* 点击涟漪 */
+.ts-ripple {
+	position: absolute;
+	border-radius: 50%;
+	transform: translate(-50%, -50%) scale(0);
+	background: radial-gradient(circle, rgba(255,255,255,0.55), transparent 70%);
+	pointer-events: none;
+	animation: ts-ripple 0.7s ease-out forwards;
+}
+@keyframes ts-ripple {
+	to { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+}
+
+/* ------- 响应式 ------- */
+@media (max-width: 960px) {
+	.ts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+	.ts-grid { grid-template-columns: 1fr; }
+}

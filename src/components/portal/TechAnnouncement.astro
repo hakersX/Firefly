@@ -1,0 +1,49 @@
+---
+/**
+ * TechAnnouncement.astro
+ *
+ * 公告模块：终端 / HUD 风格的滚动消息条。
+ */
+import "./tech-announcement.css";
+import scriptUrl from "./tech-announcement.ts?url";
+
+interface Props {
+	messages: string[];
+	hue?: number;
+}
+const { messages, hue = 260 } = Astro.props;
+
+const rows = [...messages, ...messages, ...messages];
+---
+
+<section class="tech-announce" id="blocks-start" style={`--hue: ${hue};`}>
+	<div class="ta-shell reveal">
+		<div class="ta-tag">
+			<span class="ta-tag-dot"></span>
+			<span class="ta-tag-text">SYS.ANNOUNCE</span>
+		</div>
+
+		<div class="ta-marquee" aria-label="公告">
+			<div class="ta-track ta-track-a">
+				{rows.map((m, i) => (
+					<span class="ta-item" key={`a-${i}`}>
+						<span class="ta-bullet">◆</span>
+						<span>{m}</span>
+					</span>
+				))}
+			</div>
+			<div class="ta-track ta-track-b" aria-hidden="true">
+				{rows.map((m, i) => (
+					<span class="ta-item" key={`b-${i}`}>
+						<span class="ta-bullet">◆</span>
+						<span>{m}</span>
+					</span>
+				))}
+			</div>
+		</div>
+
+		<div class="ta-clock" id="ta-clock">--</div>
+	</div>
+</section>
+
+<script src={scriptUrl} type="module"></script>

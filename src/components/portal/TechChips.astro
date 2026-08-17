@@ -1,0 +1,81 @@
+---
+/**
+ * TechChips.astro
+ *
+ * 分类 / 标签 统一组件：HUD / 赛博风可点击芯片组。
+ */
+import "./tech-chips.css";
+import scriptUrl from "./tech-chips.ts?url";
+import type { Category, Tag } from "@/utils/content-utils";
+import { getTagUrl } from "@/utils/url-utils";
+
+export type ChipItem = {
+	name: string;
+	count?: number;
+	url: string;
+};
+
+interface Props {
+	kind: "categories" | "tags";
+	title: string;
+	subtitle?: string;
+	items: ChipItem[] | Category[] | Tag[];
+	hue?: number;
+}
+
+const { kind, title, subtitle = "", items, hue = 260 } = Astro.props;
+
+function toChip(x: any): ChipItem {
+	const count =
+		typeof x.posts === "number" ? x.posts : x.posts?.length ?? x.count;
+	if (kind === "categories") {
+		return {
+			name: x.name,
+			count,
+			// 分类：getCategoryList 返回的对象已经带 url（归档页 ?category=xxx），直接复用
+			url: x.url ?? "/categories/",
+		};
+	}
+	return {
+		name: x.name,
+		count,
+		// 标签：统一跳到归档页 ?tag=xxx（与项目其他入口保持一致）
+		url: getTagUrl(x.name),
+	};
+}
+const chips: ChipItem[] = (items as any[]).map(toChip);
+chips.sort((a, b) => (b.count || 0) - (a.count || 0));
+---
+
+<section class={`tech-chips tc-${kind}`} style={`--hue: ${hue};`}>
+	<div class="tc-wrap">
+		<div class="tc-head reveal">
+			<span class="tc-tl"></span>
+			<h2 class="tc-title">
+				<span class="tc-index">{kind === "categories" ? "02" : "03"}</span>
+				<span class="tc-title-text">{title}</span>
+			</h2>
+			{subtitle && <p class="tc-sub">{subtitle}</p>}
+		</div>
+
+		<div class="tc-list">
+			{chips.map((c, i) => (
+				<a
+					class="tc-chip reveal"
+					style={`--delay: ${i * 25}ms; --h: ${hue + i * 9};`}
+					href={c.url}
+					data-ripple
+					data-count={c.count ?? 0}
+				>
+					<span class="tc-chip-side"></span>
+					<span class="tc-chip-name">{c.name}</span>
+					{typeof c.count === "number" && (
+						<span class="tc-chip-num">{c.count}</span>
+					)}
+				</a>
+			))}
+		</div>
+	</div>
+</section>
+
+<script src={scriptUrl} type="module"></script>

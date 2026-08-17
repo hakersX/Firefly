@@ -1,0 +1,69 @@
+---
+/**
+ * TechSocial.astro
+ *
+ * 社交链接模块：赛博风卡片按钮
+ */
+import { Icon } from "astro-icon/components";
+import "./tech-social.css";
+import scriptUrl from "./tech-social.ts?url";
+
+export interface SocialLink {
+	name: string;
+	url: string;
+	href?: string;
+	icon?: string;
+	showName?: boolean;
+}
+interface Props {
+	title?: string;
+	links: SocialLink[];
+	hue?: number;
+}
+const {
+	title = "社交 · 联系",
+	links,
+	hue = 260,
+} = Astro.props;
+---
+
+<section class="tech-social" style={`--hue: ${hue};`}>
+	<div class="ts-wrap">
+		<div class="ts-head reveal">
+			<span class="ts-tl"></span>
+			<h2 class="ts-title">
+				<span class="ts-index">04</span>
+				<span class="ts-title-text">{title}</span>
+			</h2>
+		</div>
+
+		<div class="ts-list">
+			{links.map((l, i) => {
+				const icon = l.icon ?? "mdi:web";
+				const linkHref = l.href ?? l.url;
+				const showName = l.showName !== false;
+				return (
+					<a
+						class="ts-btn reveal"
+						style={`--delay: ${i * 45}ms; --h: ${hue + i * 18};`}
+						href={linkHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						data-ripple
+					>
+						<span class="ts-btn-cor tl"></span>
+						<span class="ts-btn-cor tr"></span>
+						<span class="ts-btn-cor bl"></span>
+						<span class="ts-btn-cor br"></span>
+						<span class="ts-btn-icon">
+							<Icon name={icon} />
+						</span>
+						{showName && <span class="ts-btn-name">{l.name}</span>}
+					</a>
+				);
+			})}
+		</div>
+	</div>
+</section>
+
+<script src={scriptUrl} type="module"></script>

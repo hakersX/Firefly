@@ -1,0 +1,81 @@
+/* ============================================================
+ * cyber-index.css
+ * 首页通用：页面底部全局背景、section reveal 入场、页脚
+ * ============================================================ */
+
+/* 下方整体暗色科技背景，脱离首屏视频后继续有氛围 */
+body {
+	background:
+		radial-gradient(ellipse 1200px 600px at 15% 10%, hsl(var(--theme-hue, 260) 80% 40% / 0.35), transparent 70%),
+		radial-gradient(ellipse 1000px 500px at 85% 30%, hsl(calc(var(--theme-hue, 260) + 60) 80% 38% / 0.3), transparent 70%),
+		radial-gradient(ellipse 1000px 600px at 50% 110%, hsl(calc(var(--theme-hue, 260) - 20) 85% 40% / 0.35), transparent 70%),
+		linear-gradient(180deg, #04050c 0%, #07080f 100%);
+}
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	background-image:
+		linear-gradient(hsl(var(--theme-hue, 260) 100% 60% / 0.05) 1px, transparent 1px),
+		linear-gradient(90deg, hsl(var(--theme-hue, 260) 100% 60% / 0.05) 1px, transparent 1px);
+	background-size: 72px 72px;
+	mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 40%, transparent 85%);
+	-webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 40%, transparent 85%);
+	z-index: 0;
+	contain: strict;
+}
+
+/* Hero 容器绝对定位背景相对它 */
+.portal-hero-wrap {
+	position: relative;
+	min-height: 100vh;
+	z-index: 1;
+}
+
+/* 下方每个模块 section 间距 */
+.portal-section-block {
+	position: relative;
+	z-index: 1;
+}
+
+/* 通用 reveal 入场（子模块 .reveal 依赖这个来触发） */
+.reveal {
+	opacity: 0;
+	transform: translateY(24px);
+	transition:
+		opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+	transition-delay: var(--delay, 0ms);
+	will-change: transform, opacity;
+}
+.reveal.is-visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* 底部页脚（科技感） */
+.portal-footer {
+	position: relative;
+	z-index: 1;
+	margin: 3rem auto 0;
+	max-width: var(--page-width, 1200px);
+	padding: 1.8rem 1.25rem 2.5rem;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.78rem;
+	letter-spacing: 0.22em;
+	color: hsl(var(--theme-hue, 260) 15% 80% / 0.65);
+	text-align: center;
+	border-top: 1px solid hsl(var(--theme-hue, 260) 100% 60% / 0.15);
+}
+.portal-footer p { margin: 0; }
+.portal-footer p::before {
+	content: "[ "; color: hsl(var(--theme-hue, 260) 100% 70% / 0.75);
+}
+.portal-footer p::after {
+	content: " ]"; color: hsl(var(--theme-hue, 260) 100% 70% / 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reveal { opacity: 1; transform: none !important; }
+}

@@ -1,0 +1,137 @@
+/* ============================================================
+ * tech-announcement.css
+ * 下方模块 — 终端风格公告条（HUD）
+ * ============================================================ */
+
+.tech-announce {
+	padding: 2.5rem 1.25rem 1rem;
+}
+.ta-shell {
+	max-width: var(--page-width, 1200px);
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 1rem;
+	align-items: center;
+	background:
+		linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+		rgba(8, 10, 22, 0.65);
+	border: 1px solid hsl(var(--hue) 100% 60% / 0.22);
+	border-radius: 4px;
+	padding: 1rem 1.2rem;
+	backdrop-filter: blur(14px) saturate(1.3);
+	-webkit-backdrop-filter: blur(14px) saturate(1.3);
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+		0 10px 40px rgba(0, 0, 0, 0.45);
+	/* 两个切角 */
+	clip-path: polygon(
+		12px 0, calc(100% - 12px) 0, 100% 12px,
+		100% calc(100% - 12px), calc(100% - 12px) 100%,
+		12px 100%, 0 calc(100% - 12px), 0 12px
+	);
+}
+
+/* 标签（左上） */
+.ta-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding: 0.45rem 0.8rem;
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px solid hsl(var(--hue) 100% 70% / 0.3);
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.72rem;
+	letter-spacing: 0.2em;
+	color: hsl(var(--hue) 100% 88%);
+	text-shadow: 0 0 10px hsl(var(--hue) 100% 65% / 0.55);
+	white-space: nowrap;
+	border-radius: 2px;
+}
+.ta-tag-dot {
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	background: hsl(140deg 80% 60%);
+	box-shadow: 0 0 10px hsl(140deg 85% 60% / 0.85);
+	animation: ta-dot 1.2s ease-in-out infinite;
+}
+@keyframes ta-dot { 0%,100% { opacity: 1;} 50% { opacity: 0.3;} }
+
+/* 跑马灯 */
+.ta-marquee {
+	position: relative;
+	overflow: hidden;
+	height: 2.2rem;
+	mask-image: linear-gradient(
+		90deg,
+		transparent 0,
+		black 40px,
+		black calc(100% - 40px),
+		transparent 100%
+	);
+}
+.ta-track {
+	position: absolute;
+	inset: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 3.2rem;
+	white-space: nowrap;
+	color: hsl(var(--hue) 15% 94% / 0.94);
+	font-size: 0.95rem;
+	letter-spacing: 0.04em;
+	will-change: transform;
+}
+.ta-track-a { animation: ta-mar 55s linear infinite; }
+.ta-track-b { transform: translateX(100%); animation: ta-mar2 55s linear infinite; }
+.tech-announce:hover .ta-track-a,
+.tech-announce:hover .ta-track-b { animation-play-state: paused; }
+@keyframes ta-mar {
+	from { transform: translateX(0); }
+	to   { transform: translateX(-100%); }
+}
+@keyframes ta-mar2 {
+	from { transform: translateX(0); }
+	to   { transform: translateX(-100%); }
+}
+
+.ta-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+}
+.ta-bullet {
+	color: hsl(var(--hue) 100% 72% / 0.95);
+	text-shadow: 0 0 12px hsl(var(--hue) 100% 70% / 0.6);
+	font-size: 0.65em;
+}
+
+/* 时钟（右） */
+.ta-clock {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.45rem 0.9rem;
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px solid hsl(var(--hue) 100% 70% / 0.3);
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.15em;
+	color: hsl(calc(var(--hue) + 40) 100% 88% / 0.95);
+	text-shadow: 0 0 10px hsl(calc(var(--hue) + 40) 100% 70% / 0.45);
+	border-radius: 2px;
+	white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+	.ta-shell {
+		grid-template-columns: 1fr;
+		grid-template-rows: auto auto auto;
+		gap: 0.6rem;
+		padding: 0.9rem 1rem;
+	}
+	.ta-tag { justify-content: center; }
+	.ta-marquee { height: 3rem; -webkit-mask-image: none; mask-image: none; }
+	.ta-clock { text-align: center; }
+}

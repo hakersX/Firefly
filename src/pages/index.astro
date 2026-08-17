@@ -1,12 +1,28 @@
 ---
-import avatarImg from "@/assets/images/avatar.avif";
+/**
+ * 首页 index.astro — 赛博/科技感重构版
+ *
+ *   首屏（100vh）：
+ *     · StockVideoBg        — 自动播放外链 mp4 背景 + HUD 遮罩/扫描线/角标/时钟
+ *     · CyberMotto          — 巨型名字（RGB 故障）+ 终端光标标语 + 霓虹 CTA
+ *
+ *   下方区块（均为独立三文件）：
+ *     · TechAnnouncement    — 终端公告条：SYS 标签 + 无缝滚动 + 实时日期
+ *     · TechStats           — HUD 仪表盘统计卡：数字滚数 + 角标 + 进度条
+ *     · TechChips(categories/tags) — 可点击芯片：HUD 分区标题 + 彩色边条芯片
+ *     · TechSocial          — 社交联系卡片
+ *
+ *   cyber-index.css/.ts 提供 reveal 入场 IO + 暗色全局底色
+ */
+import "@/components/portal/cyber-index.css";
+import cyberIndexScriptUrl from "@/components/portal/cyber-index.ts?url";
 import Navbar from "@/components/layout/Navbar.astro";
-import PortalAnnouncement from "@/components/portal/PortalAnnouncement.astro";
-import PortalCategories from "@/components/portal/PortalCategories.astro";
-import PortalHero from "@/components/portal/PortalHero.astro";
-import PortalSocial from "@/components/portal/PortalSocial.astro";
-import PortalStats from "@/components/portal/PortalStats.astro";
-import PortalTags from "@/components/portal/PortalTags.astro";
+import CyberMotto from "@/components/portal/CyberMotto.astro";
+import StockVideoBg from "@/components/portal/StockVideoBg.astro";
+import TechAnnouncement from "@/components/portal/TechAnnouncement.astro";
+import TechChips from "@/components/portal/TechChips.astro";
+import TechSocial from "@/components/portal/TechSocial.astro";
+import TechStats from "@/components/portal/TechStats.astro";
 import {
 	backgroundWallpaper,
 	displaySettingsConfig,
@@ -20,7 +36,6 @@ import {
 	getTagList,
 } from "@/utils/content-utils";
 
-// 背景壁纸模式
 const isBannerMode = backgroundWallpaper.mode === "banner";
 const isFullscreenMode = backgroundWallpaper.mode === "fullscreen";
 const isOverlayMode = backgroundWallpaper.mode === "overlay";
@@ -28,17 +43,14 @@ const isWallpaperSwitchable = displaySettingsConfig.wallpaperModeSwitchable;
 const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
 const stickyNavbar = siteConfig.navbar.stickyNavbar ?? false;
 
-// 获取数据
 const allPosts = await getSortedPostsList();
 const categories = await getCategoryList();
 const tags = await getTagList();
 
-// 过滤草稿（生产环境）
 const visiblePosts = allPosts.filter((p) =>
 	import.meta.env.PROD ? !p.data.draft : true,
 );
 
-// 统计数据
 const postCount = visiblePosts.length;
 const categoryCount = categories.length;
 const tagCount = tags.length;
@@ -51,23 +63,14 @@ const runningDays = Math.max(
 
 const hue = siteConfig.themeColor.hue;
 
-// 打字机循环句子
-const typewriterTexts: string[] = [
-	profileConfig.bio ?? "欢迎来到我的博客",
-	"躬身入局，心为主理，行有尺度",
-	"记录技术 · 分享生活 · 探索可能",
-	"用代码构建梦想，用文字传递温度",
-];
-
-// 公告消息
 const announcementMessages = [
-	"欢迎来到我的数字花园",
-	`已撰写 ${postCount} 篇文章，共 ${categoryCount} 个分类，${tagCount} 个标签`,
-	"感谢每一位到访的朋友",
+	"欢迎来到 CATX 数字站点",
+	`已撰写 ${postCount} 篇文章 · 共 ${categoryCount} 个分类 · ${tagCount} 个标签`,
+	"运行中 · 永不离线",
 	"记录技术 · 分享生活 · 探索可能",
+	`站点已稳定运行 ${runningDays} 天`,
 ];
 
-// 统计卡片
 const stats = [
 	{ icon: "material-symbols:article", target: postCount, label: "文章", url: "/articles/" },
 	{
@@ -84,6 +87,14 @@ const stats = [
 		url: "/archive/",
 	},
 ];
+
+// 首屏视频：免上传，直接用可直链 mp4 的素材（每次随机一条）。
+// 想固定就只留一条；想替换就把 URL 换成任意 .mp4 直链（CDN/对象存储/pixabay 都行）。
+const VIDEO_URLS: string[] = [
+	"https://static.videezy.com/system/resources/previews/000/054/245/original/MatrixRain01_HD_Background.mp4",
+	"https://static.videezy.com/system/resources/previews/000/053/458/original/CyberpunkCityLoop2.mp4",
+	"https://cdn.pixabay.com/video/2022/10/22/136150-764007744_large.mp4",
+];
 ---
 
 <Layout
@@ -91,7 +102,14 @@ const stats = [
 	hasWallpaper={isWallpaperSwitchable || isBannerMode || isFullscreenMode || isOverlayMode}
 >
 
-{/* Navbar */}
+{/* 主题色 hue 同步到全局 CSS 变量（供 cyber-index.css 使用） */}
+<style is:global define:vars={{ hue }}>
+	:root {
+		--theme-hue: var(--hue);
+	}
+</style>
+
+{/* 顶部导航栏（保留） */}
 <div
 	id="top-row"
 	class="z-50 pointer-events-none relative transition-all duration-700 mx-auto"
@@ -108,53 +126,58 @@ const stats = [
 	</div>
 </div>
 
-{/* 主页内容区 */}
-<PortalHero
+{/* ===== 首屏（100vh，视频+HUD+赛博文字） ===== */}
+<div class="portal-hero-wrap">
+	<StockVideoBg videoUrls={VIDEO_URLS} hue={hue} />
+	<CyberMotto
 		name={profileConfig.name}
-		bio={profileConfig.bio}
-		avatar={avatarImg}
-		typewriterTexts={typewriterTexts}
+		slogan="躬身入局，心为主理，行有尺度"
+		subtitle="WELCOME · 欢迎进入 CATX 数字站点"
 		hue={hue}
 	/>
+</div>
 
-	<PortalAnnouncement messages={announcementMessages} hue={hue} />
+{/* ===== 下方科技感模块 ===== */}
+<div class="portal-section-block">
+	<TechAnnouncement messages={announcementMessages} hue={hue} />
+</div>
 
-	<PortalStats stats={stats} hue={hue} />
+<div class="portal-section-block">
+	<TechStats stats={stats} hue={hue} />
+</div>
 
-	<PortalCategories categories={categories} hue={hue} />
+<div class="portal-section-block">
+	<TechChips
+		kind="categories"
+		title="分类目录"
+		subtitle="CATEGORIES · 按主题浏览文章"
+		items={categories}
+		hue={hue}
+	/>
+</div>
 
-	<PortalTags tags={tags} hue={hue} />
+<div class="portal-section-block">
+	<TechChips
+		kind="tags"
+		title="标签索引"
+		subtitle="TAGS · 点击进入对应标签页"
+		items={tags}
+		hue={hue}
+	/>
+</div>
 
-	<PortalSocial links={profileConfig.links} hue={hue} />
+<div class="portal-section-block">
+	<TechSocial
+		title="社交 · 联系"
+		links={profileConfig.links}
+		hue={hue}
+	/>
+</div>
 
-	{/* 页脚 */}
-	<footer class="portal-footer">
-		<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; Crafted with passion</p>
-	</footer>
+<footer class="portal-footer">
+	<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; BUILT WITH CATX</p>
+</footer>
 
-<style>
-	.portal-footer {
-		text-align: center;
-		padding: 3rem 1.5rem;
-		font-size: 0.85rem;
-		opacity: 0.5;
-	}
-</style>
-
-<script>
-	// 全局入场动画：观察所有 .reveal 元素
-	const revealObserver = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting) {
-					entry.target.classList.add("is-visible");
-					revealObserver.unobserve(entry.target);
-				}
-			}
-		},
-		{ threshold: 0.15 },
-	);
-	document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
-</script>
+<script src={cyberIndexScriptUrl} type="module"></script>
 
 </Layout>

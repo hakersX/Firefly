@@ -1,0 +1,81 @@
+---
+/**
+ * CyberMotto.astro
+ *
+ * 首屏文字层（赛博/HUD 风格）：
+ *   - 超大号名字：每个字带 RGB 故障偏移 + 入场脉冲
+ *   - 标语：< > 包裹的等宽终端样式，带光标闪烁
+ *   - 副线：一句简短副标题
+ *   - 3 枚 CTA：文章 / 关于 / 音乐 —— 带霓虹描边 & 点击波纹
+ */
+import { Icon } from "astro-icon/components";
+import "./cyber-motto.css";
+import scriptUrl from "./cyber-motto.ts?url";
+
+interface Props {
+	name: string;
+	slogan?: string;
+	subtitle?: string;
+	hue?: number;
+}
+
+const {
+	name,
+	slogan = "躬身入局，心为主理，行有尺度",
+	subtitle = "WELCOME · 欢迎进入 CATX 数字站点",
+	hue = 260,
+} = Astro.props;
+---
+
+<section class="cyber-motto" style={`--hue: ${hue};`} id="cyber-motto">
+	<div class="cm-inner">
+		<div class="cm-subtitle reveal" style="--delay: 180ms;">
+			<span class="cm-sub-bar"></span>
+			<span class="cm-sub-text">{subtitle}</span>
+			<span class="cm-sub-bar"></span>
+		</div>
+
+		<h1 class="cm-name reveal" aria-label={name} style="--delay: 320ms;">
+			{name.split("").map((ch, i) => (
+				<span
+					class="cm-name-ch"
+					style={`--d: ${i * 70}ms; --i: ${i};`}
+				>
+					<span class="ch ch-main">{ch === " " ? "\u00A0" : ch}</span>
+					<span class="ch ch-r"   aria-hidden="true">{ch === " " ? "\u00A0" : ch}</span>
+					<span class="ch ch-g"   aria-hidden="true">{ch === " " ? "\u00A0" : ch}</span>
+					<span class="ch ch-b"   aria-hidden="true">{ch === " " ? "\u00A0" : ch}</span>
+				</span>
+			))}
+		</h1>
+
+		<p class="cm-slogan reveal" style="--delay: 820ms;">
+			<span class="slo-angle">›</span>
+			<span class="slo-text">{slogan}</span>
+			<span class="slo-cursor"></span>
+			<span class="slo-angle angle-r">‹</span>
+		</p>
+
+		<div class="cm-cta reveal" style="--delay: 1060ms;">
+			<a href="/articles/" class="cm-btn cm-btn-primary" data-ripple>
+				<Icon name="material-symbols:article-rounded" />
+				<span>浏览文章</span>
+			</a>
+			<a href="/about/" class="cm-btn cm-btn-neon" data-ripple>
+				<Icon name="material-symbols:person-rounded" />
+				<span>关于我</span>
+			</a>
+			<a href="/music/" class="cm-btn cm-btn-ghost" data-ripple>
+				<Icon name="material-symbols:music-note-rounded" />
+				<span>音乐</span>
+			</a>
+		</div>
+	</div>
+
+	<a href="#blocks-start" class="cm-scroll" aria-label="向下滚动">
+		<span class="cm-scroll-hud">SCROLL ▾</span>
+		<Icon class="cm-scroll-icon" name="material-symbols:keyboard-double-arrow-down-rounded" />
+	</a>
+</section>
+
+<script src={scriptUrl} type="module"></script>

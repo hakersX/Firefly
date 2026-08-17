@@ -1,0 +1,61 @@
+---
+/**
+ * TechStats.astro
+ *
+ * 统计数据模块（HUD 仪表盘风格）。
+ */
+import { Icon } from "astro-icon/components";
+import "./tech-stats.css";
+import scriptUrl from "./tech-stats.ts?url";
+
+interface StatItem {
+	icon: string;
+	target: number;
+	label: string;
+	url?: string;
+}
+
+interface Props {
+	stats: StatItem[];
+	hue?: number;
+}
+const { stats, hue = 260 } = Astro.props;
+---
+
+<section class="tech-stats" style={`--hue: ${hue};`}>
+	<div class="ts-grid">
+		{stats.map((s) => {
+			const Tag = (s.url ? "a" : "div") as any;
+			return (
+				<Tag
+					class="ts-card reveal"
+					href={s.url}
+					data-target={s.target}
+					{...(s.url ? { "data-ripple": "" } : {})}
+				>
+					<span class="ts-cor tl"></span>
+					<span class="ts-cor tr"></span>
+					<span class="ts-cor bl"></span>
+					<span class="ts-cor br"></span>
+
+					<div class="ts-head">
+						<span class="ts-icon">
+							<Icon name={s.icon} />
+						</span>
+						<span class="ts-label">{s.label}</span>
+					</div>
+
+					<div class="ts-number" aria-label={`${s.target}`}>
+						<span class="ts-num-chars">0</span>
+					</div>
+
+					<div class="ts-bar">
+						<span class="ts-bar-fill"></span>
+					</div>
+				</Tag>
+			);
+		})}
+	</div>
+</section>
+
+<script src={scriptUrl} type="module"></script>

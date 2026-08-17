@@ -1,0 +1,157 @@
+/* ============================================================
+ * tech-chips.css
+ * 下方模块 — 分类/标签（HUD 可点击芯片，科技感）
+ * ============================================================ */
+
+.tech-chips { padding: 1.8rem 1.25rem 0.5rem; }
+.tc-wrap {
+	max-width: var(--page-width, 1200px);
+	margin: 0 auto;
+}
+
+/* -------- 区块标题 -------- */
+.tc-head {
+	position: relative;
+	margin-bottom: 1.5rem;
+	padding: 0.2rem 0 0.2rem 1.5rem;
+}
+.tc-tl {
+	position: absolute;
+	left: 0; top: 0;
+	width: 4px; height: 100%;
+	background: linear-gradient(
+		180deg,
+		hsl(var(--hue) 100% 72%),
+		hsl(calc(var(--hue) + 60) 100% 68%),
+		transparent
+	);
+	box-shadow: 0 0 16px hsl(var(--hue) 100% 70% / 0.7);
+	border-radius: 2px;
+}
+.tc-title {
+	display: flex;
+	align-items: baseline;
+	gap: 0.85rem;
+	margin: 0 0 0.35rem;
+	font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+	font-weight: 800;
+	color: hsl(var(--hue) 15% 98% / 0.98);
+	letter-spacing: 0.04em;
+}
+.tc-index {
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.6em;
+	padding: 0.15em 0.5em;
+	background: rgba(0, 0, 0, 0.45);
+	border: 1px solid hsl(var(--hue) 100% 70% / 0.45);
+	color: hsl(var(--hue) 100% 88%);
+	border-radius: 2px;
+	letter-spacing: 0.2em;
+	text-shadow: 0 0 10px hsl(var(--hue) 100% 68% / 0.55);
+}
+.tc-title-text {
+	background: linear-gradient(
+		180deg,
+		#ffffff 0%,
+		hsl(var(--hue) 20% 88%) 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+}
+.tc-sub {
+	margin: 0;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.78rem;
+	letter-spacing: 0.25em;
+	padding-left: 0.25em;
+	color: hsl(var(--hue) 15% 80% / 0.72);
+}
+
+/* -------- 芯片 -------- */
+.tc-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+.tc-chip {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding: 0.6rem 1rem 0.6rem 1.35rem;
+	text-decoration: none;
+	color: hsl(var(--h) 10% 96% / 0.95);
+	font-size: 0.9rem;
+	font-weight: 500;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
+		rgba(8, 10, 22, 0.58);
+	border: 1px solid hsl(var(--h) 100% 65% / 0.28);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+	transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+	overflow: hidden;
+}
+.tc-chip-side {
+	position: absolute;
+	left: 0; top: 10%;
+	bottom: 10%;
+	width: 3px;
+	background: linear-gradient(
+		180deg,
+		hsl(var(--h) 100% 78%),
+		hsl(calc(var(--h) + 60) 100% 70%)
+	);
+	box-shadow: 0 0 10px hsl(var(--h) 100% 70% / 0.7);
+	border-radius: 2px;
+}
+.tc-chip-num {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.5rem;
+	padding: 0.1em 0.45em;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: hsl(var(--h) 100% 90%);
+	background: rgba(0, 0, 0, 0.45);
+	border: 1px solid hsl(var(--h) 100% 70% / 0.45);
+	border-radius: 2px;
+	letter-spacing: 0.05em;
+	transition: background 0.25s ease, color 0.25s ease;
+}
+
+.tc-chip:hover {
+	transform: translateY(-2px) scale(1.03);
+	border-color: hsl(var(--h) 100% 78% / 0.8);
+	box-shadow:
+		0 10px 28px hsl(var(--h) 100% 55% / 0.25),
+		0 0 22px hsl(var(--h) 100% 65% / 0.25);
+	color: #fff;
+}
+.tc-chip:hover .tc-chip-num {
+	background: hsl(var(--h) 100% 68% / 0.85);
+	color: #000;
+	font-weight: 800;
+}
+
+/* 涟漪 */
+.tc-ripple {
+	position: absolute;
+	border-radius: 50%;
+	transform: translate(-50%, -50%) scale(0);
+	background: radial-gradient(circle, rgba(255,255,255,0.6), rgba(255,255,255,0) 70%);
+	pointer-events: none;
+	animation: tc-ripple 0.6s ease-out forwards;
+}
+@keyframes tc-ripple {
+	to { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+@media (max-width: 560px) {
+	.tc-list { gap: 0.55rem; }
+	.tc-chip { padding: 0.52rem 0.85rem 0.52rem 1.15rem; font-size: 0.82rem; }
+}

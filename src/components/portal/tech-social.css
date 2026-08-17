@@ -1,0 +1,122 @@
+/* ============================================================
+ * tech-social.css
+ * 下方模块 — 社交卡片（科技感 HUD）
+ * ============================================================ */
+
+.tech-social { padding: 1.8rem 1.25rem 0.5rem; }
+.ts-wrap { max-width: var(--page-width, 1200px); margin: 0 auto; }
+
+.ts-head { position: relative; margin-bottom: 1.5rem; padding: 0.2rem 0 0.2rem 1.5rem; }
+.ts-tl {
+	position: absolute; left: 0; top: 0;
+	width: 4px; height: 100%;
+	background: linear-gradient(
+		180deg,
+		hsl(var(--hue) 100% 72%),
+		hsl(calc(var(--hue) + 60) 100% 68%),
+		transparent
+	);
+	box-shadow: 0 0 16px hsl(var(--hue) 100% 70% / 0.7);
+	border-radius: 2px;
+}
+.ts-title {
+	display: flex; align-items: baseline; gap: 0.85rem; margin: 0;
+	font-size: clamp(1.35rem, 2.4vw, 1.8rem); font-weight: 800;
+	color: hsl(var(--hue) 15% 98% / 0.98);
+}
+.ts-index {
+	font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.6em;
+	padding: 0.15em 0.5em; background: rgba(0,0,0,0.45);
+	border: 1px solid hsl(var(--hue) 100% 70% / 0.45); color: hsl(var(--hue) 100% 88%);
+	border-radius: 2px; letter-spacing: 0.2em;
+	text-shadow: 0 0 10px hsl(var(--hue) 100% 68% / 0.55);
+}
+.ts-title-text {
+	background: linear-gradient(180deg, #fff 0%, hsl(var(--hue) 20% 88%) 100%);
+	-webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+.ts-list {
+	display: grid;
+	gap: 0.9rem;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 960px) { .ts-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ts-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.ts-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 1rem 1.15rem;
+	text-decoration: none;
+	color: hsl(var(--h) 15% 96% / 0.95);
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
+		rgba(8, 10, 22, 0.6);
+	border: 1px solid hsl(var(--h) 100% 65% / 0.28);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border-radius: 3px;
+	box-shadow: 0 10px 32px rgba(0,0,0,0.4);
+	transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+	overflow: hidden;
+	clip-path: polygon(
+		12px 0, calc(100% - 12px) 0, 100% 12px,
+		100% calc(100% - 12px), calc(100% - 12px) 100%,
+		12px 100%, 0 calc(100% - 12px), 0 12px
+	);
+}
+.ts-btn::after {
+	content: "";
+	position: absolute; inset: 0;
+	background: linear-gradient(135deg, hsl(var(--h) 100% 70% / 0.15), transparent 55%);
+	opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+}
+.ts-btn:hover {
+	transform: translateY(-3px);
+	border-color: hsl(var(--h) 100% 78% / 0.7);
+	box-shadow:
+		0 20px 48px hsl(var(--h) 100% 55% / 0.25),
+		0 0 22px hsl(var(--h) 100% 65% / 0.25);
+}
+.ts-btn:hover::after { opacity: 1; }
+
+.ts-btn-cor {
+	position: absolute; width: 14px; height: 14px;
+	border: 1.5px solid hsl(var(--h) 100% 74% / 0.85);
+	pointer-events: none;
+}
+.ts-btn-cor.tl { top: 6px; left: 6px;   border-right: 0; border-bottom: 0; }
+.ts-btn-cor.tr { top: 6px; right: 6px;  border-left: 0;  border-bottom: 0; }
+.ts-btn-cor.bl { bottom: 6px; left: 6px;  border-right: 0; border-top: 0; }
+.ts-btn-cor.br { bottom: 6px; right: 6px; border-left: 0;  border-top: 0; }
+
+.ts-btn-icon {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 2.25rem; height: 2.25rem; border-radius: 4px;
+	background: hsl(var(--h) 100% 70% / 0.14);
+	border: 1px solid hsl(var(--h) 100% 70% / 0.32);
+	color: hsl(var(--h) 100% 86%);
+	font-size: 1.1rem;
+	text-shadow: 0 0 14px hsl(var(--h) 100% 68% / 0.55);
+	flex: 0 0 auto;
+}
+.ts-btn-name {
+	font-size: 0.95rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ts-social-ripple {
+	position: absolute; border-radius: 50%;
+	transform: translate(-50%, -50%) scale(0);
+	background: radial-gradient(circle, rgba(255,255,255,0.6), rgba(255,255,255,0) 70%);
+	pointer-events: none;
+	animation: ts-social-rip 0.6s ease-out forwards;
+}
+@keyframes ts-social-rip { to { transform: translate(-50%, -50%) scale(5); opacity: 0; } }

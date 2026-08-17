@@ -1,0 +1,76 @@
+---
+/**
+ * StockVideoBg.astro
+ *
+ * 首屏自动播放视频背景（免上传，直接用外链 mp4）。
+ * 默认放一段 Coverr 的「赛博/科技感」素材，你可以随时在 videoUrls 里换。
+ * 叠加层：扫描线 / 网格 / HUD 角标 / 渐变暗化 / 故障噪点 — 整体科技感 HUD。
+ */
+import "./stock-video-bg.css";
+import bgScriptUrl from "./stock-video-bg.ts?url";
+
+interface Props {
+	/** 视频直链数组（随机挑一个，想固定就只写 1 条） */
+	videoUrls?: string[];
+	hue?: number;
+}
+
+const DEFAULT_VIDEOS: string[] = [];
+
+const { videoUrls = [], hue = 260 } = Astro.props;
+const list = videoUrls.length > 0 ? videoUrls : DEFAULT_VIDEOS;
+const src = list.length > 0
+	? list[Math.floor(Math.random() * list.length)]
+	: "";
+---
+
+<div class="stock-video-bg" style={`--hue: ${hue};`} data-src={src || ""}>
+	{videoUrls.length > 0 && src && (
+		<video
+			class="svb-video"
+			src={src}
+			autoplay
+			muted
+			loop
+			playsinline
+			preload="auto"
+			x5-playsinline="true"
+			webkit-playsinline="true"
+			aria-hidden="true"
+		></video>
+	)}
+
+	<div class="svb-fallback">
+		<div class="svb-fb-grid"></div>
+		<div class="svb-fb-orbs">
+			<span class="o o1"></span><span class="o o2"></span><span class="o o3"></span>
+		</div>
+	</div>
+
+	<div class="svb-hud svb-hud-scanlines" aria-hidden="true"></div>
+	<div class="svb-hud svb-hud-grid" aria-hidden="true"></div>
+
+	<div class="svb-hud svb-hud-corners" aria-hidden="true">
+		<span class="c tl"></span>
+		<span class="c tr"></span>
+		<span class="c bl"></span>
+		<span class="c br"></span>
+	</div>
+
+	<div class="svb-hud svb-hud-topbar" aria-hidden="true">
+		<span class="dot"></span>
+		<span class="txt">SYS // ONLINE</span>
+		<span class="sep"></span>
+		<span class="txt">NODE.CATX_01</span>
+		<span class="sep"></span>
+		<span class="txt pulse" id="svb-clock">--:--:--</span>
+	</div>
+
+	<div class="svb-hud svb-hud-glitch" aria-hidden="true"></div>
+
+	<div class="svb-overlay svb-overlay-dark"></div>
+	<div class="svb-overlay svb-overlay-hue"></div>
+	<div class="svb-overlay svb-overlay-vignette"></div>
+</div>
+
+<script src={bgScriptUrl} type="module"></script>
