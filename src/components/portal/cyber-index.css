@@ -48,10 +48,16 @@ body::before {
 		transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 	transition-delay: var(--delay, 0ms);
 	will-change: transform, opacity;
+	/* 兜底：JS 未加载时 2s 后自动显示，防止生产环境内容不可见 */
+	animation: reveal-fallback 0.8s ease 2s forwards;
 }
 .reveal.is-visible {
 	opacity: 1;
 	transform: translateY(0);
+	animation: none;
+}
+@keyframes reveal-fallback {
+	to { opacity: 1; transform: translateY(0); }
 }
 
 /* 底部页脚（科技感） */
