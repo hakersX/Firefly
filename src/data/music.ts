@@ -21,13 +21,13 @@ export interface MusicTrack {
 }
 
 export const musicPlaylist: MusicTrack[] = [
-	{
-		name: "那首没听过的歌",
-		artist: "猫神X",
-		url: "/assets/music/那首没听过的歌.mp3",
-		cover: "/assets/music/cover/那首没听过的歌.jpg",
-		lrc: "/assets/music/lrc/那首没听过的歌.lrc",
-	},
+	// {
+	// 	name: "那首没听过的歌",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/那首没听过的歌.mp3",
+	// 	cover: "/assets/music/cover/那首没听过的歌.jpg",
+	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
+	// },
 	{
 		name: "微弱的信号",
 		artist: "猫神X",
@@ -36,17 +36,31 @@ export const musicPlaylist: MusicTrack[] = [
 		lrc: "/assets/music/lrc/微弱的信号.lrc",
 	},
 	{
-		name: "等一句我在",
+		name: "再靠近一点点",
 		artist: "猫神X",
-		url: "/assets/music/等一句我在.mp3",
-		cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
-		lrc: "/assets/music/lrc/等一句我在.lrc",
+		url: "/assets/music/再靠近一点点.mp3",
+		cover: "/assets/music/cover/再靠近一点点.jpg",
+		lrc: "/assets/music/lrc/再靠近一点点.lrc",
 	},
-	{
-		name: "使一颗心免于哀伤",
-		artist: "知更鸟 / HOYO-MiX / Chevy",
-		url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
-		cover: "/assets/music/cover/109951169585655912.webp",
-		lrc: "/assets/music/lrc/使一颗心免于哀伤.lrc",
-	},
+	// {
+	// 	name: "夏天路过的一场雨",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/夏天路过的一场雨.mp3",
+	// 	cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
+	// 	lrc: "/assets/music/lrc/夏天路过的一场雨.lrc",
+	// },
+	// {
+	// 	name: "等一句我在",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/等一句我在.mp3",
+	// 	cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
+	// 	lrc: "/assets/music/lrc/等一句我在.lrc",
+	// },
+	// {
+	// 	name: "使一颗心免于哀伤",
+	// 	artist: "知更鸟 / HOYO-MiX / Chevy",
+	// 	url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
+	// 	cover: "/assets/music/cover/109951169585655912.webp",
+	// 	lrc: "/assets/music/lrc/使一颗心免于哀伤.lrc",
+	// },
 ];
