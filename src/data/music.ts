@@ -42,13 +42,13 @@ export const musicPlaylist: MusicTrack[] = [
 		cover: "/assets/music/cover/再靠近一点点.jpg",
 		lrc: "/assets/music/lrc/再靠近一点点.lrc",
 	},
-	// {
-	// 	name: "夏天路过的一场雨",
-	// 	artist: "猫神X",
-	// 	url: "/assets/music/夏天路过的一场雨.mp3",
-	// 	cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
-	// 	lrc: "/assets/music/lrc/夏天路过的一场雨.lrc",
-	// },
+	{
+		name: "夏天路过的一场雨",
+		artist: "猫神X",
+		url: "/assets/music/夏天路过的一场雨.mp3",
+		cover: "/assets/music/cover/微信图片_2026-08-12_212117_378.jpg",
+		lrc: "/assets/music/lrc/夏天路过的一场雨.lrc",
+	},
 	// {
 	// 	name: "等一句我在",
 	// 	artist: "猫神X",
