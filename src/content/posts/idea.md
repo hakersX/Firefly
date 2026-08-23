@@ -4,7 +4,7 @@ published: 2026-08-15
 description: '每天的一点想法，随手记下。'
 tags: [随笔, 日常]
 category: '随笔'
-draft: false
+draft: true
 pinned: false
 lang: ''
 slug: idea
