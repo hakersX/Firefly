@@ -5,7 +5,7 @@ description: '一个简单的故事。'
 image: ''
 tags: [故事]
 category: '故事'
-draft: false
+draft: true
 pinned: true
 lang: ''
 slug: my_story
