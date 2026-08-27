@@ -29,6 +29,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
 	{
+		name: "冬与你",
+		artist: "鱼骨妹",
+		url: "/assets/music/冬与你.mp3",
+		cover: "/assets/music/cover/冬与你.jpg",
+		lrc: "/assets/music/lrc/冬与你.lrc",
+	},
+	{
 		name: "微弱的信号",
 		artist: "猫神X",
 		url: "/assets/music/微弱的信号.mp3",
