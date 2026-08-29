@@ -17,7 +17,7 @@ pinned: true
   text-indent: 2em;
 }
 </style>
-搭配音乐：<audio controls src="../../../../public/assets/music/秘密.mp3" title="Title"></audio>
+搭配音乐：<audio controls src="/assets/music/秘密.mp3" title="Title"></audio>
 
 “大家好，我叫苏念，念念不忘的念。”
 
