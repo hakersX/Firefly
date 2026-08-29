@@ -226,7 +226,7 @@ pinned: true
 爱不仅仅是玫瑰花，不仅仅是些情话，是失落时的陪伴，也是无时无刻的牵挂。
 爱你每一次的出现，因为你是我的特别，驱散我所有阴天，点亮我所有的视线。
 
-<audio controls src="/assets/music/秘密.mp3" title="Title"></audio>
+《微笑的女孩偷走我所有期待》<audio controls src="/assets/music/秘密.mp3" title="Title"></audio>
 
 
 唱到第二遍副歌的时候我嗓子哽住了。那句“I love you forever”我写进了最后一段，用很轻很轻的假声唱，怕吵醒什么，又怕吵不醒什么。
