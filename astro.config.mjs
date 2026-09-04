@@ -365,7 +365,11 @@ export default defineConfig({
 				},
 			},
 			// CSS 优化
-			cssCodeSplit: true,
+			// cssCodeSplit: false —— 所有页面共享同一份 CSS 文件。
+			// Swup 的 updateHead 会在换页时对比 <head>：若各页面 CSS 文件不同，
+			// 旧样式表被移除、新样式表加载完成的空窗期会出现无样式闪烁（FOUC）。
+			// 单一 CSS 文件使 head 对比零变化，彻底消除切换时的纯文本闪烁。
+			cssCodeSplit: false,
 			cssMinify: "esbuild",
 			assetsInlineLimit: 4096,
 		},
