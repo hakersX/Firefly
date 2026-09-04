@@ -24,3 +24,10 @@ export type SakuraConfig = {
 	};
 	zIndex: number; // 层级，确保樱花在合适的层级显示
 };
+
+export type ReadingProgressConfig = {
+	enable: boolean; // 是否启用文章阅读进度条
+	gradient: string; // 进度条渐变（CSS background 值）
+	height: number; // 进度条粗细（px）
+	zIndex: number; // 层级
+};

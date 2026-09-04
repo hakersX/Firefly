@@ -9,6 +9,8 @@ import FontSetup from "@components/features/FontSetup.astro";
 import MusicManager from "@components/features/MusicManager.astro";
 import MusicPlayerView from "@components/features/MusicPlayerView.astro";
 import SakuraEffect from "@components/features/SakuraEffect.astro";
+import TiltEffect from "@components/features/TiltEffect.astro";
+import ReadingProgress from "@components/features/ReadingProgress.astro";
 import ConfigCarrier from "@components/layout/ConfigCarrier.astro";
 
 import {
@@ -628,6 +630,12 @@ const siteLang = lang.replace("_", "-");
 
     <!-- Sakura Effect -->
     <SakuraEffect />
+
+    <!-- 卡片 3D Tilt 特效 -->
+    <TiltEffect />
+
+    <!-- 文章阅读进度条 -->
+    <ReadingProgress />
 
     <!-- Fancybox Manager -->
     <FancyboxManager />

@@ -4,55 +4,76 @@
 
 /* --------------------------------------------------------------------------
    1. Swup Page Transitions
+   离场：快速上浮淡出 + 轻微模糊（ease-in，干脆利落）
+   进场：从下方缓缓浮入 + 模糊消散（ease-out，丝滑舒展）
    -------------------------------------------------------------------------- */
 
 /* Main Content Transition */
 .transition-main {
-    transition: 
-        opacity 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        transform 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition:
+        opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Leaving Animation */
 .transition-leaving {
     transition:
-        transform 120ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        opacity 120ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        transform 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+        opacity 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+        filter 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
 /* State: Changing (Swup) */
 html.is-changing .transition-main {
-    transition: 
-        opacity 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        transform 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition:
+        opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.is-leaving .transition-main {
-    transition: 
-        opacity 120ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        transform 120ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    transition:
+        opacity 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+        transform 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+        filter 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
 /* State: Animating (Entering) */
 html.is-animating .transition-main {
     opacity: 0;
-    transform: translateY(2rem);
+    transform: translateY(1.4rem) scale(0.995);
+    filter: blur(8px);
 }
 
-/* State: Leaving */
+/* State: Leaving（离场动画由内层 #content-wrapper.transition-leaving 承担，
+   与外层 .transition-main 的进场规则互不覆盖） */
 html.is-animating.is-leaving .transition-leaving {
-    transform: translateY(-2rem);
+    transform: translateY(-1rem) scale(0.995);
     opacity: 0;
+    filter: blur(5px);
 }
 
 /* Swup Fade Fallback */
 html.is-changing .transition-swup-fade {
-    transition: all 120ms ease-out;
+    transition: all 200ms ease-out;
 }
 
 html.is-animating .transition-swup-fade {
     opacity: 0;
     transform: translateY(1rem);
+}
+
+/* 减少动态偏好：仅保留淡入淡出 */
+@media (prefers-reduced-motion: reduce) {
+    html.is-animating .transition-main {
+        transform: none;
+        filter: none;
+    }
+    html.is-animating.is-leaving .transition-leaving {
+        transform: none;
+        filter: none;
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -128,4 +149,52 @@ html.is-animating .transition-swup-fade {
     width: 100%;
     opacity: 0;
     transition: opacity 300ms ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   5. Card 3D Tilt Effect
+   JS（src/utils/tilt-effect.ts）写入 --tilt-rx/--tilt-ry/--glare-x/--glare-y，
+   本规则负责实际 transform 与光泽层。事件委托实现，Swup 换页后自动生效。
+   -------------------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+    .tilt-effect {
+        transform:
+            perspective(900px)
+            rotateX(var(--tilt-rx, 0deg))
+            rotateY(var(--tilt-ry, 0deg))
+            scale(var(--tilt-s, 1));
+        transition:
+            transform 0.18s ease-out,
+            box-shadow 0.3s ease,
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+        will-change: transform;
+        transform-style: preserve-3d;
+    }
+
+    .tilt-effect:hover {
+        --tilt-s: 1.015;
+    }
+
+    /* 鼠标跟随光泽层 */
+    .tilt-effect::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(
+            480px circle at var(--glare-x, 50%) var(--glare-y, 50%),
+            color-mix(in oklch, var(--primary) 9%, transparent),
+            transparent 45%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tilt-effect:hover::after {
+        opacity: 1;
+    }
 }

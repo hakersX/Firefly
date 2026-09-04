@@ -1,4 +1,4 @@
-import type { SakuraConfig } from "../types/effectsConfig";
+import type { ReadingProgressConfig, SakuraConfig } from "../types/effectsConfig";
 
 // 特效配置 - 集中管理所有动画特效
 
@@ -52,4 +52,20 @@ export const sakuraConfig: SakuraConfig = {
 
 	// 层级，确保樱花在合适的层级显示
 	zIndex: 100,
+};
+
+// 文章阅读进度条配置（仅在存在 #post-container 的页面显示）
+export const readingProgressConfig: ReadingProgressConfig = {
+	// 是否启用
+	enable: true,
+
+	// 进度条渐变（竖向 180deg）
+	gradient:
+		"linear-gradient(180deg, var(--primary) 0%, color-mix(in oklch, var(--primary) 55%, #bb9af7) 60%, #f7768e 100%)",
+
+	// 进度条粗细（px）
+	height: 3,
+
+	// 层级
+	zIndex: 9990,
 };

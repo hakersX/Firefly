@@ -14,7 +14,7 @@ const { tool, index } = Astro.props;
 	href={tool.url}
 	target="_blank"
 	rel="noopener noreferrer"
-	class="tool-card group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--primary)] hover:shadow-lg"
+	class="tool-card tilt-effect group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-5 transition-colors duration-300 hover:border-[var(--primary)] hover:shadow-lg"
 	style={`animation-delay: ${index * 60}ms`}
 >
 	{/* 图标 */}
@@ -56,21 +56,19 @@ const { tool, index } = Astro.props;
 </a>
 
 <style>
+	/* 入场动画：backwards 模式仅在 delay 期间应用 from 状态，
+	   结束后释放 transform（否则 forwards 会永久锁定，导致 3D tilt 失效） */
 	.tool-card {
-		opacity: 0;
-		transform: translateY(16px);
-		animation: tool-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		animation: tool-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 	}
 	@keyframes tool-card-in {
-		to {
-			opacity: 1;
-			transform: translateY(0);
+		from {
+			opacity: 0;
+			transform: translateY(16px);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.tool-card {
-			opacity: 1;
-			transform: none;
 			animation: none;
 		}
 	}
