@@ -99,6 +99,17 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 				// 完全显示后的暂停时间（毫秒）
 				pauseTime: 2000,
 			},
+			// 非首页横幅文字（文章列表、归档等页面）：
+			// 自动显示当前页面标题 + 下方打字机副标题，置空或删除即可关闭
+			pageSubtitle: [
+				"Among Drifting Stars, I Write",
+				"Within Fading Lights, I Keep",
+				"Upon Quiet Pages, I Stay",
+			],
+			// 非首页页面标题字体大小
+			pageTitleSize: "2.75rem",
+			// 非首页打字副标题字体大小
+			pageSubtitleSize: "1.25rem",
 		},
 		// 文章横幅信息："description" 显示描述，"meta" 显示日期、字数和阅读时长
 		postInfo: {

@@ -331,6 +331,14 @@ const foldOnFilter = collapseAllButFirst;
       // 直接设置（自定义元素在解析阶段升级、首帧前执行），避免默认标题闪烁
       if (newTitle && bannerTitle.textContent !== newTitle) {
         bannerTitle.textContent = newTitle;
+        // HUD 故障闪烁反馈：切换分类/标签时标题 glitch 一下
+        bannerTitle.classList.remove("bpt-glitch-flash");
+        void (bannerTitle as HTMLElement).offsetWidth; // 强制 reflow 重启动画
+        bannerTitle.classList.add("bpt-glitch-flash");
+        window.setTimeout(
+          () => bannerTitle.classList.remove("bpt-glitch-flash"),
+          500,
+        );
       }
     }
 

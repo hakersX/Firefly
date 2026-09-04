@@ -6,6 +6,7 @@ import Footer from "@components/layout/Footer.astro";
 import Navbar from "@components/layout/Navbar.astro";
 import SideBar from "@components/layout/SideBar.astro";
 import type { MarkdownHeading } from "astro";
+import "@/components/portal/banner-hud.css";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import FloatingControls from "@/components/controls/FloatingControls.astro";
@@ -177,6 +178,22 @@ const showBannerPageTitle =
 	!isHomePageCheck &&
 	!isPostPage &&
 	!!title;
+
+// 内页 HUD：取 URL 首段大写作为路径标签，如 /archive/ → SYS://ARCHIVE
+let pageSysPath = "ROOT";
+try {
+	const seg = Astro.url.pathname.split("/").filter(Boolean)[0] ?? "";
+	if (seg) pageSysPath = decodeURIComponent(seg).toUpperCase();
+} catch {
+	/* 畸形编码时保持 ROOT */
+}
+// 非首页横幅打字机副标题（复用 homeText 配置，置空或删除即关闭）
+const pageBannerSubtitle = backgroundWallpaper.common?.homeText?.pageSubtitle;
+const pageBannerTitleSize = backgroundWallpaper.common?.homeText?.pageTitleSize;
+const pageBannerSubtitleSize =
+	backgroundWallpaper.common?.homeText?.pageSubtitleSize ?? "1.25rem";
+const pageTypewriter = backgroundWallpaper.common?.homeText?.typewriter;
+
 // 手机端非首页不显示banner的CSS类
 const mobileNonHomeBannerClass = !isHomePageCheck ? "mobile-hide-banner" : "";
 
@@ -920,10 +937,34 @@ const hasMultipleImages =
     <!-- Non-home non-post page title overlay (desktop only) -->
     {showBannerPageTitle && (
         <div class="banner-page-title-overlay absolute inset-0 z-20 hidden lg:flex items-center justify-center pointer-events-none">
+            <div class="bpt-hud-scanlines" aria-hidden="true"></div>
             <div class="w-4/5 lg:w-3/4 text-center mb-0">
-                <div class="banner-page-title font-bold text-white leading-tight inline-flex items-center justify-center gap-3">
-                    {/* <Icon is:inline name="material-symbols:bookmark-rounded" class="banner-page-title-icon" /> */}
-                    <span class="banner-page-title-text">{title}</span>
+                <div class="flex flex-col items-center gap-2 lg:gap-3">
+                    <div class="bpt-sys-tag" aria-hidden="true">
+                        <span class="dot"></span>
+                        <span>SYS://{pageSysPath}</span>
+                        <span class="line"></span>
+                    </div>
+                    <div class="bpt-title-frame">
+                        <span class="bpt-corner tl" aria-hidden="true"></span>
+                        <span class="bpt-corner tr" aria-hidden="true"></span>
+                        <span class="bpt-corner bl" aria-hidden="true"></span>
+                        <span class="bpt-corner br" aria-hidden="true"></span>
+                        <div class="banner-page-title font-bold text-white leading-tight inline-flex items-center justify-center gap-3" style={pageBannerTitleSize ? `font-size: ${pageBannerTitleSize}` : undefined}>
+                            {/* <Icon is:inline name="material-symbols:bookmark-rounded" class="banner-page-title-icon" /> */}
+                            <span class="banner-page-title-text">{title}</span>
+                        </div>
+                        {pageBannerSubtitle && (
+                            <div class="banner-subtitle text-white/90 leading-snug" style={`font-size: ${pageBannerSubtitleSize}`}>
+                                <TypewriterText
+                                    text={pageBannerSubtitle}
+                                    speed={pageTypewriter?.speed}
+                                    deleteSpeed={pageTypewriter?.deleteSpeed}
+                                    pauseTime={pageTypewriter?.pauseTime}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

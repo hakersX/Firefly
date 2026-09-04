@@ -1,0 +1,218 @@
+/* ============================================================
+ * banner-hud.css
+ * 内页横幅 HUD 赛博装饰：扫描线 / SYS 路径标签 / 四角取景框 / 标题故障闪烁
+ * 视觉语言与首页 StockVideoBg 的 HUD 一致，颜色跟随主题 --primary。
+ * 仅桌面端渲染（banner-page-title-overlay 本身 hidden lg:flex）。
+ *
+ * 性能要点（对齐 stock-video-bg.css）：
+ *   · 动画一律走 transform/opacity（GPU 合成，不触发 Paint）
+ *   · text-shadow 动画仅限一次性 glitch 反馈（<500ms）
+ * ============================================================ */
+
+/* -------- 扫描线：banner 区域缓慢下移的细线纹理 -------- */
+.bpt-hud-scanlines {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+	opacity: 0.45;
+	contain: strict;
+}
+.bpt-hud-scanlines::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: -100%;
+	width: 100%;
+	height: 200%;
+	background: repeating-linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.03) 0px,
+		rgba(255, 255, 255, 0.03) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+	will-change: transform;
+	animation: bpt-scan 9s linear infinite;
+}
+@keyframes bpt-scan {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		transform: translate3d(0, 50%, 0);
+	}
+}
+:root.dark .bpt-hud-scanlines {
+	opacity: 0.65;
+}
+
+/* -------- SYS 路径标签：[●] SYS://ARCHIVE ──── -------- */
+.bpt-sys-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	margin-bottom: 0.2rem;
+	font-family:
+		ui-monospace,
+		SFMono-Regular,
+		Menlo,
+		Monaco,
+		Consolas,
+		monospace;
+	font-size: 0.72rem;
+	letter-spacing: 0.22em;
+	color: rgba(255, 255, 255, 0.85);
+	text-shadow: 0 0 12px
+		color-mix(in oklch, var(--primary) 60%, transparent);
+	white-space: nowrap;
+	animation: bpt-fade-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.bpt-sys-tag .dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: color-mix(in oklch, var(--primary) 80%, white 20%);
+	box-shadow: 0 0 8px color-mix(in oklch, var(--primary) 85%, transparent);
+	animation: bpt-dot 1.4s ease-in-out infinite;
+	will-change: opacity;
+}
+@keyframes bpt-dot {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.3;
+	}
+}
+.bpt-sys-tag .line {
+	width: 4.5rem;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		color-mix(in oklch, var(--primary) 65%, transparent),
+		transparent
+	);
+}
+
+/* -------- 四角取景框：围住标题 + 副标题内容块 -------- */
+.bpt-title-frame {
+	position: relative;
+	padding: 1.5rem 2.8rem;
+}
+.bpt-corner {
+	position: absolute;
+	width: 26px;
+	height: 26px;
+	border-color: color-mix(in oklch, var(--primary) 65%, white 35%);
+	opacity: 0.9;
+	filter: drop-shadow(
+		0 0 6px color-mix(in oklch, var(--primary) 70%, transparent)
+	);
+	animation: bpt-corner-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.bpt-corner.tl {
+	top: 0;
+	left: 0;
+	border-top: 1.5px solid;
+	border-left: 1.5px solid;
+}
+.bpt-corner.tr {
+	top: 0;
+	right: 0;
+	border-top: 1.5px solid;
+	border-right: 1.5px solid;
+	animation-delay: 0.06s;
+}
+.bpt-corner.bl {
+	bottom: 0;
+	left: 0;
+	border-bottom: 1.5px solid;
+	border-left: 1.5px solid;
+	animation-delay: 0.12s;
+}
+.bpt-corner.br {
+	bottom: 0;
+	right: 0;
+	border-bottom: 1.5px solid;
+	border-right: 1.5px solid;
+	animation-delay: 0.18s;
+}
+@keyframes bpt-corner-in {
+	from {
+		opacity: 0;
+		transform: scale(1.7);
+	}
+	to {
+		opacity: 0.9;
+		transform: scale(1);
+	}
+}
+
+/* -------- 标题故障闪烁：分类/标签切换时由 JS 添加 .bpt-glitch-flash -------- */
+.bpt-glitch-flash {
+	animation: bpt-glitch-flash 0.45s steps(2, end) 1;
+}
+@keyframes bpt-glitch-flash {
+	0% {
+		opacity: 1;
+		text-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+		transform: translate(0, 0);
+	}
+	15% {
+		opacity: 0.55;
+		text-shadow:
+			3px 0 rgba(255, 42, 109, 0.85),
+			-3px 0 rgba(0, 229, 255, 0.85);
+		transform: translate(-2px, 1px) skewX(-4deg);
+	}
+	30% {
+		opacity: 1;
+		text-shadow:
+			-4px 0 rgba(255, 42, 109, 0.85),
+			4px 0 rgba(0, 229, 255, 0.85);
+		transform: translate(3px, -1px);
+	}
+	45% {
+		opacity: 0.7;
+		text-shadow:
+			2px 0 rgba(255, 42, 109, 0.85),
+			-2px 0 rgba(0, 229, 255, 0.85);
+		transform: translate(-1px, 0) skewX(3deg);
+	}
+	60% {
+		opacity: 1;
+		text-shadow:
+			1px 0 rgba(255, 42, 109, 0.6),
+			-1px 0 rgba(0, 229, 255, 0.6);
+		transform: translate(1px, 0);
+	}
+	100% {
+		opacity: 1;
+		text-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+		transform: translate(0, 0);
+	}
+}
+
+@keyframes bpt-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(0.6rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* -------- 降级：减少动态偏好时全部静止 -------- */
+@media (prefers-reduced-motion: reduce) {
+	.bpt-hud-scanlines::before,
+	.bpt-sys-tag,
+	.bpt-sys-tag .dot,
+	.bpt-corner,
+	.bpt-glitch-flash {
+		animation: none !important;
+	}
+}
