@@ -9,6 +9,7 @@
     "strictNullChecks": true,
     "allowJs": false,
     "declaration": true,
+    "isolatedDeclarations": false,
     "noUncheckedSideEffectImports": false,
     "plugins": [
       {

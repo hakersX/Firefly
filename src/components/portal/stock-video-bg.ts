@@ -9,9 +9,7 @@
  */
 
 const wrap = document.querySelector<HTMLElement>(".stock-video-bg");
-if (!wrap) {
-	export {};
-} else {
+if (wrap) {
 	const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 	const isMobile = window.matchMedia("(max-width: 640px)").matches;
 	// @ts-expect-error - navigator.connection 非标准但广泛支持
@@ -75,7 +73,7 @@ if (!wrap) {
 		document.addEventListener("visibilitychange", () => {
 			if (!video.classList.contains("is-ready")) return;
 			if (document.hidden) {
-				video.pause().catch(() => {});
+				video.pause();
 			} else {
 				video.play().catch(() => {});
 			}

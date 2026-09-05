@@ -35,7 +35,7 @@ if (motto) {
 	});
 
 	/* -------- 自动 RGB glitch：离开视口 / 切后台立即暂停，避免空耗 -------- */
-	const name = motto.querySelector<HTMLElement>(".cm-name");
+	const name = motto.querySelector<HTMLElement>(".cm-name")!;
 	if (name && !reduceMotion) {
 		let glitchTimer: number | undefined;
 		let running = false;
@@ -48,7 +48,7 @@ if (motto) {
 		function trigger() {
 			if (!running) return;
 			name.classList.add("is-glitching");
-			setTimeout(() => name?.classList.remove("is-glitching"), 1600);
+			setTimeout(() => name.classList.remove("is-glitching"), 1600);
 			scheduleNext();
 		}
 

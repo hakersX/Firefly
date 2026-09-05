@@ -21,7 +21,7 @@ const playlistJson = JSON.stringify(playlist);
 	{/* 背景层 */}
 	<div class="bg-layer" id="bg-layer"></div>
 
-	{/* 全屏 canvas：可视化 + 涟漪交互 */}
+	{/* 全屏 canvas：环形频谱 + 涟漪交互 */}
 	<canvas class="visualizer" id="visualizer"></canvas>
 
 	{/* 左侧：歌词（无框浮动） */}
@@ -33,8 +33,11 @@ const playlistJson = JSON.stringify(playlist);
 		</div>
 	</div>
 
-	{/* 中心：歌名 + 艺术家 */}
+	{/* 中心：封面舞台 + 歌名 + 艺术家 */}
 	<div class="center-overlay">
+		<div class="cover-stage" id="cover-stage">
+			<img src={playlist[0]?.cover} alt={playlist[0]?.name} id="stage-cover-img" />
+		</div>
 		<h2 class="song-name" id="song-name">{playlist[0]?.name ?? "未播放"}</h2>
 		<p class="song-artist" id="song-artist">{playlist[0]?.artist ?? "—"}</p>
 	</div>
@@ -48,19 +51,27 @@ const playlistJson = JSON.stringify(playlist);
 		<div class="timeline" id="timeline">
 			<div class="timeline-line"></div>
 			{
-				playlist.map((song, i) => (
-					<div class="track" data-index={i}>
-						<div class="track-node">
-							<i class="node-dot"></i>
+					playlist.map((song, i) => (
+						<div class="track" data-index={i}>
+							{song.cover && (
+								<img
+									class="track-cover"
+									src={song.cover}
+									alt=""
+									loading="lazy"
+								/>
+							)}
+							<div class="track-node">
+								<i class="node-dot"></i>
+							</div>
+							<div class="track-body">
+								<div class="track-name">{song.name}</div>
+								<div class="track-artist">{song.artist}</div>
+							</div>
+							<span class="track-duration" data-url={song.url}>--:--</span>
 						</div>
-						<div class="track-body">
-							<div class="track-name">{song.name}</div>
-							<div class="track-artist">{song.artist}</div>
-						</div>
-						<span class="track-duration" data-url={song.url}>--:--</span>
-					</div>
-				))
-			}
+					))
+				}
 		</div>
 	</div>
 

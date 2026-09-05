@@ -43,6 +43,8 @@ interface FireflyMusic {
 	seek(percent: number): void;
 	seekToTime(time: number): void;
 	playTrackByIndex(index: number): void;
+	/** 当前音频频谱（0-255，256 bins）；分析器未就绪时返回 null。复用同一数组，同步读取 */
+	getFreqData?(): Uint8Array | null;
 }
 interface Ripple {
 	x: number;
@@ -52,11 +54,14 @@ interface Ripple {
 	alpha: number;
 }
 
+// —— 元素引用 ——
 const root = document.querySelector(".music-page") as HTMLElement;
 const mgr = (window as any).__fireflyMusic as FireflyMusic;
 
 const $ = (id: string) => document.getElementById(id)!;
 const coverImg = $("cover-img") as HTMLImageElement;
+const stageCover = $("cover-stage") as HTMLElement;
+const stageImg = $("stage-cover-img") as HTMLImageElement;
 const songName = $("song-name");
 const songArtist = $("song-artist");
 const songName2 = $("song-name-2");
@@ -87,6 +92,7 @@ let lyricOffsets: number[] = [];
 let activeLyricIdx = -1;
 let isPlaying = false;
 let dragging = false;
+let frameCount = 0; // 用于 --beat 的帧节流
 const ripples: Ripple[] = [];
 const handlers: Record<string, EventListener> = {};
 
@@ -122,6 +128,20 @@ if (!mgr) {
 		coverImg.src = track.pic ?? "";
 		coverImg.alt = track.name;
 		bgLayer.style.backgroundImage = track.pic ? `url(${track.pic})` : "";
+
+		// 中央封面舞台：同步封面 + 3D 翻转过渡
+		if (stageImg.src !== track.pic) {
+			stageImg.src = track.pic ?? "";
+			stageImg.alt = track.name;
+		}
+		if (stageCover) {
+			stageCover.classList.remove("is-flipping");
+			void (stageCover as HTMLElement).offsetWidth; // 强制 reflow 重启动画
+			stageCover.classList.add("is-flipping");
+			window.setTimeout(() => stageCover.classList.remove("is-flipping"), 800);
+		}
+		// 封面尺寸变化后刷新环形频谱的圆心/半径
+		requestAnimationFrame(refreshRingMetrics);
 	}
 
 	function updatePlayStateUI(playing: boolean) {
@@ -154,7 +174,13 @@ if (!mgr) {
 		const active = tracks[index] as HTMLElement | undefined;
 		if (active) {
 			timelineProgrammaticScroll = true;
-			active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+			// 手机端歌单是横向滑动卡条：按内联方向居中；桌面竖列表按块方向
+			const isMobile = window.matchMedia("(max-width: 768px)").matches;
+			active.scrollIntoView(
+				isMobile
+					? { inline: "center", block: "nearest", behavior: "smooth" }
+					: { block: "nearest", behavior: "smooth" },
+			);
 			window.setTimeout(() => {
 				timelineProgrammaticScroll = false;
 			}, 600);
@@ -197,10 +223,7 @@ if (!mgr) {
 		if (index >= 0 && lyricEls[index]) {
 			lyricEls[index].classList.add("active");
 			// 用户手动拖动期间/拖动后冷却期内，不强制覆盖位置
-			if (
-				lyricUserOffset === null &&
-				lyricOffsets[index] !== undefined
-			) {
+			if (lyricUserOffset === null && lyricOffsets[index] !== undefined) {
 				lyricsContent.style.transform = `translateY(${-lyricOffsets[index]}px)`;
 			}
 		}
@@ -404,6 +427,82 @@ if (!mgr) {
 		spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
 	});
 
+	// 环形频谱的帧间平滑缓存（左右镜像，half 长度）
+	const ringHalf = 48;
+	const lastRingVals: number[] = new Array(ringHalf).fill(0);
+
+	// 环形频谱几何缓存：圆心跟随中央封面舞台中心，基径随封面大小自适应
+	// （各断点的 .center-overlay 位置不同，动态读取可保证任何断点都对齐）
+	const ringMetrics = { cx: 0, cy: 0, baseR: 190, maxLen: 70 };
+	function refreshRingMetrics() {
+		const rect = stageCover?.getBoundingClientRect();
+		const isMobile = window.matchMedia("(max-width: 768px)").matches;
+		ringMetrics.maxLen = isMobile ? 45 : 70;
+		if (!rect || rect.width === 0) {
+			// 封面未渲染时退回断点估算
+			ringMetrics.cx = canvas.clientWidth / 2;
+			ringMetrics.cy =
+				canvas.clientHeight * (isMobile ? 0.18 : isTablet() ? 0.3 : 0.38);
+			ringMetrics.baseR = isMobile
+				? Math.min(140, canvas.clientWidth * 0.32)
+				: Math.min(210, canvas.clientWidth * 0.22);
+			return;
+		}
+		ringMetrics.cx = rect.left + rect.width / 2;
+		ringMetrics.cy = rect.top + rect.height / 2;
+		ringMetrics.baseR = rect.width / 2 + 28;
+	}
+	function isTablet() {
+		return window.matchMedia("(max-width: 1024px)").matches;
+	}
+	refreshRingMetrics();
+
+	// 中心环形频谱：围绕封面的辐射光柱
+	function drawSpectrumRing(hue: string, freq: Uint8Array) {
+		const { cx, cy, baseR, maxLen } = ringMetrics;
+		const bars = ringHalf * 2;
+
+		// 采样 48 bins（跳过能量集中的最低频，对数式铺开到中高频）
+		for (let i = 0; i < ringHalf; i++) {
+			const bin = 4 + Math.floor(i * 1.9);
+			const cur = (freq[bin] ?? 0) / 255;
+			// 帧间缓动，消除 bin 映射跳变
+			lastRingVals[i] = lastRingVals[i] * 0.72 + cur * 0.28;
+		}
+
+		// 基线圆圈：虚线缓慢旋转
+		canvasCtx!.save();
+		canvasCtx!.beginPath();
+		canvasCtx!.setLineDash([2, 10]);
+		canvasCtx!.lineDashOffset = -performance.now() / 90;
+		canvasCtx!.arc(cx, cy, baseR - 8, 0, Math.PI * 2);
+		canvasCtx!.strokeStyle = `hsla(${hue}, 80%, 65%, 0.18)`;
+		canvasCtx!.lineWidth = 1;
+		canvasCtx!.stroke();
+		canvasCtx!.restore();
+
+		// 光柱：双 pass（粗线低透明做光晕，细线做主体）
+		for (let pass = 0; pass < 2; pass++) {
+			canvasCtx!.lineWidth = pass === 0 ? 5 : 1.8;
+			for (let i = 0; i < bars; i++) {
+				const side = i < ringHalf ? i : bars - 1 - i;
+				const v = lastRingVals[side];
+				const angle = (i / bars) * Math.PI * 2 - Math.PI / 2;
+				const len = 6 + v * maxLen;
+				const cosA = Math.cos(angle);
+				const sinA = Math.sin(angle);
+				canvasCtx!.beginPath();
+				canvasCtx!.moveTo(cx + cosA * baseR, cy + sinA * baseR);
+				canvasCtx!.lineTo(cx + cosA * (baseR + len), cy + sinA * (baseR + len));
+				canvasCtx!.strokeStyle =
+					pass === 0
+						? `hsla(${Number(hue) + side * 0.8}, 90%, 60%, ${0.08 + v * 0.3})`
+						: `hsla(${Number(hue) + side * 0.8}, 90%, ${62 + v * 18}%, ${0.28 + v * 0.6})`;
+				canvasCtx!.stroke();
+			}
+		}
+	}
+
 	function drawVisualizer() {
 		requestAnimationFrame(drawVisualizer);
 		if (!canvasCtx) return;
@@ -413,6 +512,23 @@ if (!mgr) {
 			getComputedStyle(root).getPropertyValue("--hue").trim() || "165";
 
 		canvasCtx.clearRect(0, 0, w, h);
+
+		// 真实频谱：MusicManager 的 AnalyserNode 就绪后返回 0-255 数据
+		const freq = mgr.getFreqData?.() ?? null;
+		let bass = 0;
+		let mid = 0;
+		let treble = 0;
+		if (freq) {
+			let b = 0;
+			let m = 0;
+			let t = 0;
+			for (let i = 2; i < 16; i++) b += freq[i];
+			for (let i = 16; i < 64; i++) m += freq[i];
+			for (let i = 64; i < 160; i++) t += freq[i];
+			bass = b / (14 * 255);
+			mid = m / (48 * 255);
+			treble = t / (96 * 255);
+		}
 
 		// 播放时波浪更活跃，暂停时低幅呼吸
 		const energy = isPlaying ? 1 : 0.25;
@@ -468,6 +584,20 @@ if (!mgr) {
 			canvasCtx.fill();
 		}
 
+		// 环形频谱：仅播放时绘制（暂停时光柱会全部回落，画了也接近基线）
+		if (freq && isPlaying) {
+			drawSpectrumRing(hue, freq);
+		}
+
+		// 节拍发光：低频能量写入 --beat，驱动歌名光晕（每 3 帧更新，避免频繁样式重算）
+		frameCount++;
+		if (freq && frameCount % 3 === 0) {
+			root.style.setProperty(
+				"--beat",
+				(isPlaying ? Math.min(1, bass * 1.4) : 0).toFixed(3),
+			);
+		}
+
 		// 涟漪
 		for (let i = ripples.length - 1; i >= 0; i--) {
 			const r = ripples[i];
@@ -497,7 +627,10 @@ if (!mgr) {
 		}
 	}
 	drawVisualizer();
-	window.addEventListener("resize", resizeCanvas);
+	window.addEventListener("resize", () => {
+		resizeCanvas();
+		refreshRingMetrics();
+	});
 
 	// ===== 初始化 =====
 	const initState = mgr.getState();

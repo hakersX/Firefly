@@ -102,6 +102,36 @@ const managerConfigStr = JSON.stringify({
     document.body.appendChild(audio);
     audio.pause(); // 确保不自动播放
 
+    // ── 音频频谱分析（音乐页可视化用）──────────────────────
+    // AudioContext 必须在用户手势后启动，因此延迟到首次播放时初始化；
+    // MediaElementSource 对同一 audio 元素只能创建一次，用闭包保证单例。
+    var audioCtx = null;
+    var analyser = null;
+    var freqData = null;
+    function ensureAnalyser() {
+        if (analyser) {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            return;
+        }
+        try {
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            audioCtx = new Ctx();
+            var source = audioCtx.createMediaElementSource(audio);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 512; // 256 个频率 bin
+            analyser.smoothingTimeConstant = 0.82;
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination); // 必须接回输出，否则静音
+            freqData = new Uint8Array(analyser.frequencyBinCount);
+        } catch (e) {
+            console.warn('Audio analyser init failed, visualizer falls back to fake waves', e);
+            analyser = null;
+        }
+    }
+    // 所有播放路径（loadTrack / togglePlay / 自动连播）都会触发 play 事件
+    audio.addEventListener('play', function () { ensureAnalyser(); });
+
     // ── State ────────────────────────────────────────────────
     var loadVersion = 0; // incremented on each loadTrack to discard stale play() results
     var state = {
@@ -491,7 +521,14 @@ const managerConfigStr = JSON.stringify({
         seek: seek,
         seekToTime: seekToTime,
         playTrackByIndex: playTrackByIndex,
-        loadTrack: loadTrack
+        loadTrack: loadTrack,
+        // 返回当前音频频谱（Uint8Array，0-255，256 bins）；未初始化时返回 null。
+        // 复用同一数组，调用方应同步读取，不持有引用。
+        getFreqData: function () {
+            if (!analyser || !freqData) return null;
+            analyser.getByteFrequencyData(freqData);
+            return freqData;
+        }
     };
 })();
 </script>
