@@ -435,6 +435,21 @@ enum I18nKey {
 	galleryBackToAlbums = "galleryBackToAlbums",
 	searchAlbums = "searchAlbums",
 
+	// 连载故事
+	series = "series",
+	seriesDescription = "seriesDescription",
+	seriesChaptersCount = "seriesChaptersCount",
+	seriesOngoing = "seriesOngoing",
+	seriesCompleted = "seriesCompleted",
+	seriesNoSeries = "seriesNoSeries",
+	seriesBackToList = "seriesBackToList",
+	seriesStartReading = "seriesStartReading",
+	seriesLatestBadge = "seriesLatestBadge",
+	seriesChapterIndex = "seriesChapterIndex",
+	seriesPrevChapter = "seriesPrevChapter",
+	seriesNextChapter = "seriesNextChapter",
+	seriesProgress = "seriesProgress",
+
 	// 密码保护
 	passwordProtected = "passwordProtected",
 	passwordProtectedDesc = "passwordProtectedDesc",

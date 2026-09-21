@@ -1,0 +1,142 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { seriesConfig, siteConfig } from "@/config";
+import { getAllSeries, getSeriesUrl } from "@/utils/series-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+
+if (!siteConfig.pages.series || !seriesConfig.enable) {
+	return Astro.redirect("/404/");
+}
+
+const albums = await getAllSeries();
+const total = albums.reduce((sum, a) => sum + a.chapters.length, 0);
+
+function coverSrc(cover: string): string {
+	if (!cover) return "";
+	if (
+		cover.startsWith("http://") ||
+		cover.startsWith("https://") ||
+		cover.startsWith("//") ||
+		cover.startsWith("data:")
+	) {
+		return cover;
+	}
+	return cover.startsWith("/") ? cover : `/${cover}`;
+}
+---
+
+<MainGridLayout title={i18n(I18nKey.series)} description={i18n(I18nKey.seriesDescription)}>
+	<!-- 页面标题 -->
+	<div class="card-base px-8 py-6 mb-4">
+		<div class="flex items-center gap-3 mb-2">
+			<div class="w-10 h-10 rounded-xl bg-(--primary)/10 flex items-center justify-center">
+				<Icon is:inline name="material-symbols:auto-stories-rounded" class="text-2xl text-(--primary)" />
+			</div>
+			<div class="text-2xl font-bold text-(--primary)">
+				{i18n(I18nKey.series)}
+			</div>
+		</div>
+		<p class="text-30 text-sm">
+			{i18n(I18nKey.seriesDescription)} · {total} {i18n(I18nKey.seriesChaptersCount)}
+		</p>
+	</div>
+
+	<!-- 专辑卡片网格 -->
+	{
+		albums.length > 0 && (
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+				{albums.map((album, index) => {
+					const src = coverSrc(album.cover);
+					return (
+						<a
+							href={getSeriesUrl(album.id)}
+							class="card-base series-card group overflow-hidden block onload-animation"
+							style={`animation-delay: calc(var(--content-delay) + ${index * 60}ms);`}
+						>
+							<!-- 封面 -->
+							<div class="series-cover relative aspect-[16/7] overflow-hidden">
+								{src ? (
+									<img src={src} alt={album.name} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+								) : (
+									<div class="series-cover-fallback w-full h-full flex items-center justify-center">
+										<span class="text-5xl font-bold opacity-30 select-none">{album.name.slice(0, 1)}</span>
+									</div>
+								)}
+								<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+								<!-- 状态徽章 -->
+								<span class:list={["series-status absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full backdrop-blur-sm", album.status === "completed" ? "is-completed" : "is-ongoing"]}>
+									{album.status === "completed" ? i18n(I18nKey.seriesCompleted) : i18n(I18nKey.seriesOngoing)}
+								</span>
+								<!-- 底部名称 -->
+								<div class="absolute bottom-0 left-0 right-0 p-4">
+									<h2 class="text-xl font-bold text-white drop-shadow-md group-hover:text-(--primary) transition-colors">
+										{album.name}
+									</h2>
+								</div>
+							</div>
+							<!-- 信息 -->
+							<div class="px-5 py-4">
+								<p class="text-sm text-50 line-clamp-2 min-h-[2.5rem]">
+									{album.description || album.chapters[0]?.description || ""}
+								</p>
+								<div class="flex items-center justify-between mt-3 text-xs text-30">
+									<span class="inline-flex items-center gap-1">
+										<Icon is:inline name="material-symbols:list-alt-rounded" class="text-sm" />
+										{album.chapters.length} {i18n(I18nKey.seriesChaptersCount)}
+									</span>
+									<span class="inline-flex items-center gap-1">
+										<Icon is:inline name="material-symbols:schedule-outline-rounded" class="text-sm" />
+										{formatDateToYYYYMMDD(album.updated)}
+									</span>
+								</div>
+							</div>
+						</a>
+					);
+				})}
+			</div>
+		)
+	}
+
+	<!-- 空状态 -->
+	{
+		albums.length === 0 && (
+			<div class="card-base px-8 py-16 text-center">
+				<Icon is:inline name="material-symbols:auto-stories-outline" class="text-6xl text-30 mx-auto mb-4 opacity-50" />
+				<p class="text-30">{i18n(I18nKey.seriesNoSeries)}</p>
+			</div>
+		)
+	}
+</MainGridLayout>
+
+<style>
+	.series-card {
+		padding: 0;
+		transition:
+			transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+			box-shadow 0.3s;
+	}
+	.series-card:hover {
+		transform: translateY(-3px);
+	}
+	.series-cover-fallback {
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklch, var(--primary) 30%, #1a1a2e),
+			color-mix(in oklch, var(--primary) 8%, #0f0f1a)
+		);
+		color: color-mix(in oklch, var(--primary) 70%, white);
+	}
+	.series-status {
+		color: #fff;
+		font-weight: 500;
+	}
+	.series-status.is-ongoing {
+		background: color-mix(in oklch, var(--primary) 70%, transparent);
+	}
+	.series-status.is-completed {
+		background: rgba(0, 0, 0, 0.45);
+	}
+</style>

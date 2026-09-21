@@ -115,6 +115,8 @@ export const siteConfig: SiteConfig = {
 		vndb: false,
 		// 相册页面开关
 		gallery: true,
+		// 连载故事页面开关
+		series: true,
 		// 追番页面开关
 		anime: true,
 		// 动态页面开关

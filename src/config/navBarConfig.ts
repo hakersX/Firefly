@@ -70,6 +70,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Books,
 			//相册
 			LinkPresets.Gallery,
+			// 连载故事
+			LinkPresets.Series,
 		],
 	});
 	// 工具
@@ -228,6 +230,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		url: "/gallery/",
 		icon: "material-symbols:photo-library",
 		pageKey: "gallery",
+	},
+	Series: {
+		name: "连载故事",
+		url: "/series/",
+		icon: "material-symbols:auto-stories-rounded",
+		pageKey: "series",
 	},
 	Anime: {
 		name: "追番",

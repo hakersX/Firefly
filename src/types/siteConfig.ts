@@ -87,6 +87,7 @@ export type SiteConfig = {
 		bangumi: boolean;
 		vndb: boolean;
 		gallery: boolean; // 相册页面开关
+		series: boolean; // 连载故事页面开关
 		anime: boolean; // 追番页面开关
 		dynamic: boolean; // 动态页面开关
 		tools: boolean; // 工具箱页面开关

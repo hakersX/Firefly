@@ -438,6 +438,21 @@ export const zh_CN: Translation = {
 	[Key.galleryBackToAlbums]: "返回相册列表",
 	[Key.searchAlbums]: "搜索相簿...",
 
+	// 连载故事
+	[Key.series]: "连载故事",
+	[Key.seriesDescription]: "连载故事专辑合集",
+	[Key.seriesChaptersCount]: "章",
+	[Key.seriesOngoing]: "连载中",
+	[Key.seriesCompleted]: "已完结",
+	[Key.seriesNoSeries]: "暂无连载作品",
+	[Key.seriesBackToList]: "返回连载列表",
+	[Key.seriesStartReading]: "开始阅读",
+	[Key.seriesLatestBadge]: "最新",
+	[Key.seriesChapterIndex]: "章节目录",
+	[Key.seriesPrevChapter]: "上一章",
+	[Key.seriesNextChapter]: "下一章",
+	[Key.seriesProgress]: "阅读进度",
+
 	// 密码保护
 	[Key.passwordProtected]: "密码保护",
 	[Key.passwordProtectedDesc]: "此内容已被密码保护，请输入密码查看。",

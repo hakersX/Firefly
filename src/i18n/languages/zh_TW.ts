@@ -440,6 +440,21 @@ export const zh_TW: Translation = {
 	[Key.galleryBackToAlbums]: "返回相簿列表",
 	[Key.searchAlbums]: "搜尋相簿...",
 
+	// 連載故事
+	[Key.series]: "連載故事",
+	[Key.seriesDescription]: "連載故事專輯合集",
+	[Key.seriesChaptersCount]: "章",
+	[Key.seriesOngoing]: "連載中",
+	[Key.seriesCompleted]: "已完結",
+	[Key.seriesNoSeries]: "暫無連載作品",
+	[Key.seriesBackToList]: "返回連載列表",
+	[Key.seriesStartReading]: "開始閱讀",
+	[Key.seriesLatestBadge]: "最新",
+	[Key.seriesChapterIndex]: "章節目錄",
+	[Key.seriesPrevChapter]: "上一章",
+	[Key.seriesNextChapter]: "下一章",
+	[Key.seriesProgress]: "閱讀進度",
+
 	// 密碼保護
 	[Key.passwordProtected]: "密碼保護",
 	[Key.passwordProtectedDesc]: "此內容已被密碼保護，請輸入密碼查看。",

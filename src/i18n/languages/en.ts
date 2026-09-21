@@ -448,6 +448,21 @@ export const en: Translation = {
 	[Key.galleryBackToAlbums]: "Back to albums",
 	[Key.searchAlbums]: "Search albums...",
 
+	// Serialized stories
+	[Key.series]: "Series",
+	[Key.seriesDescription]: "Serialized stories collection",
+	[Key.seriesChaptersCount]: "Chapters",
+	[Key.seriesOngoing]: "Ongoing",
+	[Key.seriesCompleted]: "Completed",
+	[Key.seriesNoSeries]: "No series yet",
+	[Key.seriesBackToList]: "Back to series",
+	[Key.seriesStartReading]: "Start reading",
+	[Key.seriesLatestBadge]: "Latest",
+	[Key.seriesChapterIndex]: "Chapters",
+	[Key.seriesPrevChapter]: "Previous chapter",
+	[Key.seriesNextChapter]: "Next chapter",
+	[Key.seriesProgress]: "Progress",
+
 	// Password Protection
 	[Key.passwordProtected]: "Password Protected",
 	[Key.passwordProtectedDesc]:

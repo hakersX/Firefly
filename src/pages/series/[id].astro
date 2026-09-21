@@ -1,0 +1,212 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { seriesConfig, siteConfig } from "@/config";
+import { getAllSeries } from "@/utils/series-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { url } from "@/utils/url-utils";
+
+if (!siteConfig.pages.series || !seriesConfig.enable) {
+	return Astro.redirect("/404/");
+}
+
+export async function getStaticPaths() {
+	const albums = await getAllSeries();
+	return albums.map((album) => ({
+		params: { id: album.id },
+		props: { album },
+	}));
+}
+
+const { album } = Astro.props;
+
+function coverSrc(cover: string): string {
+	if (!cover) return "";
+	if (
+		cover.startsWith("http://") ||
+		cover.startsWith("https://") ||
+		cover.startsWith("//") ||
+		cover.startsWith("data:")
+	) {
+		return cover;
+	}
+	return cover.startsWith("/") ? cover : `/${cover}`;
+}
+
+const src = coverSrc(album.cover);
+const firstChapter = album.chapters[0];
+const latestChapter = album.chapters[album.chapters.length - 1];
+const chapterLabel = (n: number, idx: number) =>
+	`${n > 0 ? n : idx + 1}`;
+---
+
+<MainGridLayout title={album.name} description={album.description || album.name}>
+	<!-- 专辑封面横幅 -->
+	<div class="w-full rounded-(--radius-large) overflow-hidden relative">
+		<div class="relative w-full aspect-[3/1] min-h-[200px] max-h-[360px]">
+			{
+				src ? (
+					<img src={src} alt={album.name} class="w-full h-full object-cover" />
+				) : (
+					<div class="series-banner-fallback w-full h-full flex items-center justify-center">
+						<span class="text-7xl font-bold opacity-25 select-none">{album.name.slice(0, 1)}</span>
+					</div>
+				)
+			}
+			<div class="absolute inset-0 bg-linear-to-t from-black/75 via-black/35 to-transparent" />
+			<!-- 返回列表 -->
+			<a
+				href={url("/series/")}
+				class="absolute top-4 left-4 inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
+			>
+				<Icon is:inline name="material-symbols:arrow-back" class="text-base" />
+				{i18n(I18nKey.seriesBackToList)}
+			</a>
+			<!-- 状态徽章 -->
+			<span class:list={["absolute top-4 right-4 text-xs px-2.5 py-1 rounded-full backdrop-blur-sm text-white font-medium", album.status === "completed" ? "bg-black/45" : "series-badge-ongoing"]}>
+				{album.status === "completed" ? i18n(I18nKey.seriesCompleted) : i18n(I18nKey.seriesOngoing)}
+			</span>
+			<!-- 专辑信息 -->
+			<div class="absolute bottom-0 left-0 right-0 p-6">
+				<h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-lg">
+					{album.name}
+				</h1>
+				{
+					album.description && (
+						<p class="text-sm text-white/75 leading-relaxed mb-2.5 max-w-2xl line-clamp-2">
+							{album.description}
+						</p>
+					)
+				}
+				<div class="flex items-center gap-4 text-sm text-white/80 flex-wrap">
+					<span class="inline-flex items-center gap-1">
+						<Icon is:inline name="material-symbols:list-alt-rounded" class="text-sm" />
+						{album.chapters.length} {i18n(I18nKey.seriesChaptersCount)}
+					</span>
+					<span class="inline-flex items-center gap-1">
+						<Icon is:inline name="material-symbols:schedule-outline-rounded" class="text-sm" />
+						{formatDateToYYYYMMDD(album.updated)}
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 章节列表 -->
+	<div class="w-full rounded-(--radius-large) overflow-hidden relative mt-4">
+		<div class="card-base z-10 px-6 py-6 relative w-full">
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-bold flex items-center gap-2">
+					<Icon is:inline name="material-symbols:menu-book-outline-rounded" class="text-xl text-(--primary)" />
+					{i18n(I18nKey.seriesChapterIndex)}
+				</h2>
+				{
+					firstChapter && (
+						<a
+							href={firstChapter.url}
+							class="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-(--primary) text-white hover:opacity-90 transition-opacity"
+						>
+							<Icon is:inline name="material-symbols:play-arrow-rounded" class="text-base" />
+							{i18n(I18nKey.seriesStartReading)}
+						</a>
+					)
+				}
+			</div>
+
+			<ul class="series-chapter-list">
+				{
+					album.chapters.map((chapter, idx) => (
+						<li>
+							<a href={chapter.url} class="series-chapter-item group">
+								<span class="chapter-no">
+									{chapterLabel(chapter.chapter, idx)}
+								</span>
+								<span class="flex-1 min-w-0">
+									<span class="block font-medium truncate group-hover:text-(--primary) transition-colors">
+										{chapter.title}
+									</span>
+									{
+										chapter.description && (
+											<span class="block text-xs text-30 truncate mt-0.5">
+												{chapter.description}
+											</span>
+										)
+									}
+								</span>
+								{
+									chapter.id === latestChapter?.id && album.status === "ongoing" && (
+										<span class="chapter-latest-badge">{i18n(I18nKey.seriesLatestBadge)}</span>
+									)
+								}
+								<span class="text-xs text-30 whitespace-nowrap hidden sm:inline">
+									{formatDateToYYYYMMDD(chapter.published)}
+								</span>
+								<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-xl text-30 group-hover:text-(--primary) transition-colors" />
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</div>
+</MainGridLayout>
+
+<style>
+	.series-banner-fallback {
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklch, var(--primary) 32%, #1a1a2e),
+			color-mix(in oklch, var(--primary) 8%, #0f0f1a)
+		);
+		color: color-mix(in oklch, var(--primary) 70%, white);
+	}
+	.series-badge-ongoing {
+		background: color-mix(in oklch, var(--primary) 70%, transparent);
+	}
+	.series-chapter-list {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.series-chapter-item {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 0.75rem 0.6rem;
+		border-radius: 12px;
+		transition: background 0.25s;
+	}
+	.series-chapter-item:hover {
+		background: color-mix(in oklch, var(--primary) 6%, transparent);
+	}
+	.series-chapter-list li + li .series-chapter-item {
+		border-top: 1px dashed var(--line-divider, rgba(128, 128, 128, 0.15));
+	}
+	.chapter-no {
+		flex-shrink: 0;
+		width: 2.2rem;
+		height: 2.2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		font-size: 0.85rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: color-mix(in oklch, var(--primary) 80%, white 20%);
+		background: color-mix(in oklch, var(--primary) 12%, transparent);
+		border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+	}
+	.chapter-latest-badge {
+		flex-shrink: 0;
+		font-size: 0.68rem;
+		padding: 2px 8px;
+		border-radius: 999px;
+		color: #fff;
+		background: color-mix(in oklch, var(--primary) 70%, transparent);
+	}
+</style>

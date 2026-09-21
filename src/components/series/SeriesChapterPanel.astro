@@ -1,0 +1,119 @@
+---
+import { Icon } from "astro-icon/components";
+import type { CollectionEntry } from "astro:content";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import { seriesConfig, siteConfig } from "@/config";
+import { getSeriesNav, getSeriesUrl } from "@/utils/series-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import "./series-chapter.css";
+
+interface Props {
+	entry: CollectionEntry<"posts">;
+}
+
+const { entry } = Astro.props;
+
+// 非连载文章 / 功能关闭时不渲染
+const nav =
+	siteConfig.pages.series && seriesConfig.enable
+		? await getSeriesNav(entry)
+		: null;
+---
+
+{
+	nav && (
+		<div class="card-base series-chapter-panel mb-4">
+			{/* 专辑头：封面 + 名称 + 进度 */}
+			<a href={getSeriesUrl(nav.album.id)} class="series-panel-head">
+				<div class="series-panel-icon">
+					<Icon is:inline name="material-symbols:auto-stories-rounded" class="text-xl" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<div class="series-panel-label">
+						{i18n(I18nKey.series)}
+						<span class:list={["series-panel-status", nav.album.status === "completed" ? "is-completed" : "is-ongoing"]}>
+							{nav.album.status === "completed"
+								? i18n(I18nKey.seriesCompleted)
+								: i18n(I18nKey.seriesOngoing)}
+						</span>
+					</div>
+					<div class="series-panel-name">{nav.album.name}</div>
+					<div class="series-panel-meta">
+						{nav.index + 1} / {nav.album.chapters.length} {i18n(I18nKey.seriesChaptersCount)}
+					</div>
+				</div>
+				<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-2xl text-30" />
+			</a>
+
+			{/* 进度条 */}
+			<div class="series-progress-track">
+				<div
+					class="series-progress-fill"
+					style={`width: ${((nav.index + 1) / nav.album.chapters.length) * 100}%`}
+				/>
+			</div>
+
+			{/* 章节目录（原生 details，默认折叠；当前章高亮并自动滚动到视图） */}
+			<details class="series-details">
+				<summary>
+					<Icon is:inline name="material-symbols:list-alt-rounded" class="text-base" />
+					{i18n(I18nKey.seriesChapterIndex)}
+					<span class="series-details-count">（{nav.album.chapters.length}）</span>
+				</summary>
+				<ul class="series-details-list">
+					{
+						nav.album.chapters.map((chapter, idx) => (
+							<li>
+								<a
+									href={chapter.url}
+									class:list={["series-details-item", chapter.id === entry.id && "is-current"]}
+								>
+									<span class="series-details-no">{chapter.chapter > 0 ? chapter.chapter : idx + 1}</span>
+									<span class="series-details-title">{chapter.title}</span>
+									<span class="series-details-date">{formatDateToYYYYMMDD(chapter.published)}</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</details>
+
+			{/* 上一章 / 下一章 */}
+			<div class="series-chapter-nav">
+				{
+					nav.prev ? (
+						<a href={nav.prev.url} class="series-nav-btn">
+							<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-xl" />
+							<span class="min-w-0">
+								<span class="series-nav-dir">{i18n(I18nKey.seriesPrevChapter)}</span>
+								<span class="series-nav-title">{nav.prev.title}</span>
+							</span>
+						</a>
+					) : (
+						<span class="series-nav-btn is-disabled">
+							<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-xl" />
+							<span class="series-nav-dir">{i18n(I18nKey.seriesPrevChapter)}</span>
+						</span>
+					)
+				}
+				{
+					nav.next ? (
+						<a href={nav.next.url} class="series-nav-btn is-next">
+							<span class="min-w-0 text-right">
+								<span class="series-nav-dir">{i18n(I18nKey.seriesNextChapter)}</span>
+								<span class="series-nav-title">{nav.next.title}</span>
+							</span>
+							<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-xl" />
+						</a>
+					) : (
+						<span class="series-nav-btn is-next is-disabled">
+							<span class="series-nav-dir">{i18n(I18nKey.seriesNextChapter)}</span>
+							<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-xl" />
+						</span>
+					)
+				}
+			</div>
+		</div>
+	)
+}

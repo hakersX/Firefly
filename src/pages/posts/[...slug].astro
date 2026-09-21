@@ -20,6 +20,7 @@ import utc from "dayjs/plugin/utc";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
 import RecommendedPost from "@/components/misc/RecommendedPost.astro";
+import SeriesChapterPanel from "@/components/series/SeriesChapterPanel.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
 import { coverImageConfig } from "@/config/coverImageConfig";
 import { licenseConfig } from "@/config/licenseConfig";
@@ -485,6 +486,9 @@ const relatedPosts = await getRelatedPosts(entry, 5);
       )}
     </div>
   </div>
+
+  <!-- 连载章节导航：仅属于某个系列的文章渲染 -->
+  <SeriesChapterPanel entry={entry} />
 
   <!-- 上次编辑时间 -->
   {

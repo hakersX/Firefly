@@ -446,6 +446,21 @@ export const ja: Translation = {
 	[Key.galleryBackToAlbums]: "アルバム一覧に戻る",
 	[Key.searchAlbums]: "アルバムを検索...",
 
+	// 連載小説
+	[Key.series]: "連載小説",
+	[Key.seriesDescription]: "連載小説コレクション",
+	[Key.seriesChaptersCount]: "話",
+	[Key.seriesOngoing]: "連載中",
+	[Key.seriesCompleted]: "完結",
+	[Key.seriesNoSeries]: "連載作品はありません",
+	[Key.seriesBackToList]: "連載一覧に戻る",
+	[Key.seriesStartReading]: "読み始める",
+	[Key.seriesLatestBadge]: "最新",
+	[Key.seriesChapterIndex]: "目次",
+	[Key.seriesPrevChapter]: "前の話",
+	[Key.seriesNextChapter]: "次の話",
+	[Key.seriesProgress]: "進捗",
+
 	// パスワード保護
 	[Key.passwordProtected]: "パスワード保護",
 	[Key.passwordProtectedDesc]:

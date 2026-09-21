@@ -450,6 +450,21 @@ export const ru: Translation = {
 	[Key.galleryBackToAlbums]: "Вернуться к альбомам",
 	[Key.searchAlbums]: "Поиск альбомов...",
 
+	// Серии историй
+	[Key.series]: "Серии",
+	[Key.seriesDescription]: "Коллекция серий историй",
+	[Key.seriesChaptersCount]: "глав",
+	[Key.seriesOngoing]: "В процессе",
+	[Key.seriesCompleted]: "Завершено",
+	[Key.seriesNoSeries]: "Серий пока нет",
+	[Key.seriesBackToList]: "К списку серий",
+	[Key.seriesStartReading]: "Начать читать",
+	[Key.seriesLatestBadge]: "Новое",
+	[Key.seriesChapterIndex]: "Главы",
+	[Key.seriesPrevChapter]: "Предыдущая глава",
+	[Key.seriesNextChapter]: "Следующая глава",
+	[Key.seriesProgress]: "Прогресс",
+
 	// Защита паролем
 	[Key.passwordProtected]: "Защищено паролем",
 	[Key.passwordProtectedDesc]:

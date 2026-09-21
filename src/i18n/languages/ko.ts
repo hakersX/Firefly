@@ -445,6 +445,21 @@ export const ko: Translation = {
 	[Key.galleryBackToAlbums]: "앨범으로 돌아가기",
 	[Key.searchAlbums]: "앨범 검색...",
 
+	// 연재 소설
+	[Key.series]: "연재 소설",
+	[Key.seriesDescription]: "연재 소설 모음",
+	[Key.seriesChaptersCount]: "화",
+	[Key.seriesOngoing]: "연재중",
+	[Key.seriesCompleted]: "완결",
+	[Key.seriesNoSeries]: "연재 작품이 없습니다",
+	[Key.seriesBackToList]: "시리즈 목록으로",
+	[Key.seriesStartReading]: "읽기 시작",
+	[Key.seriesLatestBadge]: "최신",
+	[Key.seriesChapterIndex]: "목차",
+	[Key.seriesPrevChapter]: "이전 화",
+	[Key.seriesNextChapter]: "다음 화",
+	[Key.seriesProgress]: "진행도",
+
 	// Password Protection
 	[Key.passwordProtected]: "비밀번호로 보호됨",
 	[Key.passwordProtectedDesc]:

@@ -22,6 +22,8 @@ type PostData = {
 	comment: boolean;
 	password: string;
 	passwordHint: string;
+	series: string;
+	chapter: number;
 	prevTitle: string;
 	prevSlug: string;
 	nextTitle: string;
@@ -60,6 +62,9 @@ const postsCollection: ContentCollection<PostData> = defineCollection({
 		comment: z.boolean().optional().default(true),
 		password: z.string().optional().default(""),
 		passwordHint: z.string().optional().default(""),
+		// 连载系列：series 为专辑 id（对应 seriesConfig 中的 id），chapter 为章节序号
+		series: z.string().optional().default(""),
+		chapter: z.number().optional().default(0),
 
 		/* For internal use */
 		prevTitle: z.string().default(""),
