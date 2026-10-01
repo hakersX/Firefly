@@ -1,5 +1,4 @@
 {
-  "src:assets/images/avatar.avif": "dcd8d5d1cecabea9a9",
   "public:gallery/firefly-2026/cover.avif": "7588a28a8f989e8d88",
   "public:gallery/firefly-2026/1.avif": "c8bca9dde6d2babfb5",
   "src:assets/images/DesktopWallpaper/d6.avif": "d9e5ec9ca7aebda9b0",
@@ -46,5 +45,8 @@
   "public:assets/images/my_story/7d260f7087afc309f9b22b4ca5e3e49b.png": "c6dde7c7e0e9c5e0ec",
   "public:assets/images/my_story/7398d292d3e34cc026d63b77c70a34c5.jpg": "e8e6e8efeff0efeded",
   "public:assets/images/dynamic/95c8ea9cdac168e045b4f6a1e72f0f9e.jpg": "3a425662728e2a3b51",
-  "public:assets/images/dynamic/2f4c3f5b870f623b964dc2a6f17c788a.jpg": "604e4180695db3afa3"
+  "public:assets/images/dynamic/2f4c3f5b870f623b964dc2a6f17c788a.jpg": "604e4180695db3afa3",
+  "src:assets/images/logo/cat-light.png": "2a2a2a2a2a2a2b2b2b",
+  "src:assets/images/logo/cat-dark.png": "f5a05bf5a05bf4a45a",
+  "src:assets/images/avatar.avif": "b5b588acad8f322b17"
 }
