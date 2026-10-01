@@ -119,8 +119,8 @@ const managerConfigStr = JSON.stringify({
             audioCtx = new Ctx();
             var source = audioCtx.createMediaElementSource(audio);
             analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 512; // 256 个频率 bin
-            analyser.smoothingTimeConstant = 0.82;
+            analyser.fftSize = 1024; // 512 个频率 bin（≈43Hz/bin，低频分辨率足够抓鼓点）
+            analyser.smoothingTimeConstant = 0.7;
             source.connect(analyser);
             analyser.connect(audioCtx.destination); // 必须接回输出，否则静音
             freqData = new Uint8Array(analyser.frequencyBinCount);
@@ -522,7 +522,7 @@ const managerConfigStr = JSON.stringify({
         seekToTime: seekToTime,
         playTrackByIndex: playTrackByIndex,
         loadTrack: loadTrack,
-        // 返回当前音频频谱（Uint8Array，0-255，256 bins）；未初始化时返回 null。
+        // 返回当前音频频谱（Uint8Array，0-255，512 bins）；未初始化时返回 null。
         // 复用同一数组，调用方应同步读取，不持有引用。
         getFreqData: function () {
             if (!analyser || !freqData) return null;

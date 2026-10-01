@@ -427,17 +427,144 @@ if (!mgr) {
 		spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
 	});
 
-	// 环形频谱的帧间平滑缓存（左右镜像，half 长度）
-	const ringHalf = 48;
-	const lastRingVals: number[] = new Array(ringHalf).fill(0);
+	// ===== 频谱分析：对数分频 + 自动增益 + 节拍检测 =====
+	// analyser fftSize=1024 → 512 bins（≈43Hz/bin@44.1k），对数铺开 bin 1..320（≈43Hz–13.8kHz）
+	const BANDS = 64;
+	const BIN_LO = 1;
+	const BIN_HI = 320;
+	const bandVals = new Float32Array(BANDS); // 平滑后 0-1：快攻慢放
+	const bandPeaks = new Float32Array(BANDS); // 峰值帽：缓慢回落
+	const bandRaw = new Float32Array(BANDS); // 本帧未平滑值
+	let gainPeak = 0.4; // 自动增益：跟踪近期最大值，歌曲轻重都能撑满画面
+	let bassAvg = 0;
+	let lastBeatAt = 0;
+	let kick = 0; // 节拍冲量：命中鼓点瞬间≈1，之后指数衰减
+	let hueCache = 165;
+	let hueReadAt = 0;
+	const reducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	interface Pulse {
+		r: number;
+		alpha: number;
+	}
+	interface Paw {
+		x: number;
+		y: number;
+		vy: number;
+		size: number;
+		phase: number;
+		rot: number;
+		hueOff: number;
+		alpha: number;
+	}
+	const pulses: Pulse[] = [];
+	const paws: Paw[] = [];
+
+	// 读取某个对数频带的能量（0-1）：窄频带插值，宽频带取最大/均值混合
+	function sampleBand(freq: Uint8Array, i: number): number {
+		const ratio = BIN_HI / BIN_LO;
+		const a = BIN_LO * ratio ** (i / BANDS);
+		const b = BIN_LO * ratio ** ((i + 1) / BANDS);
+		if (b - a <= 1.2) {
+			const c = (a + b) / 2;
+			const lo = Math.floor(c);
+			const f = c - lo;
+			return ((freq[lo] ?? 0) * (1 - f) + (freq[lo + 1] ?? 0) * f) / 255;
+		}
+		let max = 0;
+		let sum = 0;
+		let n = 0;
+		for (let k = Math.floor(a); k < Math.ceil(b); k++) {
+			const v = freq[k] ?? 0;
+			if (v > max) max = v;
+			sum += v;
+			n++;
+		}
+		return (max * 0.6 + (sum / n) * 0.4) / 255;
+	}
+
+	// 无法取得真实频谱（如跨域音频）时，播放中用伪频谱兜底，保证仍有律动
+	function fakeSpectrum(t: number) {
+		const env = 0.55 + 0.45 * Math.max(0, Math.sin(t * Math.PI * 4)) ** 3;
+		for (let i = 0; i < BANDS; i++) {
+			const lowBias = 1 - (i / BANDS) * 0.55;
+			const wave = 0.5 + 0.5 * Math.sin(t * (1.6 + i * 0.09) + i * 0.8);
+			bandRaw[i] = Math.min(1, wave * lowBias * (i < 10 ? env : 0.8));
+		}
+	}
+
+	function analyse(freq: Uint8Array | null, playing: boolean, now: number) {
+		const t = now / 1000;
+		if (playing && freq) {
+			let frameMax = 0;
+			for (let i = 0; i < BANDS; i++) {
+				// 高频天然能量低，做一点频谱倾斜补偿
+				const v = sampleBand(freq, i) * (1 + (i / BANDS) * 0.9);
+				bandRaw[i] = v;
+				if (v > frameMax) frameMax = v;
+			}
+			gainPeak = Math.max(gainPeak * 0.997, frameMax, 0.3);
+			const norm = 1 / gainPeak;
+			for (let i = 0; i < BANDS; i++) {
+				bandRaw[i] = Math.min(1, bandRaw[i] * norm) ** 1.6; // 拉开对比，峰值更突出
+			}
+		} else if (playing) {
+			fakeSpectrum(t);
+		} else {
+			bandRaw.fill(0);
+		}
+
+		for (let i = 0; i < BANDS; i++) {
+			const target = bandRaw[i];
+			const cur = bandVals[i];
+			bandVals[i] = cur + (target - cur) * (target > cur ? 0.62 : 0.13);
+			bandPeaks[i] = Math.max(bandPeaks[i] - 0.006, bandVals[i]);
+		}
+
+		// 节拍：低频能量显著高于近期均值即视为一次鼓点
+		let bass = 0;
+		for (let i = 0; i < 7; i++) bass += bandRaw[i];
+		bass /= 7;
+		bassAvg = bassAvg * 0.94 + bass * 0.06;
+		if (playing && bass > bassAvg * 1.28 + 0.08 && now - lastBeatAt > 190) {
+			lastBeatAt = now;
+			kick = Math.min(1, 0.55 + (bass - bassAvg) * 1.8);
+			onBeat();
+		} else {
+			kick *= 0.9;
+		}
+	}
+
+	function onBeat() {
+		pulses.push({ r: ringMetrics.baseR, alpha: 0.55 * (0.6 + kick * 0.4) });
+		if (pulses.length > 5) pulses.shift();
+		if (reducedMotion) return;
+		const w = canvas.clientWidth;
+		const h = canvas.clientHeight;
+		const count = kick > 0.8 ? 3 : 2;
+		for (let n = 0; n < count && paws.length < 36; n++) {
+			paws.push({
+				x: Math.random() * w,
+				y: h + 20,
+				vy: 1.3 + Math.random() * 1.9 + kick * 1.2,
+				size: 9 + Math.random() * 10,
+				phase: Math.random() * Math.PI * 2,
+				rot: (Math.random() - 0.5) * 0.8,
+				hueOff: Math.random() * 50 - 15,
+				alpha: 0.5 + Math.random() * 0.3,
+			});
+		}
+	}
 
 	// 环形频谱几何缓存：圆心跟随中央封面舞台中心，基径随封面大小自适应
 	// （各断点的 .center-overlay 位置不同，动态读取可保证任何断点都对齐）
-	const ringMetrics = { cx: 0, cy: 0, baseR: 190, maxLen: 70 };
+	const ringHalf = 48;
+	const ringMetrics = { cx: 0, cy: 0, baseR: 190, maxLen: 90 };
 	function refreshRingMetrics() {
 		const rect = stageCover?.getBoundingClientRect();
 		const isMobile = window.matchMedia("(max-width: 768px)").matches;
-		ringMetrics.maxLen = isMobile ? 45 : 70;
 		if (!rect || rect.width === 0) {
 			// 封面未渲染时退回断点估算
 			ringMetrics.cx = canvas.clientWidth / 2;
@@ -446,156 +573,225 @@ if (!mgr) {
 			ringMetrics.baseR = isMobile
 				? Math.min(140, canvas.clientWidth * 0.32)
 				: Math.min(210, canvas.clientWidth * 0.22);
-			return;
+		} else {
+			ringMetrics.cx = rect.left + rect.width / 2;
+			ringMetrics.cy = rect.top + rect.height / 2;
+			ringMetrics.baseR = rect.width / 2 + 28;
 		}
-		ringMetrics.cx = rect.left + rect.width / 2;
-		ringMetrics.cy = rect.top + rect.height / 2;
-		ringMetrics.baseR = rect.width / 2 + 28;
+		ringMetrics.maxLen = isMobile
+			? Math.max(50, ringMetrics.baseR * 0.7)
+			: Math.max(90, ringMetrics.baseR * 0.95);
 	}
 	function isTablet() {
 		return window.matchMedia("(max-width: 1024px)").matches;
 	}
 	refreshRingMetrics();
 
-	// 中心环形频谱：围绕封面的辐射光柱
-	function drawSpectrumRing(hue: string, freq: Uint8Array) {
-		const { cx, cy, baseR, maxLen } = ringMetrics;
+	// 中心环形频谱：围绕封面的辐射光柱，鼓点时整体外扩
+	function drawSpectrumRing(hue: number) {
+		const ctx = canvasCtx!;
+		const { cx, cy, maxLen } = ringMetrics;
+		const baseR = ringMetrics.baseR * (1 + kick * 0.05);
 		const bars = ringHalf * 2;
 
-		// 采样 48 bins（跳过能量集中的最低频，对数式铺开到中高频）
-		for (let i = 0; i < ringHalf; i++) {
-			const bin = 4 + Math.floor(i * 1.9);
-			const cur = (freq[bin] ?? 0) / 255;
-			// 帧间缓动，消除 bin 映射跳变
-			lastRingVals[i] = lastRingVals[i] * 0.72 + cur * 0.28;
-		}
-
-		// 基线圆圈：虚线缓慢旋转
-		canvasCtx!.save();
-		canvasCtx!.beginPath();
-		canvasCtx!.setLineDash([2, 10]);
-		canvasCtx!.lineDashOffset = -performance.now() / 90;
-		canvasCtx!.arc(cx, cy, baseR - 8, 0, Math.PI * 2);
-		canvasCtx!.strokeStyle = `hsla(${hue}, 80%, 65%, 0.18)`;
-		canvasCtx!.lineWidth = 1;
-		canvasCtx!.stroke();
-		canvasCtx!.restore();
+		// 基线圆圈：虚线缓慢旋转，随鼓点变亮变粗
+		ctx.save();
+		ctx.beginPath();
+		ctx.setLineDash([2, 10]);
+		ctx.lineDashOffset = -performance.now() / 90;
+		ctx.arc(cx, cy, baseR - 8, 0, Math.PI * 2);
+		ctx.strokeStyle = `hsla(${hue}, 80%, 70%, ${0.2 + kick * 0.5})`;
+		ctx.lineWidth = 1 + kick * 2.5;
+		ctx.stroke();
+		ctx.restore();
 
 		// 光柱：双 pass（粗线低透明做光晕，细线做主体）
+		ctx.lineCap = "round";
 		for (let pass = 0; pass < 2; pass++) {
-			canvasCtx!.lineWidth = pass === 0 ? 5 : 1.8;
+			ctx.lineWidth = pass === 0 ? 7 : 2.6;
 			for (let i = 0; i < bars; i++) {
 				const side = i < ringHalf ? i : bars - 1 - i;
-				const v = lastRingVals[side];
+				// 低频在顶部，向下渐入高频，左右镜像
+				const bi = Math.min(
+					BANDS - 1,
+					Math.floor((side / ringHalf) * BANDS * 0.9),
+				);
+				const v = bandVals[bi];
 				const angle = (i / bars) * Math.PI * 2 - Math.PI / 2;
-				const len = 6 + v * maxLen;
+				const len = 5 + v * maxLen;
 				const cosA = Math.cos(angle);
 				const sinA = Math.sin(angle);
-				canvasCtx!.beginPath();
-				canvasCtx!.moveTo(cx + cosA * baseR, cy + sinA * baseR);
-				canvasCtx!.lineTo(cx + cosA * (baseR + len), cy + sinA * (baseR + len));
-				canvasCtx!.strokeStyle =
+				const hh = hue + side * 1.1;
+				ctx.beginPath();
+				ctx.moveTo(cx + cosA * baseR, cy + sinA * baseR);
+				ctx.lineTo(cx + cosA * (baseR + len), cy + sinA * (baseR + len));
+				ctx.strokeStyle =
 					pass === 0
-						? `hsla(${Number(hue) + side * 0.8}, 90%, 60%, ${0.08 + v * 0.3})`
-						: `hsla(${Number(hue) + side * 0.8}, 90%, ${62 + v * 18}%, ${0.28 + v * 0.6})`;
-				canvasCtx!.stroke();
+						? `hsla(${hh}, 90%, 60%, ${0.1 + v * 0.35})`
+						: `hsla(${hh}, 95%, ${62 + v * 20}%, ${0.4 + v * 0.6})`;
+				ctx.stroke();
 			}
+		}
+		ctx.lineCap = "butt";
+	}
+
+	// 鼓点冲击波：从封面外缘向外扩散并淡出
+	function drawPulses(hue: number) {
+		const ctx = canvasCtx!;
+		for (let i = pulses.length - 1; i >= 0; i--) {
+			const p = pulses[i];
+			p.r += 4 + (1 - p.alpha) * 6;
+			p.alpha *= 0.935;
+			if (p.alpha < 0.02) {
+				pulses.splice(i, 1);
+				continue;
+			}
+			ctx.beginPath();
+			ctx.arc(ringMetrics.cx, ringMetrics.cy, p.r, 0, Math.PI * 2);
+			ctx.strokeStyle = `hsla(${hue + 20}, 90%, 70%, ${p.alpha})`;
+			ctx.lineWidth = 1.5 + p.alpha * 5;
+			ctx.stroke();
+		}
+	}
+
+	// 底部全宽频谱条：低频在中央向两侧铺开，带渐变与峰值帽
+	function drawBottomBars(w: number, h: number, hue: number) {
+		const ctx = canvasCtx!;
+		const barW = w < 640 ? 6 : 9;
+		const gap = w < 640 ? 4 : 6;
+		const n = Math.max(12, Math.floor(w / (barW + gap)));
+		const maxH = Math.min(h * 0.34, 300);
+		const mid = (n - 1) / 2;
+		const total = n * (barW + gap) - gap;
+		const x0 = (w - total) / 2;
+
+		const grad = ctx.createLinearGradient(0, h, 0, h - maxH);
+		grad.addColorStop(0, `hsla(${hue}, 90%, 55%, 0.05)`);
+		grad.addColorStop(0.35, `hsla(${hue + 15}, 90%, 62%, 0.5)`);
+		grad.addColorStop(1, `hsla(${hue + 45}, 95%, 75%, 0.95)`);
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		const caps: Array<[number, number]> = [];
+		for (let j = 0; j < n; j++) {
+			const d = Math.abs(j - mid) / (mid || 1); // 0=中央(低频) → 1=两端(高频)
+			const f = d * (BANDS - 1) * 0.92;
+			const i0 = Math.floor(f);
+			const fr = f - i0;
+			const i1 = Math.min(BANDS - 1, i0 + 1);
+			const v = bandVals[i0] * (1 - fr) + bandVals[i1] * fr;
+			const pk = bandPeaks[i0] * (1 - fr) + bandPeaks[i1] * fr;
+			// 中央略高、两端略低，整体呈山形，更有层次
+			const shape = 1 - d * 0.35;
+			const bh = 3 + v * maxH * shape;
+			const x = x0 + j * (barW + gap);
+			if (ctx.roundRect) ctx.roundRect(x, h - bh, barW, bh + 6, barW / 2);
+			else ctx.rect(x, h - bh, barW, bh);
+			caps.push([x, h - (3 + pk * maxH * shape) - 7]);
+		}
+		ctx.fill();
+
+		// 峰值帽
+		ctx.fillStyle = `hsla(${hue + 30}, 95%, 82%, 0.85)`;
+		for (const [x, y] of caps) ctx.fillRect(x, y, barW, 2);
+	}
+
+	// 小猫爪：1 个掌垫 + 4 个脚趾
+	function drawPaw(p: Paw, alpha: number, hue: number) {
+		const ctx = canvasCtx!;
+		const s = p.size;
+		ctx.save();
+		ctx.translate(p.x + Math.sin(p.phase) * 14, p.y);
+		ctx.rotate(p.rot + Math.sin(p.phase) * 0.25);
+		ctx.globalAlpha = alpha;
+		ctx.fillStyle = `hsl(${hue + p.hueOff}, 85%, 78%)`;
+		ctx.beginPath();
+		ctx.ellipse(0, s * 0.35, s * 0.55, s * 0.45, 0, 0, Math.PI * 2);
+		ctx.moveTo(-s * 0.72 + s * 0.2, -s * 0.05);
+		ctx.ellipse(-s * 0.72, -s * 0.05, s * 0.2, s * 0.28, -0.35, 0, Math.PI * 2);
+		ctx.moveTo(-s * 0.28 + s * 0.2, -s * 0.5);
+		ctx.ellipse(-s * 0.28, -s * 0.5, s * 0.2, s * 0.3, -0.1, 0, Math.PI * 2);
+		ctx.moveTo(s * 0.28 + s * 0.2, -s * 0.5);
+		ctx.ellipse(s * 0.28, -s * 0.5, s * 0.2, s * 0.3, 0.1, 0, Math.PI * 2);
+		ctx.moveTo(s * 0.72 + s * 0.2, -s * 0.05);
+		ctx.ellipse(s * 0.72, -s * 0.05, s * 0.2, s * 0.28, 0.35, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.restore();
+	}
+
+	function drawPaws(h: number, hue: number) {
+		for (let i = paws.length - 1; i >= 0; i--) {
+			const p = paws[i];
+			p.y -= p.vy;
+			p.phase += 0.03;
+			// 越靠近顶部越透明
+			const fade = Math.min(1, Math.max(0, p.y / (h * 0.8)));
+			if (p.y < -30 || fade < 0.02) {
+				paws.splice(i, 1);
+				continue;
+			}
+			drawPaw(p, p.alpha * fade, hue);
 		}
 	}
 
 	function drawVisualizer() {
 		requestAnimationFrame(drawVisualizer);
 		if (!canvasCtx) return;
+		const ctx = canvasCtx;
 		const w = canvas.clientWidth;
 		const h = canvas.clientHeight;
-		const hue =
-			getComputedStyle(root).getPropertyValue("--hue").trim() || "165";
-
-		canvasCtx.clearRect(0, 0, w, h);
-
-		// 真实频谱：MusicManager 的 AnalyserNode 就绪后返回 0-255 数据
-		const freq = mgr.getFreqData?.() ?? null;
-		let bass = 0;
-		let mid = 0;
-		let treble = 0;
-		if (freq) {
-			let b = 0;
-			let m = 0;
-			let t = 0;
-			for (let i = 2; i < 16; i++) b += freq[i];
-			for (let i = 16; i < 64; i++) m += freq[i];
-			for (let i = 64; i < 160; i++) t += freq[i];
-			bass = b / (14 * 255);
-			mid = m / (48 * 255);
-			treble = t / (96 * 255);
+		const now = performance.now();
+		// --hue 很少变化，每秒读一次即可，避免每帧强制样式计算
+		if (now - hueReadAt > 1000) {
+			hueReadAt = now;
+			hueCache =
+				Number(getComputedStyle(root).getPropertyValue("--hue").trim()) || 165;
 		}
+		const hue = hueCache;
 
-		// 播放时波浪更活跃，暂停时低幅呼吸
+		ctx.clearRect(0, 0, w, h);
+
+		analyse(mgr.getFreqData?.() ?? null, isPlaying, now);
+
+		// 背景波浪：播放时随鼓点起伏，暂停时低幅呼吸
 		const energy = isPlaying ? 1 : 0.25;
-		const time = performance.now() / 1000;
+		const time = now / 1000;
 		const speed = isPlaying ? 1 : 0.3;
-
 		const layers = [
-			{
-				freq: 0.7,
-				amp: 0.05 + energy * 0.16,
-				speed: 0.5 * speed,
-				alpha: 0.09,
-				hueOff: 0,
-			},
-			{
-				freq: 1.3,
-				amp: 0.07 + energy * 0.12,
-				speed: -0.35 * speed,
-				alpha: 0.07,
-				hueOff: 30,
-			},
-			{
-				freq: 2.1,
-				amp: 0.04 + energy * 0.1,
-				speed: 0.25 * speed,
-				alpha: 0.05,
-				hueOff: 60,
-			},
+			{ freq: 0.7, amp: 0.05 + energy * 0.16, speed: 0.5 * speed, alpha: 0.09, hueOff: 0 },
+			{ freq: 1.3, amp: 0.07 + energy * 0.12, speed: -0.35 * speed, alpha: 0.07, hueOff: 30 },
+			{ freq: 2.1, amp: 0.04 + energy * 0.1, speed: 0.25 * speed, alpha: 0.05, hueOff: 60 },
 		];
-
 		for (const layer of layers) {
-			canvasCtx.beginPath();
-			canvasCtx.moveTo(0, h);
+			const amp = layer.amp + kick * 0.05;
+			ctx.beginPath();
+			ctx.moveTo(0, h);
 			for (let x = 0; x <= w; x += 4) {
-				// 叠加两个正弦让波浪更自然
 				const y =
 					h / 2 +
-					Math.sin(x * 0.006 * layer.freq + time * layer.speed) *
-						(h * layer.amp) +
+					Math.sin(x * 0.006 * layer.freq + time * layer.speed) * (h * amp) +
 					Math.sin(x * 0.013 * layer.freq + time * layer.speed * 1.6) *
-						(h * layer.amp * 0.4);
-				canvasCtx.lineTo(x, y);
+						(h * amp * 0.4);
+				ctx.lineTo(x, y);
 			}
-			canvasCtx.lineTo(w, h);
-			canvasCtx.closePath();
-			const grad = canvasCtx.createLinearGradient(0, 0, 0, h);
-			grad.addColorStop(
-				0,
-				`hsla(${Number(hue) + layer.hueOff}, 80%, 55%, ${layer.alpha})`,
-			);
-			grad.addColorStop(1, `hsla(${Number(hue) + layer.hueOff}, 80%, 55%, 0)`);
-			canvasCtx.fillStyle = grad;
-			canvasCtx.fill();
+			ctx.lineTo(w, h);
+			ctx.closePath();
+			const grad = ctx.createLinearGradient(0, 0, 0, h);
+			grad.addColorStop(0, `hsla(${hue + layer.hueOff}, 80%, 55%, ${layer.alpha})`);
+			grad.addColorStop(1, `hsla(${hue + layer.hueOff}, 80%, 55%, 0)`);
+			ctx.fillStyle = grad;
+			ctx.fill();
 		}
 
-		// 环形频谱：仅播放时绘制（暂停时光柱会全部回落，画了也接近基线）
-		if (freq && isPlaying) {
-			drawSpectrumRing(hue, freq);
-		}
+		// 底部频谱条始终绘制（暂停时回落为低矮的底线），环形与冲击波仅播放时绘制
+		drawBottomBars(w, h, hue);
+		if (isPlaying || pulses.length > 0) drawPulses(hue);
+		if (isPlaying) drawSpectrumRing(hue);
+		drawPaws(h, hue);
 
-		// 节拍发光：低频能量写入 --beat，驱动歌名光晕（每 3 帧更新，避免频繁样式重算）
+		// 节拍发光：冲量写入 --beat，驱动封面脉冲与歌名光晕（每 2 帧更新，避免频繁样式重算）
 		frameCount++;
-		if (freq && frameCount % 3 === 0) {
-			root.style.setProperty(
-				"--beat",
-				(isPlaying ? Math.min(1, bass * 1.4) : 0).toFixed(3),
-			);
+		if (frameCount % 2 === 0) {
+			root.style.setProperty("--beat", (isPlaying ? kick : 0).toFixed(3));
 		}
 
 		// 涟漪
@@ -607,23 +803,20 @@ if (!mgr) {
 				ripples.splice(i, 1);
 				continue;
 			}
-			// 外圈
-			canvasCtx.beginPath();
-			canvasCtx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-			canvasCtx.strokeStyle = `hsla(${hue}, 85%, 60%, ${r.alpha})`;
-			canvasCtx.lineWidth = 2;
-			canvasCtx.stroke();
-			// 内圈
-			canvasCtx.beginPath();
-			canvasCtx.arc(r.x, r.y, r.radius * 0.6, 0, Math.PI * 2);
-			canvasCtx.strokeStyle = `hsla(${hue}, 85%, 65%, ${r.alpha * 0.5})`;
-			canvasCtx.lineWidth = 1;
-			canvasCtx.stroke();
-			// 中心光点
-			canvasCtx.beginPath();
-			canvasCtx.arc(r.x, r.y, 3, 0, Math.PI * 2);
-			canvasCtx.fillStyle = `hsla(${hue}, 85%, 70%, ${r.alpha})`;
-			canvasCtx.fill();
+			ctx.beginPath();
+			ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+			ctx.strokeStyle = `hsla(${hue}, 85%, 60%, ${r.alpha})`;
+			ctx.lineWidth = 2;
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.arc(r.x, r.y, r.radius * 0.6, 0, Math.PI * 2);
+			ctx.strokeStyle = `hsla(${hue}, 85%, 65%, ${r.alpha * 0.5})`;
+			ctx.lineWidth = 1;
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.arc(r.x, r.y, 3, 0, Math.PI * 2);
+			ctx.fillStyle = `hsla(${hue}, 85%, 70%, ${r.alpha})`;
+			ctx.fill();
 		}
 	}
 	drawVisualizer();
