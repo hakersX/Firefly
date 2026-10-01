@@ -1,0 +1,225 @@
+---
+/**
+ * CatWipe.astro —— 整页刷新时的猫爪转场
+ *
+ * 背景：首页 / 音乐页等独立布局没有 swup 容器，与其它页面互相跳转时 swup 会放弃接管、
+ * 退化为整页刷新（白闪 + 硬切）。这里在点击时先用暖色圆形从点击位置扩散盖住屏幕，
+ * 再跳转；新页面由 Layout <head> 里的小脚本标记 html.cat-wipe-hold，使其一加载就被盖住，
+ * 随后以同一点为圆心收缩揭开。
+ *
+ * 与 swup 的关系：capture 阶段拦截需要整页刷新的链接并 stopImmediatePropagation，
+ * 其余链接仍由 swup 处理（保留原有的切页动画）。
+ */
+---
+
+<div id="cat-wipe" aria-hidden="true">
+	<svg width="0" height="0" style="position:absolute">
+		<symbol id="cw-paw" viewBox="0 0 64 64">
+			<g fill="currentColor">
+				<ellipse cx="32" cy="42" rx="13" ry="11"></ellipse>
+				<ellipse cx="14" cy="28" rx="6" ry="8" transform="rotate(-20 14 28)"></ellipse>
+				<ellipse cx="25" cy="17" rx="6" ry="8.5" transform="rotate(-6 25 17)"></ellipse>
+				<ellipse cx="39" cy="17" rx="6" ry="8.5" transform="rotate(6 39 17)"></ellipse>
+				<ellipse cx="50" cy="28" rx="6" ry="8" transform="rotate(20 50 28)"></ellipse>
+			</g>
+		</symbol>
+	</svg>
+	<div class="cw-walk">
+		{[0, 1, 2, 3, 4].map((i) => (
+			<svg class="cw-paw" style={`--i:${i};`}><use href="#cw-paw"></use></svg>
+		))}
+	</div>
+</div>
+
+<style is:global>
+	#cat-wipe {
+		--cw-bg: linear-gradient(135deg, #ffc27a, #f0892b);
+		--cw-ink: rgba(255, 255, 255, 0.92);
+		position: fixed;
+		inset: 0;
+		z-index: 2147483000;
+		display: grid;
+		place-items: center;
+		visibility: hidden;
+		pointer-events: none;
+		background: var(--cw-bg);
+		clip-path: circle(0px at var(--wx, 50%) var(--wy, 50%));
+		transition: clip-path 520ms cubic-bezier(0.65, 0, 0.35, 1);
+	}
+	:root.dark #cat-wipe {
+		--cw-bg: linear-gradient(135deg, #2f2346, #1b1512);
+		--cw-ink: rgba(255, 190, 110, 0.9);
+	}
+
+	/* 离开：圆形扩散盖住屏幕 */
+	#cat-wipe.cover {
+		visibility: visible;
+		pointer-events: all;
+		clip-path: circle(150vmax at var(--wx, 50%) var(--wy, 50%));
+	}
+	/* 到达：新页面一加载就被盖住（无过渡，避免闪一下） */
+	html.cat-wipe-hold {
+		background: #ffc27a;
+	}
+	html.dark.cat-wipe-hold {
+		background: #1b1512;
+	}
+	html.cat-wipe-hold #cat-wipe {
+		visibility: visible;
+		pointer-events: all;
+		clip-path: circle(150vmax at var(--wx, 50%) var(--wy, 50%));
+		transition: none;
+	}
+	/* 揭开：去掉 hold 后圆形向落点收缩 */
+	#cat-wipe.reveal {
+		visibility: visible;
+		transition-duration: 640ms;
+	}
+
+	/* 一排猫爪依次踩过 */
+	.cw-walk {
+		display: flex;
+		gap: 1.4rem;
+		align-items: center;
+	}
+	.cw-paw {
+		width: 44px;
+		height: 44px;
+		color: var(--cw-ink);
+		opacity: 0;
+		rotate: 90deg;
+		animation: cw-step 1.3s ease-in-out infinite;
+		animation-delay: calc(var(--i) * 0.16s);
+	}
+	.cw-paw:nth-child(odd) {
+		translate: 0 -12px;
+	}
+	.cw-paw:nth-child(even) {
+		translate: 0 12px;
+	}
+	@keyframes cw-step {
+		0%,
+		100% {
+			opacity: 0;
+			scale: 0.4;
+		}
+		25%,
+		60% {
+			opacity: 1;
+			scale: 1;
+		}
+		85% {
+			opacity: 0;
+			scale: 1;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.cw-walk {
+			gap: 0.8rem;
+		}
+		.cw-paw {
+			width: 32px;
+			height: 32px;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		#cat-wipe {
+			display: none;
+		}
+	}
+</style>
+
+<script is:inline>
+	(function () {
+		if (window.__catWipe) return;
+		window.__catWipe = true;
+
+		// 没有 swup 容器的独立布局页面：与它们互相跳转都会整页刷新
+		var STANDALONE = /^\/(?:$|music(?:\/|$)|books(?:\/|$)|dynamic\/comments)/;
+		var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		function overlay() {
+			return document.getElementById("cat-wipe");
+		}
+
+		function go(href, x, y) {
+			var w = overlay();
+			if (!w) {
+				location.href = href;
+				return;
+			}
+			w.style.setProperty("--wx", x + "px");
+			w.style.setProperty("--wy", y + "px");
+			try {
+				sessionStorage.setItem("catWipe", JSON.stringify({ x: x, y: y }));
+			} catch (_) {}
+			void w.offsetWidth; // 先让圆心落定，再开始扩散，否则圆心会从屏幕中央滑向点击点
+			w.classList.add("cover");
+			var done = false;
+			function nav() {
+				if (done) return;
+				done = true;
+				location.href = href;
+			}
+			w.addEventListener("transitionend", nav, { once: true });
+			setTimeout(nav, 700); // 兜底
+		}
+
+		// capture 阶段先于 swup 处理，拦下需要整页刷新的链接
+		window.addEventListener("click", function (e) {
+			if (reduce || e.defaultPrevented || e.button !== 0) return;
+			if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+			var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+			if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+			var u;
+			try {
+				u = new URL(a.href, location.href);
+			} catch (_) {
+				return;
+			}
+			if (u.origin !== location.origin || u.pathname === location.pathname) return;
+			if (!STANDALONE.test(location.pathname) && !STANDALONE.test(u.pathname)) return;
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			go(u.href, e.clientX, e.clientY);
+		}, true);
+
+		// 到达：<head> 里的脚本已给 html 加了 cat-wipe-hold，这里在 DOM 就绪后揭开
+		var revealed = false;
+		function reveal() {
+			if (revealed) return;
+			revealed = true;
+			var root = document.documentElement;
+			var w = overlay();
+			try {
+				sessionStorage.removeItem("catWipe");
+			} catch (_) {}
+			if (!w || !root.classList.contains("cat-wipe-hold")) return;
+			// 不依赖 rAF（后台标签页里 rAF 不触发会导致一直盖着）：强制重排后再切换类名，
+			// 让过渡从「全屏覆盖」的状态开始
+			void w.offsetWidth;
+			w.classList.add("reveal");
+			root.classList.remove("cat-wipe-hold");
+			var end = function () { w.classList.remove("reveal"); };
+			w.addEventListener("transitionend", end, { once: true });
+			setTimeout(end, 1000);
+		}
+		if (document.documentElement.classList.contains("cat-wipe-hold")) {
+			if (document.readyState === "loading") {
+				document.addEventListener("DOMContentLoaded", function () { setTimeout(reveal, 120); }, { once: true });
+			} else {
+				setTimeout(reveal, 120);
+			}
+			setTimeout(reveal, 2500); // 兜底：无论如何不能一直盖着
+		}
+
+		// 从 bfcache 返回时清掉遗留的覆盖层
+		window.addEventListener("pageshow", function (e) {
+			if (!e.persisted) return;
+			var w = overlay();
+			if (w) w.classList.remove("cover", "reveal");
+			document.documentElement.classList.remove("cat-wipe-hold");
+		});
+	})();
+</script>
