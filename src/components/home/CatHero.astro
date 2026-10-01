@@ -84,8 +84,9 @@ const floaters: Array<[number, number, number, number]> = [
 			</div>
 		</div>
 
-		<div class="hero-art reveal" style="--delay: 400ms;" aria-hidden="true">
-			<svg class="cat-scene" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+		<div class="hero-art reveal" style="--delay: 400ms;">
+			<span class="cat-say" aria-live="polite"></span>
+			<svg class="cat-scene" aria-hidden="true" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
 				<defs>
 					<radialGradient id="moon-grad" cx="50%" cy="45%" r="55%">
 						<stop offset="0%" stop-color="var(--moon-a)"></stop>
@@ -96,23 +97,25 @@ const floaters: Array<[number, number, number, number]> = [
 				<g class="cat">
 					<path class="tail" d="M262 306 C322 308 346 262 318 222" fill="none" stroke="var(--cat-ink)" stroke-width="18" stroke-linecap="round"></path>
 					<path d="M138 312 C138 240 160 198 200 198 C240 198 262 240 262 312 Z" fill="var(--cat-ink)"></path>
-					<ellipse cx="200" cy="168" rx="50" ry="43" fill="var(--cat-ink)"></ellipse>
-					<path d="M155 148 L158 98 L192 130 Z" fill="var(--cat-ink)"></path>
-					<path d="M245 148 L242 98 L208 130 Z" fill="var(--cat-ink)"></path>
-					<path d="M162 140 L164 112 L182 130 Z" fill="var(--ear-in)"></path>
-					<path d="M238 140 L236 112 L218 130 Z" fill="var(--ear-in)"></path>
-					<g class="eyes">
-						<ellipse cx="182" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
-						<ellipse cx="218" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
-						<ellipse cx="182" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
-						<ellipse cx="218" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
-					</g>
-					<path d="M196 182 L204 182 L200 187 Z" fill="var(--nose)"></path>
-					<g stroke="var(--whisker)" stroke-width="1.5" stroke-linecap="round" fill="none">
-						<path d="M170 186 L136 180"></path>
-						<path d="M170 191 L138 196"></path>
-						<path d="M230 186 L264 180"></path>
-						<path d="M230 191 L262 196"></path>
+					<g class="head">
+						<ellipse cx="200" cy="168" rx="50" ry="43" fill="var(--cat-ink)"></ellipse>
+						<path class="ear ear-l" d="M155 148 L158 98 L192 130 Z" fill="var(--cat-ink)"></path>
+						<path class="ear ear-r" d="M245 148 L242 98 L208 130 Z" fill="var(--cat-ink)"></path>
+						<path d="M162 140 L164 112 L182 130 Z" fill="var(--ear-in)"></path>
+						<path d="M238 140 L236 112 L218 130 Z" fill="var(--ear-in)"></path>
+						<g class="eyes">
+							<ellipse cx="182" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
+							<ellipse cx="218" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
+							<ellipse class="pupil" cx="182" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
+							<ellipse class="pupil" cx="218" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
+						</g>
+						<path d="M196 182 L204 182 L200 187 Z" fill="var(--nose)"></path>
+						<g stroke="var(--whisker)" stroke-width="1.5" stroke-linecap="round" fill="none">
+							<path d="M170 186 L136 180"></path>
+							<path d="M170 191 L138 196"></path>
+							<path d="M230 186 L264 180"></path>
+							<path d="M230 191 L262 196"></path>
+						</g>
 					</g>
 				</g>
 				<rect x="40" y="310" width="320" height="16" rx="8" fill="var(--ledge)"></rect>
@@ -129,3 +132,102 @@ const floaters: Array<[number, number, number, number]> = [
 		<path d="M0 40 C 240 90 480 0 720 40 C 960 80 1200 10 1440 50 L1440 90 L0 90 Z" fill="var(--bg)"></path>
 	</svg>
 </section>
+
+<script is:inline>
+	(function () {
+		// 全局监听只绑一次；swup 换页后只需刷新 hero 引用
+		if (window.__catHome) {
+			window.__catHome.refresh();
+			return;
+		}
+
+		var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		var hero = null;
+		var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+		var SAYS = ["喵~", "呼噜呼噜…", "摸摸我~", "要吃小鱼干!", "(=^･ω･^=)", "今天也要加油喵", "再摸一下嘛"];
+		var lastSay = -1;
+
+		function refresh() {
+			hero = document.querySelector(".cat-hero");
+		}
+		function getHero() {
+			if (!hero || !hero.isConnected) refresh();
+			return hero;
+		}
+
+		// 鼠标视差：向目标值缓动，写入 --mx/--my（-1..1），由 CSS 驱动瞳孔、头部、各层位移
+		function tick() {
+			raf = 0;
+			var h = getHero();
+			if (!h) return;
+			cx += (tx - cx) * 0.09;
+			cy += (ty - cy) * 0.09;
+			h.style.setProperty("--mx", cx.toFixed(3));
+			h.style.setProperty("--my", cy.toFixed(3));
+			if (Math.abs(tx - cx) > 0.002 || Math.abs(ty - cy) > 0.002) {
+				raf = requestAnimationFrame(tick);
+			}
+		}
+		window.addEventListener("pointermove", function (e) {
+			if (reduce || e.pointerType === "touch" || !getHero()) return;
+			tx = (e.clientX / window.innerWidth - 0.5) * 2;
+			ty = (e.clientY / window.innerHeight - 0.5) * 2;
+			if (!raf) raf = requestAnimationFrame(tick);
+		}, { passive: true });
+
+		// 滚动：首屏文字渐隐下沉、猫咪上浮，写入 --sy（0..1）
+		var scrollRaf = 0;
+		window.addEventListener("scroll", function () {
+			if (reduce || scrollRaf) return;
+			scrollRaf = requestAnimationFrame(function () {
+				scrollRaf = 0;
+				var h = getHero();
+				if (!h) return;
+				var p = Math.min(1, Math.max(0, window.scrollY / (h.offsetHeight * 0.85)));
+				h.style.setProperty("--sy", p.toFixed(3));
+			});
+		}, { passive: true });
+
+		function say(art) {
+			var bubble = art.querySelector(".cat-say");
+			if (!bubble) return;
+			var i;
+			do { i = Math.floor(Math.random() * SAYS.length); } while (i === lastSay);
+			lastSay = i;
+			bubble.textContent = SAYS[i];
+			bubble.classList.remove("show");
+			void bubble.offsetWidth; // 重启动画
+			bubble.classList.add("show");
+		}
+
+		document.addEventListener("pointerdown", function (e) {
+			var h = getHero();
+			if (!h || !(e.target instanceof Element) || !h.contains(e.target)) return;
+
+			// 点猫咪：喵一声 + 弹一下
+			var scene = e.target.closest(".cat-scene");
+			if (scene) {
+				scene.classList.remove("purr");
+				void scene.getBoundingClientRect();
+				scene.classList.add("purr");
+				say(scene.closest(".hero-art"));
+				return;
+			}
+			// 点空白处：盖一个猫爪印（链接 / 按钮 / 文字区域不触发）
+			if (reduce || e.target.closest("a, button, .hero-text")) return;
+			var rect = h.getBoundingClientRect();
+			var stamp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			stamp.setAttribute("class", "stamp");
+			stamp.style.left = e.clientX - rect.left + "px";
+			stamp.style.top = e.clientY - rect.top + "px";
+			stamp.style.setProperty("--r", (Math.random() * 60 - 30).toFixed(0) + "deg");
+			stamp.innerHTML = '<use href="#cat-paw"></use>';
+			h.appendChild(stamp);
+			stamp.addEventListener("animationend", function () { stamp.remove(); });
+		});
+
+		window.__catHome = { refresh: refresh };
+		refresh();
+		document.addEventListener("swup:contentReplaced", refresh);
+	})();
+</script>

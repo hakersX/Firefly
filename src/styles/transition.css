@@ -11,9 +11,9 @@
 /* Main Content Transition */
 .transition-main {
     transition:
-        opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        filter 280ms cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 420ms ease-out,
+        transform 620ms cubic-bezier(0.34, 1.4, 0.64, 1),
+        filter 420ms ease-out;
 }
 
 /* Leaving Animation */
@@ -27,9 +27,9 @@
 /* State: Changing (Swup) */
 html.is-changing .transition-main {
     transition:
-        opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        filter 280ms cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 420ms ease-out,
+        transform 620ms cubic-bezier(0.34, 1.4, 0.64, 1),
+        filter 420ms ease-out;
 }
 
 html.is-leaving .transition-main {
@@ -42,8 +42,8 @@ html.is-leaving .transition-main {
 /* State: Animating (Entering) */
 html.is-animating .transition-main {
     opacity: 0;
-    transform: translateY(1.4rem) scale(0.995);
-    filter: blur(8px);
+    transform: translateY(2.2rem) scale(0.975);
+    filter: blur(10px);
 }
 
 /* State: Leaving（离场动画由内层 #content-wrapper.transition-leaving 承担，
@@ -74,6 +74,9 @@ html.is-animating .transition-swup-fade {
         transform: none;
         filter: none;
     }
+    .onload-animation.post-card-item {
+        animation: fade-in-up 220ms ease-out forwards;
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -97,7 +100,22 @@ html.is-animating .transition-swup-fade {
 
 .onload-animation {
     opacity: 0;
-    animation: fade-in-up 120ms ease-out forwards;
+    animation: fade-in-up 220ms ease-out forwards;
+}
+
+/* 文章卡片：从下方弹出并轻微回正，配合逐个延迟形成「依次蹦出」的节奏 */
+.onload-animation.post-card-item {
+    animation: card-pop 560ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+@keyframes card-pop {
+    from {
+        opacity: 0;
+        transform: translateY(2.4rem) scale(0.94) rotate(-1.2deg);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* 渐进式动画延迟 */
@@ -130,6 +148,24 @@ html.is-animating .transition-swup-fade {
 @keyframes progress-loading {
     0% { width: 0; }
     100% { width: 95%; }
+}
+
+/* 进度条头部：一只小猫爪跟着进度「跑」 */
+#progress-bar::after {
+    content: "";
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translateY(-50%) rotate(90deg);
+    background: var(--primary);
+    -webkit-mask: var(--paw-mask) center / contain no-repeat;
+    mask: var(--paw-mask) center / contain no-repeat;
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--primary) 60%, transparent));
+}
+#progress-bar {
+    --paw-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='black'%3E%3Cellipse cx='32' cy='42' rx='13' ry='11'/%3E%3Cellipse cx='14' cy='28' rx='6' ry='8' transform='rotate(-20 14 28)'/%3E%3Cellipse cx='25' cy='17' rx='6' ry='8.5' transform='rotate(-6 25 17)'/%3E%3Cellipse cx='39' cy='17' rx='6' ry='8.5' transform='rotate(6 39 17)'/%3E%3Cellipse cx='50' cy='28' rx='6' ry='8' transform='rotate(20 50 28)'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 #progress-bar.loading {
