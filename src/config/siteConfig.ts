@@ -9,25 +9,17 @@ export const siteConfig: SiteConfig = {
 	title: "CatX",
 
 	// 站点副标题
-	subtitle: "Demo site",
+	subtitle: "猫神X的猫窝 🐾",
 
 	// 站点 URL
 	site_url: "https://catxblog.online",
 
 	// 站点描述
 	description:
-		"Firefly 是一款基于 Astro 框架和 Fuwari 模板开发的清新美观且现代化个人博客主题模板，专为技术爱好者和内容创作者设计。该主题融合了现代 Web 技术栈，提供了丰富的功能模块和高度可定制的界面，让您能够轻松打造出专业且美观的个人博客网站。",
+		"猫神X的个人博客，一个充满猫咪的小窝。在这里记录技术笔记、生活碎碎念和连载故事，欢迎来撸猫。",
 
 	// 站点关键词
-	keywords: [
-		"Firefly",
-		"Fuwari",
-		"Astro",
-		"ACGN",
-		"博客",
-		"技术博客",
-		"静态博客",
-	],
+	keywords: ["猫神X", "CatX", "猫咪", "博客", "技术博客", "连载故事"],
 
 	// 主题色
 	themeColor: {
@@ -55,7 +47,7 @@ export const siteConfig: SiteConfig = {
 	favicon: [
 		{
 			// 图标文件路径
-			src: "/favicon/firefly-32.png",
+			src: "/favicon/cat-32.png",
 			// 可选，指定主题 'light' | 'dark'
 			// theme: "light",
 			// 可选，图标大小
@@ -76,9 +68,9 @@ export const siteConfig: SiteConfig = {
 		// 使用 Astro 图标库时不需要设置 valueDark，图标会自动跟随主题亮暗色切换
 		logo: {
 			type: "image",
-			value: "assets/images/logo/firefly-light.png",
-			valueDark: "assets/images/logo/firefly-dark.png",
-			alt: "🍀",
+			value: "assets/images/logo/cat-light.png",
+			valueDark: "assets/images/logo/cat-dark.png",
+			alt: "🐾",
 		},
 		// 导航栏标题
 		title: "CatX",

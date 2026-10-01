@@ -5,7 +5,7 @@ export const announcementConfig: AnnouncementConfig = {
 	title: "公告",
 
 	// 公告内容
-	content: "这是我的博客空间，我希望能做出一个真正好用的博客平台",
+	content: "欢迎来到猫神X的猫窝 🐾 这里记录技术、故事和日常，希望能做出一个真正好用的博客平台",
 
 	// 是否允许用户关闭公告
 	closable: true,
