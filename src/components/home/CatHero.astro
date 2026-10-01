@@ -1,0 +1,131 @@
+---
+/**
+ * CatHero.astro
+ *
+ * 首屏：暖色天空 + 窗台上的猫咪剪影（眨眼、摇尾巴）+ 飘浮猫爪 + 名字与标语 + 3 个入口按钮。
+ * 同时定义全页复用的猫爪 <symbol id="cat-paw">。
+ */
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	name: string;
+	slogan: string;
+	subtitle: string;
+}
+const { name, slogan, subtitle } = Astro.props;
+
+// 飘浮猫爪：[left%, size px, duration s, delay s]
+const floaters: Array<[number, number, number, number]> = [
+	[6, 26, 19, 0],
+	[16, 18, 23, 6],
+	[28, 22, 21, 11],
+	[44, 16, 25, 3],
+	[58, 24, 20, 14],
+	[72, 18, 24, 8],
+	[85, 28, 22, 1],
+	[94, 16, 26, 12],
+];
+---
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+	<symbol id="cat-paw" viewBox="0 0 64 64">
+		<g fill="currentColor">
+			<ellipse cx="32" cy="42" rx="13" ry="11"></ellipse>
+			<ellipse cx="14" cy="28" rx="6" ry="8" transform="rotate(-20 14 28)"></ellipse>
+			<ellipse cx="25" cy="17" rx="6" ry="8.5" transform="rotate(-6 25 17)"></ellipse>
+			<ellipse cx="39" cy="17" rx="6" ry="8.5" transform="rotate(6 39 17)"></ellipse>
+			<ellipse cx="50" cy="28" rx="6" ry="8" transform="rotate(20 50 28)"></ellipse>
+		</g>
+	</symbol>
+</svg>
+
+<section class="cat-hero">
+	<div class="hero-stars" aria-hidden="true"></div>
+	<div class="hero-floaters" aria-hidden="true">
+		{floaters.map(([left, size, dur, delay]) => (
+			<svg
+				class="floater"
+				style={`left:${left}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:-${delay}s;`}
+			>
+				<use href="#cat-paw"></use>
+			</svg>
+		))}
+	</div>
+
+	<div class="hero-inner">
+		<div class="hero-text">
+			<p class="hero-chip reveal" style="--delay: 120ms;">
+				<svg class="chip-paw"><use href="#cat-paw"></use></svg>
+				<span>{subtitle}</span>
+			</p>
+
+			<h1 class="cat-name reveal" aria-label={name} style="--delay: 240ms;">
+				{name.split("").map((ch, i) => (
+					<span class="cat-name-ch" style={`--i:${i};`}>{ch}</span>
+				))}
+				<span class="meow" aria-hidden="true">喵~</span>
+			</h1>
+
+			<p class="hero-slogan reveal" style="--delay: 520ms;">{slogan}</p>
+
+			<div class="hero-cta reveal" style="--delay: 720ms;">
+				<a href="/articles/" class="cat-btn cat-btn-primary">
+					<Icon name="material-symbols:article-rounded" />
+					<span>浏览文章</span>
+				</a>
+				<a href="/about/" class="cat-btn cat-btn-soft">
+					<Icon name="material-symbols:pets" />
+					<span>认识猫神X</span>
+				</a>
+				<a href="/music/" class="cat-btn cat-btn-soft">
+					<Icon name="material-symbols:music-note-rounded" />
+					<span>听音乐</span>
+				</a>
+			</div>
+		</div>
+
+		<div class="hero-art reveal" style="--delay: 400ms;" aria-hidden="true">
+			<svg class="cat-scene" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+				<defs>
+					<radialGradient id="moon-grad" cx="50%" cy="45%" r="55%">
+						<stop offset="0%" stop-color="var(--moon-a)"></stop>
+						<stop offset="100%" stop-color="var(--moon-b)"></stop>
+					</radialGradient>
+				</defs>
+				<circle class="moon" cx="200" cy="150" r="128" fill="url(#moon-grad)"></circle>
+				<g class="cat">
+					<path class="tail" d="M262 306 C322 308 346 262 318 222" fill="none" stroke="var(--cat-ink)" stroke-width="18" stroke-linecap="round"></path>
+					<path d="M138 312 C138 240 160 198 200 198 C240 198 262 240 262 312 Z" fill="var(--cat-ink)"></path>
+					<ellipse cx="200" cy="168" rx="50" ry="43" fill="var(--cat-ink)"></ellipse>
+					<path d="M155 148 L158 98 L192 130 Z" fill="var(--cat-ink)"></path>
+					<path d="M245 148 L242 98 L208 130 Z" fill="var(--cat-ink)"></path>
+					<path d="M162 140 L164 112 L182 130 Z" fill="var(--ear-in)"></path>
+					<path d="M238 140 L236 112 L218 130 Z" fill="var(--ear-in)"></path>
+					<g class="eyes">
+						<ellipse cx="182" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
+						<ellipse cx="218" cy="168" rx="8" ry="9" fill="var(--eye)"></ellipse>
+						<ellipse cx="182" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
+						<ellipse cx="218" cy="168" rx="2.2" ry="6.5" fill="var(--cat-ink)"></ellipse>
+					</g>
+					<path d="M196 182 L204 182 L200 187 Z" fill="var(--nose)"></path>
+					<g stroke="var(--whisker)" stroke-width="1.5" stroke-linecap="round" fill="none">
+						<path d="M170 186 L136 180"></path>
+						<path d="M170 191 L138 196"></path>
+						<path d="M230 186 L264 180"></path>
+						<path d="M230 191 L262 196"></path>
+					</g>
+				</g>
+				<rect x="40" y="310" width="320" height="16" rx="8" fill="var(--ledge)"></rect>
+				<rect x="60" y="322" width="280" height="6" rx="3" fill="var(--ledge-shadow)"></rect>
+			</svg>
+		</div>
+	</div>
+
+	<a href="#blocks-start" class="hero-scroll" aria-label="向下滚动">
+		<Icon name="material-symbols:keyboard-double-arrow-down-rounded" />
+	</a>
+
+	<svg class="hero-wave" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
+		<path d="M0 40 C 240 90 480 0 720 40 C 960 80 1200 10 1440 50 L1440 90 L0 90 Z" fill="var(--bg)"></path>
+	</svg>
+</section>

@@ -1,0 +1,37 @@
+---
+/**
+ * CatAnnounce.astro
+ *
+ * 公告条：气泡里无缝滚动的消息，悬停暂停。
+ */
+interface Props {
+	messages: string[];
+}
+const { messages } = Astro.props;
+
+// 每一半都铺三遍，保证单半宽度大于容器，再复制一份做 -50% 无缝位移
+const half = [...messages, ...messages, ...messages];
+---
+
+<section class="cat-announce" id="blocks-start">
+	<div class="announce-bubble reveal">
+		<span class="announce-tag">
+			<svg class="tag-paw"><use href="#cat-paw"></use></svg>
+			猫窝快报
+		</span>
+		<div class="announce-marquee" aria-label="公告">
+			<div class="announce-track">
+				{[0, 1].map((copy) => (
+					<div class="announce-half" aria-hidden={copy === 1 ? "true" : undefined}>
+						{half.map((m) => (
+							<span class="announce-item">
+								<svg class="item-paw"><use href="#cat-paw"></use></svg>
+								{m}
+							</span>
+						))}
+					</div>
+				))}
+			</div>
+		</div>
+	</div>
+</section>

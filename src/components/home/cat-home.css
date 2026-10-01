@@ -1,0 +1,720 @@
+/* ============================================================
+ * cat-home.css —— 首页「猫窝」风格
+ * 暖色调，亮/暗两套配色（跟随 :root.dark），圆角柔和，动效克制
+ * ============================================================ */
+
+.cat-home {
+	--bg: #fff6ea;
+	--bg-2: #ffeedb;
+	--ink: #4a3426;
+	--muted: #8a7360;
+	--accent: #f0892b;
+	--accent-2: #ffb35c;
+	--on-accent: #ffffff;
+	--card: #fffdf9;
+	--line: #f3dcc3;
+	--shadow: 0 10px 30px -12px rgba(176, 100, 30, 0.28);
+
+	--sky-top: #ffd9b0;
+	--sky-bottom: #fff6ea;
+	--moon-a: #fffaf0;
+	--moon-b: #ffe2b8;
+	--moon-glow: rgba(255, 190, 120, 0.55);
+	--cat-ink: #4a3426;
+	--ear-in: #f7a7a0;
+	--eye: #ffc94a;
+	--nose: #f08a8a;
+	--whisker: rgba(255, 246, 234, 0.8);
+	--ledge: #c98b52;
+	--ledge-shadow: #a8703c;
+
+	--tone-0: #f0892b;
+	--tone-1: #e8a33d;
+	--tone-2: #e07a5f;
+	--tone-3: #c9a227;
+	--tone-4: #d98c7a;
+
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+	background: var(--bg);
+	color: var(--ink);
+}
+
+:root.dark .cat-home {
+	--bg: #1b1512;
+	--bg-2: #231a15;
+	--ink: #f5e6d6;
+	--muted: #b9a590;
+	--accent: #ffa24a;
+	--accent-2: #ffc27a;
+	--on-accent: #2a1a0c;
+	--card: #2a211b;
+	--line: #3d2e24;
+	--shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+
+	--sky-top: #2a1f3d;
+	--sky-bottom: #1b1512;
+	--moon-a: #fff3d6;
+	--moon-b: #f3c98a;
+	--moon-glow: rgba(255, 190, 110, 0.25);
+	--cat-ink: #120d0b;
+	--ear-in: #5a3a3a;
+	--eye: #ffd45e;
+	--nose: #b86a6a;
+	--whisker: rgba(255, 230, 200, 0.55);
+	--ledge: #4a3626;
+	--ledge-shadow: #33241a;
+
+	--tone-0: #ffa24a;
+	--tone-1: #f0b95a;
+	--tone-2: #f09479;
+	--tone-3: #dcc15a;
+	--tone-4: #e6a595;
+}
+
+/* ---------- reveal 入场 ---------- */
+.cat-home .reveal {
+	opacity: 0;
+	transform: translateY(22px);
+	transition:
+		opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+	transition-delay: var(--delay, 0ms);
+	/* 兜底：JS 未加载时自动显示，避免内容不可见 */
+	animation: cat-reveal-fallback 0.6s ease 2s forwards;
+}
+.cat-home .reveal.is-visible {
+	opacity: 1;
+	transform: none;
+	animation: none;
+}
+@keyframes cat-reveal-fallback {
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---------- 首屏 ---------- */
+.cat-hero {
+	position: relative;
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	padding: 7rem 1.5rem 6rem;
+	overflow: hidden;
+	background:
+		radial-gradient(ellipse 60% 55% at 76% 40%, var(--moon-glow), transparent 70%),
+		linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+}
+
+/* 暗色下的星星 */
+.hero-stars {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	pointer-events: none;
+	background-image:
+		radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+		radial-gradient(1px 1px at 28% 32%, #fff, transparent),
+		radial-gradient(1.5px 1.5px at 41% 12%, #ffe9c4, transparent),
+		radial-gradient(1px 1px at 55% 26%, #fff, transparent),
+		radial-gradient(1.5px 1.5px at 67% 14%, #fff, transparent),
+		radial-gradient(1px 1px at 82% 22%, #ffe9c4, transparent),
+		radial-gradient(1.5px 1.5px at 92% 38%, #fff, transparent),
+		radial-gradient(1px 1px at 8% 52%, #fff, transparent),
+		radial-gradient(1px 1px at 20% 70%, #ffe9c4, transparent);
+	animation: cat-twinkle 5s ease-in-out infinite;
+}
+:root.dark .hero-stars {
+	opacity: 0.9;
+}
+@keyframes cat-twinkle {
+	0%,
+	100% {
+		filter: brightness(1);
+	}
+	50% {
+		filter: brightness(0.55);
+	}
+}
+
+/* 飘浮猫爪 */
+.hero-floaters {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+.floater {
+	position: absolute;
+	bottom: -40px;
+	color: var(--accent);
+	opacity: 0;
+	animation: cat-float linear infinite;
+}
+@keyframes cat-float {
+	0% {
+		transform: translateY(0) rotate(-12deg);
+		opacity: 0;
+	}
+	12% {
+		opacity: 0.22;
+	}
+	50% {
+		transform: translateY(-50vh) translateX(18px) rotate(10deg);
+	}
+	88% {
+		opacity: 0.18;
+	}
+	100% {
+		transform: translateY(-105vh) translateX(-12px) rotate(-8deg);
+		opacity: 0;
+	}
+}
+
+.hero-inner {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 1100px;
+	display: grid;
+	grid-template-columns: 1.1fr 0.9fr;
+	align-items: center;
+	gap: 2rem;
+}
+
+.hero-chip {
+	display: flex;
+	width: fit-content;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0 0 1.2rem;
+	padding: 0.4rem 1rem;
+	border-radius: 999px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	font-size: 0.9rem;
+	color: var(--muted);
+	box-shadow: var(--shadow);
+}
+.chip-paw {
+	width: 1rem;
+	height: 1rem;
+	color: var(--accent);
+}
+
+.cat-name {
+	position: relative;
+	display: block;
+	width: fit-content;
+	margin: 0;
+	font-size: clamp(3.6rem, 9vw, 7rem);
+	font-weight: 800;
+	line-height: 1.05;
+	letter-spacing: 0.04em;
+}
+.cat-name-ch {
+	display: inline-block;
+	background: linear-gradient(135deg, var(--accent), var(--accent-2));
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	animation: cat-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	animation-delay: calc(0.5s + var(--i) * 90ms);
+}
+@keyframes cat-pop {
+	from {
+		opacity: 0;
+		transform: translateY(24px) scale(0.7);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* 名字旁的喵气泡 */
+.meow {
+	position: absolute;
+	top: -0.4rem;
+	right: -3.6rem;
+	padding: 0.15rem 0.7rem;
+	border-radius: 999px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	color: var(--accent);
+	font-size: 1.1rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	box-shadow: var(--shadow);
+	animation: cat-bob 2.6s ease-in-out infinite;
+}
+.meow::after {
+	content: "";
+	position: absolute;
+	left: 0.4rem;
+	bottom: -0.35rem;
+	width: 0.6rem;
+	height: 0.6rem;
+	background: var(--card);
+	border-right: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+	transform: rotate(45deg);
+}
+@keyframes cat-bob {
+	0%,
+	100% {
+		transform: translateY(0) rotate(4deg);
+	}
+	50% {
+		transform: translateY(-6px) rotate(-2deg);
+	}
+}
+
+.hero-slogan {
+	margin: 1.2rem 0 2rem;
+	font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+	color: var(--muted);
+	letter-spacing: 0.12em;
+}
+
+.hero-cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.8rem;
+}
+.cat-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.75rem 1.4rem;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 0.98rem;
+	text-decoration: none;
+	transition:
+		transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.25s ease,
+		background 0.25s ease;
+}
+.cat-btn:hover {
+	transform: translateY(-3px) rotate(-1.5deg);
+}
+.cat-btn:active {
+	transform: scale(0.96);
+}
+.cat-btn-primary {
+	background: linear-gradient(135deg, var(--accent), var(--accent-2));
+	color: var(--on-accent);
+	box-shadow: 0 10px 24px -10px var(--accent);
+}
+.cat-btn-soft {
+	background: var(--card);
+	color: var(--ink);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+}
+.cat-btn-soft:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+/* 猫咪插画 */
+.hero-art {
+	display: flex;
+	justify-content: center;
+}
+.cat-scene {
+	width: min(100%, 420px);
+	height: auto;
+	overflow: visible;
+	filter: drop-shadow(0 18px 24px rgba(120, 70, 20, 0.22));
+}
+.cat-scene .tail {
+	transform-box: view-box;
+	transform-origin: 262px 306px;
+	animation: cat-tail 3.4s ease-in-out infinite;
+}
+@keyframes cat-tail {
+	0%,
+	100% {
+		transform: rotate(0deg);
+	}
+	50% {
+		transform: rotate(14deg);
+	}
+}
+.cat-scene .eyes {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: cat-blink 5.5s infinite;
+}
+@keyframes cat-blink {
+	0%,
+	94%,
+	100% {
+		transform: scaleY(1);
+	}
+	97% {
+		transform: scaleY(0.08);
+	}
+}
+.cat-scene .moon {
+	animation: cat-moon 6s ease-in-out infinite;
+}
+@keyframes cat-moon {
+	0%,
+	100% {
+		opacity: 0.92;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+.hero-scroll {
+	position: absolute;
+	left: 50%;
+	bottom: 4.2rem;
+	z-index: 1;
+	transform: translateX(-50%);
+	font-size: 1.8rem;
+	color: var(--accent);
+	animation: cat-bounce 1.8s ease-in-out infinite;
+}
+@keyframes cat-bounce {
+	0%,
+	100% {
+		transform: translate(-50%, 0);
+	}
+	50% {
+		transform: translate(-50%, 8px);
+	}
+}
+
+.hero-wave {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -1px;
+	width: 100%;
+	height: 70px;
+}
+
+/* ---------- 通用区块 ---------- */
+.cat-announce,
+.cat-stats,
+.cat-chips,
+.cat-social {
+	position: relative;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 1.6rem 1.5rem;
+}
+
+.section-head {
+	margin-bottom: 1.2rem;
+}
+.section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--ink);
+}
+.title-paw {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: var(--accent);
+}
+.section-sub {
+	margin: 0.3rem 0 0 2.1rem;
+	font-size: 0.9rem;
+	color: var(--muted);
+}
+
+/* ---------- 公告 ---------- */
+.announce-bubble {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.6rem 0.7rem;
+	border-radius: 999px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+}
+.announce-tag {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.4rem 1rem;
+	border-radius: 999px;
+	background: linear-gradient(135deg, var(--accent), var(--accent-2));
+	color: var(--on-accent);
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+.tag-paw {
+	width: 1rem;
+	height: 1rem;
+}
+.announce-marquee {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+	-webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.announce-track {
+	display: flex;
+	width: max-content;
+	animation: cat-marquee 60s linear infinite;
+}
+.announce-bubble:hover .announce-track {
+	animation-play-state: paused;
+}
+.announce-half {
+	display: flex;
+	flex-shrink: 0;
+}
+.announce-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-right: 2.5rem;
+	white-space: nowrap;
+	font-size: 0.95rem;
+	color: var(--muted);
+}
+.item-paw {
+	width: 0.9rem;
+	height: 0.9rem;
+	color: var(--accent);
+	opacity: 0.7;
+}
+@keyframes cat-marquee {
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+/* ---------- 统计 ---------- */
+.stats-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1rem;
+}
+.stat-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 1.4rem 1rem;
+	border-radius: 28px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+	text-decoration: none;
+	color: var(--ink);
+	transition:
+		transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+		border-color 0.3s;
+}
+a.stat-card:hover {
+	transform: translateY(-6px) rotate(-1deg);
+	border-color: var(--accent);
+}
+.stat-icon {
+	display: grid;
+	place-items: center;
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	font-size: 1.5rem;
+	color: var(--on-accent);
+	background: var(--tone-0);
+}
+.stat-card:nth-child(2) .stat-icon {
+	background: var(--tone-1);
+}
+.stat-card:nth-child(3) .stat-icon {
+	background: var(--tone-2);
+}
+.stat-card:nth-child(4) .stat-icon {
+	background: var(--tone-3);
+}
+.stat-num {
+	font-size: 2.2rem;
+	font-weight: 800;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+}
+.stat-label {
+	font-size: 0.9rem;
+	color: var(--muted);
+}
+
+/* ---------- 胶囊 ---------- */
+.chips-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.7rem;
+}
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 0.55rem 0.45rem 1.1rem;
+	border-radius: 999px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	color: var(--ink);
+	text-decoration: none;
+	font-size: 0.95rem;
+	transition:
+		transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+		border-color 0.25s,
+		box-shadow 0.25s;
+}
+.chip:hover {
+	transform: translateY(-3px) rotate(-1.5deg);
+	border-color: var(--accent);
+	box-shadow: var(--shadow);
+}
+.chip-count {
+	display: inline-grid;
+	place-items: center;
+	min-width: 1.5rem;
+	height: 1.5rem;
+	padding: 0 0.4rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--on-accent);
+	background: var(--tone-0);
+}
+.chip:not(:has(.chip-count)) {
+	padding-right: 1.1rem;
+}
+.chip[style*="--tone:1"] .chip-count { background: var(--tone-1); }
+.chip[style*="--tone:2"] .chip-count { background: var(--tone-2); }
+.chip[style*="--tone:3"] .chip-count { background: var(--tone-3); }
+.chip[style*="--tone:4"] .chip-count { background: var(--tone-4); }
+
+/* ---------- 社交 ---------- */
+.social-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.8rem;
+}
+.social-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding: 0.7rem 1.3rem;
+	border-radius: 999px;
+	background: var(--card);
+	border: 1px solid var(--line);
+	color: var(--ink);
+	text-decoration: none;
+	font-weight: 600;
+	box-shadow: var(--shadow);
+	transition:
+		transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+		color 0.25s,
+		border-color 0.25s;
+}
+.social-btn svg {
+	font-size: 1.2rem;
+	color: var(--tone-0);
+}
+.social-btn[style*="--tone:1"] svg { color: var(--tone-1); }
+.social-btn[style*="--tone:2"] svg { color: var(--tone-2); }
+.social-btn[style*="--tone:3"] svg { color: var(--tone-3); }
+.social-btn[style*="--tone:4"] svg { color: var(--tone-4); }
+.social-btn:hover {
+	transform: translateY(-3px) rotate(2deg);
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+/* ---------- 页脚 ---------- */
+.cat-footer {
+	margin: 2.5rem auto 0;
+	max-width: 1100px;
+	padding: 2rem 1.5rem 3rem;
+	text-align: center;
+	font-size: 0.9rem;
+	color: var(--muted);
+	border-top: 1px dashed var(--line);
+}
+.cat-footer p {
+	margin: 0;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 860px) {
+	.cat-hero {
+		padding: 6rem 1.25rem 6rem;
+	}
+	.hero-inner {
+		grid-template-columns: 1fr;
+		text-align: center;
+		gap: 1.5rem;
+	}
+	.hero-chip,
+	.cat-name {
+		margin-inline: auto;
+	}
+	.hero-cta {
+		justify-content: center;
+	}
+	.hero-art {
+		order: -1;
+	}
+	.cat-scene {
+		width: min(70%, 260px);
+	}
+	.meow {
+		right: -2.8rem;
+	}
+	.stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.announce-tag {
+		padding: 0.35rem 0.8rem;
+	}
+}
+@media (max-width: 480px) {
+	.announce-bubble {
+		border-radius: 28px;
+	}
+	.section-sub {
+		margin-left: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cat-home .reveal {
+		opacity: 1;
+		transform: none;
+		animation: none;
+	}
+	.floater,
+	.hero-stars,
+	.tail,
+	.eyes,
+	.moon,
+	.meow,
+	.hero-scroll,
+	.announce-track,
+	.cat-name-ch {
+		animation: none !important;
+	}
+}

@@ -1,0 +1,52 @@
+---
+/**
+ * CatChips.astro
+ *
+ * 分类 / 标签：圆润的胶囊，带数量小气泡，按文章数降序，暖色轮换。
+ */
+import type { Category, Tag } from "@/utils/content-utils";
+import { getTagUrl } from "@/utils/url-utils";
+
+interface ChipItem {
+	name: string;
+	count?: number;
+	url: string;
+}
+interface Props {
+	kind: "categories" | "tags";
+	title: string;
+	subtitle?: string;
+	items: Category[] | Tag[];
+}
+const { kind, title, subtitle = "", items } = Astro.props;
+
+const chips: ChipItem[] = (items as Array<Category & Tag>)
+	.map((x) => ({
+		name: x.name,
+		count: typeof x.count === "number" ? x.count : undefined,
+		// 分类自带 url；标签统一跳到归档页 ?tag=xxx
+		url: kind === "categories" ? (x.url ?? "/categories/") : getTagUrl(x.name),
+	}))
+	.sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
+---
+
+<section class={`cat-chips chips-${kind}`}>
+	<div class="chips-wrap">
+		<div class="section-head reveal">
+			<h2 class="section-title">
+				<svg class="title-paw"><use href="#cat-paw"></use></svg>
+				{title}
+			</h2>
+			{subtitle && <p class="section-sub">{subtitle}</p>}
+		</div>
+
+		<div class="chips-list">
+			{chips.map((c, i) => (
+				<a class="chip reveal" style={`--delay:${i * 30}ms;--tone:${i % 5};`} href={c.url}>
+					<span class="chip-name">{c.name}</span>
+					{typeof c.count === "number" && <span class="chip-count">{c.count}</span>}
+				</a>
+			))}
+		</div>
+	</div>
+</section>

@@ -1,0 +1,48 @@
+---
+/**
+ * CatSocial.astro
+ *
+ * 社交链接：圆角按钮，悬停时轻轻晃动。
+ */
+import { Icon } from "astro-icon/components";
+
+interface SocialLink {
+	name: string;
+	url: string;
+	icon?: string;
+	showName?: boolean;
+}
+interface Props {
+	title: string;
+	links: SocialLink[];
+}
+const { title, links } = Astro.props;
+---
+
+<section class="cat-social">
+	<div class="social-wrap">
+		<div class="section-head reveal">
+			<h2 class="section-title">
+				<svg class="title-paw"><use href="#cat-paw"></use></svg>
+				{title}
+			</h2>
+		</div>
+		<div class="social-list">
+			{links.map((l, i) => {
+				const isExternal = /^https?:\/\//.test(l.url);
+				return (
+					<a
+						class="social-btn reveal"
+						style={`--delay:${i * 60}ms;--tone:${i % 5};`}
+						href={l.url}
+						target={isExternal ? "_blank" : undefined}
+						rel={isExternal ? "noopener noreferrer" : undefined}
+					>
+						<Icon name={l.icon ?? "mdi:web"} />
+						{l.showName !== false && <span>{l.name}</span>}
+					</a>
+				);
+			})}
+		</div>
+	</div>
+</section>

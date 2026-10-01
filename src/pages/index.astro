@@ -1,27 +1,20 @@
 ---
 /**
- * 首页 index.astro — 赛博/科技感重构版
+ * 首页 index.astro —— 猫窝风格
  *
- *   首屏（100vh）：
- *     · StockVideoBg        — 自动播放外链 mp4 背景 + HUD 遮罩/扫描线/角标/时钟
- *     · CyberMotto          — 巨型名字（RGB 故障）+ 终端光标标语 + 霓虹 CTA
- *
- *   下方区块（均为独立三文件）：
- *     · TechAnnouncement    — 终端公告条：SYS 标签 + 无缝滚动 + 实时日期
- *     · TechStats           — HUD 仪表盘统计卡：数字滚数 + 角标 + 进度条
- *     · TechChips(categories/tags) — 可点击芯片：HUD 分区标题 + 彩色边条芯片
- *     · TechSocial          — 社交联系卡片
- *
- *   cyber-index.css/.ts 提供 reveal 入场 IO + 暗色全局底色
+ *   首屏：CatHero      — 暖色天空 + 窗台猫咪剪影 + 名字/标语/入口按钮
+ *   下方：CatAnnounce  — 气泡公告条
+ *         CatStats     — 统计卡片
+ *         CatChips     — 分类 / 标签胶囊
+ *         CatSocial    — 社交链接
  */
-import "@/components/portal/cyber-index.css";
+import "@/components/home/cat-home.css";
+import CatAnnounce from "@/components/home/CatAnnounce.astro";
+import CatChips from "@/components/home/CatChips.astro";
+import CatHero from "@/components/home/CatHero.astro";
+import CatSocial from "@/components/home/CatSocial.astro";
+import CatStats from "@/components/home/CatStats.astro";
 import Navbar from "@/components/layout/Navbar.astro";
-import CyberMotto from "@/components/portal/CyberMotto.astro";
-import StockVideoBg from "@/components/portal/StockVideoBg.astro";
-import TechAnnouncement from "@/components/portal/TechAnnouncement.astro";
-import TechChips from "@/components/portal/TechChips.astro";
-import TechSocial from "@/components/portal/TechSocial.astro";
-import TechStats from "@/components/portal/TechStats.astro";
 import {
 	backgroundWallpaper,
 	displaySettingsConfig,
@@ -60,14 +53,11 @@ const runningDays = Math.max(
 	Math.floor((today.getTime() - startDate.getTime()) / 86400000),
 );
 
-const hue = siteConfig.themeColor.hue;
-
 const announcementMessages = [
-	"欢迎来到 CATX 数字站点",
-	`已撰写 ${postCount} 篇文章 · 共 ${categoryCount} 个分类 · ${tagCount} 个标签`,
-	"运行中 · 永不离线",
-	"记录技术 · 分享生活 · 探索可能",
-	`站点已稳定运行 ${runningDays} 天`,
+	"喵~ 欢迎来到猫神X的猫窝",
+	`猫窝里已经囤了 ${postCount} 篇文章 · ${categoryCount} 个分区 · ${tagCount} 个标签`,
+	"记录技术 · 分享生活 · 偶尔讲故事",
+	`猫窝已经营业 ${runningDays} 天啦`,
 ];
 
 const stats = [
@@ -82,17 +72,9 @@ const stats = [
 	{
 		icon: "material-symbols:calendar-month-rounded",
 		target: runningDays,
-		label: "运行天数",
+		label: "营业天数",
 		url: "/archive/",
 	},
-];
-
-// 首屏视频：免上传，直接用可直链 mp4 的素材（每次随机一条）。
-// 想固定就只留一条；想替换就把 URL 换成任意 .mp4 直链（CDN/对象存储/pixabay 都行）。
-const VIDEO_URLS: string[] = [
-	"https://static.videezy.com/system/resources/previews/000/054/245/original/MatrixRain01_HD_Background.mp4",
-	"https://static.videezy.com/system/resources/previews/000/053/458/original/CyberpunkCityLoop2.mp4",
-	"https://cdn.pixabay.com/video/2022/10/22/136150-764007744_large.mp4",
 ];
 ---
 
@@ -100,13 +82,6 @@ const VIDEO_URLS: string[] = [
 	title={siteConfig.title}
 	hasWallpaper={isWallpaperSwitchable || isBannerMode || isFullscreenMode || isOverlayMode}
 >
-
-{/* 主题色 hue 同步到全局 CSS 变量（供 cyber-index.css 使用） */}
-<style is:global define:vars={{ hue }}>
-	:root {
-		--theme-hue: var(--hue);
-	}
-</style>
 
 {/* 顶部导航栏（保留） */}
 <div
@@ -125,57 +100,23 @@ const VIDEO_URLS: string[] = [
 	</div>
 </div>
 
-{/* ===== 首屏（100vh，视频+HUD+赛博文字） ===== */}
-<div class="portal-hero-wrap">
-	<StockVideoBg videoUrls={VIDEO_URLS} hue={hue} />
-	<CyberMotto
+<div class="cat-home">
+	<CatHero
 		name={profileConfig.name}
 		slogan="躬身入局，心为主理，行有尺度"
-		subtitle="WELCOME · 欢迎进入 CATX 数字站点"
-		hue={hue}
+		subtitle="欢迎来到猫神X的猫窝"
 	/>
-</div>
 
-{/* ===== 下方科技感模块 ===== */}
-<div class="portal-section-block">
-	<TechAnnouncement messages={announcementMessages} hue={hue} />
-</div>
+	<CatAnnounce messages={announcementMessages} />
+	<CatStats stats={stats} />
+	<CatChips kind="categories" title="猫窝分区" subtitle="按主题逛逛文章" items={categories} />
+	<CatChips kind="tags" title="猫薄荷标签" subtitle="点一个标签，找到相关的文章" items={tags} />
+	<CatSocial title="来找我玩" links={profileConfig.links} />
 
-<div class="portal-section-block">
-	<TechStats stats={stats} hue={hue} />
+	<footer class="cat-footer">
+		<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; 猫猫已就位 🐾</p>
+	</footer>
 </div>
-
-<div class="portal-section-block">
-	<TechChips
-		kind="categories"
-		title="分类目录"
-		subtitle="CATEGORIES · 按主题浏览文章"
-		items={categories}
-		hue={hue}
-	/>
-</div>
-
-<div class="portal-section-block">
-	<TechChips
-		kind="tags"
-		title="标签索引"
-		subtitle="TAGS · 点击进入对应标签页"
-		items={tags}
-		hue={hue}
-	/>
-</div>
-
-<div class="portal-section-block">
-	<TechSocial
-		title="社交 · 联系"
-		links={profileConfig.links}
-		hue={hue}
-	/>
-</div>
-
-<footer class="portal-footer">
-	<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; BUILT WITH CATX</p>
-</footer>
 
 <script is:inline>
 	function initReveal() {
