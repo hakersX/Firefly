@@ -29,6 +29,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
 	{
+		name: "就让晚风替我说再见",
+		artist: "猫神X",
+		url: "/assets/music/就让晚风替我说再见.mp3",
+		cover: "/assets/music/cover/再靠近一点点.jpg",
+		lrc: "/assets/music/lrc/就让晚风替我说再见.lrc",
+	},
+	{
 		name: "月下的玫瑰",
 		artist: "猫神X",
 		url: "/assets/music/月光下的玫瑰.mp3",
