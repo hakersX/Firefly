@@ -481,6 +481,9 @@ if (!mgr) {
 	let lastBeatAt = 0;
 	let kick = 0; // 节拍冲量：命中鼓点瞬间≈1，之后指数衰减
 	let hueCache = 165;
+	let waveEnergy = 0.25; // 背景波浪的当前幅度（0.25 暂停 ~ 1 播放）
+	let wavePhase = 0; // 背景波浪的累计相位
+	let lastWaveAt = performance.now();
 	let hueReadAt = 0;
 	const reducedMotion = window.matchMedia(
 		"(prefers-reduced-motion: reduce)",
@@ -642,24 +645,27 @@ if (!mgr) {
 
 		analyse(mgr.getFreqData?.() ?? null, isPlaying, now);
 
-		// 背景波浪：播放时随鼓点起伏，暂停时低幅呼吸
-		const energy = isPlaying ? 1 : 0.25;
-		const time = now / 1000;
-		const speed = isPlaying ? 1 : 0.3;
+		// 背景波浪：只做缓慢的呼吸流动，不随鼓点起伏。
+		// 幅度与速度向目标值缓动、相位累加，播放/暂停切换时不会突然跳变。
+		const dt = Math.min(0.1, (now - lastWaveAt) / 1000);
+		lastWaveAt = now;
+		waveEnergy += ((isPlaying ? 1 : 0.25) - waveEnergy) * 0.04;
+		wavePhase += dt * (0.3 + ((waveEnergy - 0.25) / 0.75) * 0.7);
+		const energy = waveEnergy;
 		const layers = [
-			{ freq: 0.7, amp: 0.05 + energy * 0.16, speed: 0.5 * speed, alpha: 0.09, hueOff: 0 },
-			{ freq: 1.3, amp: 0.07 + energy * 0.12, speed: -0.35 * speed, alpha: 0.07, hueOff: 30 },
-			{ freq: 2.1, amp: 0.04 + energy * 0.1, speed: 0.25 * speed, alpha: 0.05, hueOff: 60 },
+			{ freq: 0.7, amp: 0.05 + energy * 0.16, speed: 0.5, alpha: 0.09, hueOff: 0 },
+			{ freq: 1.3, amp: 0.07 + energy * 0.12, speed: -0.35, alpha: 0.07, hueOff: 30 },
+			{ freq: 2.1, amp: 0.04 + energy * 0.1, speed: 0.25, alpha: 0.05, hueOff: 60 },
 		];
 		for (const layer of layers) {
-			const amp = layer.amp + kick * 0.05;
+			const amp = layer.amp;
 			ctx.beginPath();
 			ctx.moveTo(0, h);
 			for (let x = 0; x <= w; x += 4) {
 				const y =
 					h / 2 +
-					Math.sin(x * 0.006 * layer.freq + time * layer.speed) * (h * amp) +
-					Math.sin(x * 0.013 * layer.freq + time * layer.speed * 1.6) *
+					Math.sin(x * 0.006 * layer.freq + wavePhase * layer.speed) * (h * amp) +
+					Math.sin(x * 0.013 * layer.freq + wavePhase * layer.speed * 1.6) *
 						(h * amp * 0.4);
 				ctx.lineTo(x, y);
 			}
