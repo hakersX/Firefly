@@ -480,7 +480,7 @@ if (!mgr) {
 	let bassAvg = 0;
 	let lastBeatAt = 0;
 	let kick = 0; // 节拍冲量：命中鼓点瞬间≈1，之后指数衰减
-	let hueCache = 165;
+	let hueCache = 57;
 	let waveEnergy = 0.25; // 背景波浪的当前幅度（0.25 暂停 ~ 1 播放）
 	let wavePhase = 0; // 背景波浪的累计相位
 	let lastWaveAt = performance.now();
@@ -637,7 +637,7 @@ if (!mgr) {
 		if (now - hueReadAt > 1000) {
 			hueReadAt = now;
 			hueCache =
-				Number(getComputedStyle(root).getPropertyValue("--hue").trim()) || 165;
+				Number(getComputedStyle(root).getPropertyValue("--hue").trim()) || 57;
 		}
 		const hue = hueCache;
 
