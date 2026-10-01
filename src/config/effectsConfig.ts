@@ -3,8 +3,8 @@ import type { ReadingProgressConfig, SakuraConfig } from "../types/effectsConfig
 // 特效配置 - 集中管理所有动画特效
 
 export const sakuraConfig: SakuraConfig = {
-	// 是否启用樱花特效
-	enable: true,
+	// 是否默认启用樱花特效（访客仍可在「显示设置」里自行开启）
+	enable: false,
 
 	// 樱花数量
 	sakuraNum: 15,
