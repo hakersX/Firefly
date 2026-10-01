@@ -82,6 +82,9 @@ const icoRepeat = $("ico-repeat");
 const icoRepeatOne = $("ico-repeat-one");
 const icoShuffle = $("ico-shuffle");
 const timeline = $("timeline");
+// 手机端歌单抽屉：列表按钮在药丸里，桌面端不显示
+const bList = document.getElementById("b-list") as HTMLButtonElement | null;
+const listBackdrop = document.getElementById("timeline-backdrop");
 const canvas = $("visualizer") as HTMLCanvasElement;
 let canvasCtx: CanvasRenderingContext2D | null = null;
 
@@ -172,13 +175,7 @@ if (!mgr) {
 		const active = tracks[index] as HTMLElement | undefined;
 		if (active) {
 			timelineProgrammaticScroll = true;
-			// 手机端歌单是横向滑动卡条：按内联方向居中；桌面竖列表按块方向
-			const isMobile = window.matchMedia("(max-width: 768px)").matches;
-			active.scrollIntoView(
-				isMobile
-					? { inline: "center", block: "nearest", behavior: "smooth" }
-					: { block: "nearest", behavior: "smooth" },
-			);
+			active.scrollIntoView({ block: "nearest", behavior: "smooth" });
 			window.setTimeout(() => {
 				timelineProgrammaticScroll = false;
 			}, 600);
@@ -203,10 +200,7 @@ if (!mgr) {
 		) as HTMLElement[];
 		activeLyricIdx = -1;
 		requestAnimationFrame(() => {
-			const ph = lyricsPanel.clientHeight;
-			lyricOffsets = lyricEls.map(
-				(el) => el.offsetTop - ph / 2 + el.clientHeight / 2,
-			);
+			computeLyricOffsets();
 			// 初始把首句居中：长歌词时首句不会顶到面板顶部
 			if (activeLyricIdx < 0 && lyricOffsets[0] !== undefined) {
 				lyricsContent.style.transform = `translateY(${-lyricOffsets[0]}px)`;
@@ -214,11 +208,37 @@ if (!mgr) {
 		});
 	}
 
+	// 每句歌词居中所需的位移；面板高度/换行随窗口变化，缩放时需要重算
+	function computeLyricOffsets() {
+		const ph = lyricsPanel.clientHeight;
+		lyricOffsets = lyricEls.map(
+			(el) => el.offsetTop - ph / 2 + el.clientHeight / 2,
+		);
+	}
+	let lyricResizeRaf = 0;
+	window.addEventListener("resize", () => {
+		if (lyricResizeRaf) return;
+		lyricResizeRaf = requestAnimationFrame(() => {
+			lyricResizeRaf = 0;
+			if (!lyricEls.length) return;
+			computeLyricOffsets();
+			const idx = activeLyricIdx >= 0 ? activeLyricIdx : 0;
+			if (lyricUserOffset === null && lyricOffsets[idx] !== undefined) {
+				lyricsContent.style.transform = `translateY(${-lyricOffsets[idx]}px)`;
+			}
+		});
+	});
+
 	function updateLrcHighlight(index: number) {
 		if (index === activeLyricIdx) return;
 		if (activeLyricIdx >= 0 && lyricEls[activeLyricIdx])
 			lyricEls[activeLyricIdx].classList.remove("active");
+		// 当前句的相邻句稍亮一些，形成由近及远的渐变层次
+		lyricEls[activeLyricIdx - 1]?.classList.remove("near");
+		lyricEls[activeLyricIdx + 1]?.classList.remove("near");
 		if (index >= 0 && lyricEls[index]) {
+			lyricEls[index - 1]?.classList.add("near");
+			lyricEls[index + 1]?.classList.add("near");
 			lyricEls[index].classList.add("active");
 			// 用户手动拖动期间/拖动后冷却期内，不强制覆盖位置
 			if (lyricUserOffset === null && lyricOffsets[index] !== undefined) {
@@ -276,12 +296,37 @@ if (!mgr) {
 	bNext.addEventListener("click", () => mgr.playNext());
 	bMode.addEventListener("click", () => mgr.cyclePlayMode());
 
+	// ===== 手机端歌单抽屉 =====
+	const isMobileView = () => window.matchMedia("(max-width: 768px)").matches;
+	function setListOpen(open: boolean) {
+		root.classList.toggle("list-open", open);
+		bList?.setAttribute("aria-expanded", String(open));
+		if (open) {
+			// 展开时把当前歌曲带到视野里（等抽屉滑出后再滚，避免与过渡打架）
+			timelineUserScrolling = false;
+			window.setTimeout(() => {
+				const active = timeline.querySelector(".track.active");
+				active?.scrollIntoView({ block: "center", behavior: "auto" });
+			}, 60);
+		}
+	}
+	bList?.addEventListener("click", () =>
+		setListOpen(!root.classList.contains("list-open")),
+	);
+	listBackdrop?.addEventListener("click", () => setListOpen(false));
+	window.addEventListener("keydown", (e) => {
+		if (e.key === "Escape") setListOpen(false);
+	});
+
 	timeline.addEventListener("click", (e) => {
 		const track = (e.target as HTMLElement).closest(
 			".track",
 		) as HTMLElement | null;
-		if (track)
+		if (track) {
 			mgr.playTrackByIndex(Number.parseInt(track.dataset.index || "0", 10));
+			// 手机端选完歌自动收起抽屉
+			if (isMobileView()) setListOpen(false);
+		}
 	});
 	lyricsContent.addEventListener("click", (e) => {
 		const line = (e.target as HTMLElement).closest(
@@ -425,13 +470,11 @@ if (!mgr) {
 		spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
 	});
 
-	// ===== 频谱分析：对数分频 + 自动增益 + 节拍检测 =====
+	// ===== 频谱分析：对数分频 + 自动增益 + 节拍检测（仅用于鼓点触发猫爪与歌名光晕）=====
 	// analyser fftSize=1024 → 512 bins（≈43Hz/bin@44.1k），对数铺开 bin 1..320（≈43Hz–13.8kHz）
 	const BANDS = 64;
 	const BIN_LO = 1;
 	const BIN_HI = 320;
-	const bandVals = new Float32Array(BANDS); // 平滑后 0-1：快攻慢放
-	const bandPeaks = new Float32Array(BANDS); // 峰值帽：缓慢回落
 	const bandRaw = new Float32Array(BANDS); // 本帧未平滑值
 	let gainPeak = 0.4; // 自动增益：跟踪近期最大值，歌曲轻重都能撑满画面
 	let bassAvg = 0;
@@ -509,13 +552,6 @@ if (!mgr) {
 			bandRaw.fill(0);
 		}
 
-		for (let i = 0; i < BANDS; i++) {
-			const target = bandRaw[i];
-			const cur = bandVals[i];
-			bandVals[i] = cur + (target - cur) * (target > cur ? 0.62 : 0.13);
-			bandPeaks[i] = Math.max(bandPeaks[i] - 0.006, bandVals[i]);
-		}
-
 		// 节拍：低频能量显著高于近期均值即视为一次鼓点
 		let bass = 0;
 		for (let i = 0; i < 7; i++) bass += bandRaw[i];
@@ -547,47 +583,6 @@ if (!mgr) {
 				alpha: 0.5 + Math.random() * 0.3,
 			});
 		}
-	}
-
-	// 底部全宽频谱条：低频在中央向两侧铺开，带渐变与峰值帽
-	function drawBottomBars(w: number, h: number, hue: number) {
-		const ctx = canvasCtx!;
-		const barW = w < 640 ? 6 : 9;
-		const gap = w < 640 ? 4 : 6;
-		const n = Math.max(12, Math.floor(w / (barW + gap)));
-		const maxH = Math.min(h * 0.34, 300);
-		const mid = (n - 1) / 2;
-		const total = n * (barW + gap) - gap;
-		const x0 = (w - total) / 2;
-
-		const grad = ctx.createLinearGradient(0, h, 0, h - maxH);
-		grad.addColorStop(0, `hsla(${hue}, 90%, 55%, 0.05)`);
-		grad.addColorStop(0.35, `hsla(${hue + 15}, 90%, 62%, 0.5)`);
-		grad.addColorStop(1, `hsla(${hue + 45}, 95%, 75%, 0.95)`);
-		ctx.fillStyle = grad;
-		ctx.beginPath();
-		const caps: Array<[number, number]> = [];
-		for (let j = 0; j < n; j++) {
-			const d = Math.abs(j - mid) / (mid || 1); // 0=中央(低频) → 1=两端(高频)
-			const f = d * (BANDS - 1) * 0.92;
-			const i0 = Math.floor(f);
-			const fr = f - i0;
-			const i1 = Math.min(BANDS - 1, i0 + 1);
-			const v = bandVals[i0] * (1 - fr) + bandVals[i1] * fr;
-			const pk = bandPeaks[i0] * (1 - fr) + bandPeaks[i1] * fr;
-			// 中央略高、两端略低，整体呈山形，更有层次
-			const shape = 1 - d * 0.35;
-			const bh = 3 + v * maxH * shape;
-			const x = x0 + j * (barW + gap);
-			if (ctx.roundRect) ctx.roundRect(x, h - bh, barW, bh + 6, barW / 2);
-			else ctx.rect(x, h - bh, barW, bh);
-			caps.push([x, h - (3 + pk * maxH * shape) - 7]);
-		}
-		ctx.fill();
-
-		// 峰值帽
-		ctx.fillStyle = `hsla(${hue + 30}, 95%, 82%, 0.85)`;
-		for (const [x, y] of caps) ctx.fillRect(x, y, barW, 2);
 	}
 
 	// 小猫爪：1 个掌垫 + 4 个脚趾
@@ -677,8 +672,6 @@ if (!mgr) {
 			ctx.fill();
 		}
 
-		// 底部频谱条始终绘制（暂停时回落为低矮的底线）
-		drawBottomBars(w, h, hue);
 		drawPaws(h, hue);
 
 		// 节拍发光：冲量写入 --beat，驱动封面脉冲与歌名光晕（每 2 帧更新，避免频繁样式重算）

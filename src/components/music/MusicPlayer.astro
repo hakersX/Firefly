@@ -42,8 +42,11 @@ const playlistJson = JSON.stringify(playlist);
 		<p class="song-artist" id="song-artist">{playlist[0]?.artist ?? "—"}</p>
 	</div>
 
-	{/* 右侧：时间线（浮动半透明） */}
-	<div class="timeline-overlay">
+	{/* 手机端：歌单抽屉的点击遮罩 */}
+	<div class="timeline-backdrop" id="timeline-backdrop"></div>
+
+	{/* 右侧：时间线（桌面浮动面板；手机端为底部抽屉，由药丸里的列表按钮开合） */}
+	<div class="timeline-overlay" id="timeline-sheet">
 		<div class="timeline-header">
 			<span>播放列表</span>
 			<i id="track-count">{playlist.length} 首</i>
@@ -104,6 +107,9 @@ const playlistJson = JSON.stringify(playlist);
 			</button>
 			<button class="dock-btn" id="b-next" title="下一首">
 				<Icon name="material-symbols:skip-next-rounded" />
+			</button>
+			<button class="dock-btn dock-btn-list" id="b-list" title="播放列表" aria-controls="timeline-sheet" aria-expanded="false">
+				<Icon name="material-symbols:queue-music-rounded" />
 			</button>
 			<button class="dock-btn" id="b-mode" title="列表循环">
 				<Icon name="material-symbols:repeat-rounded" id="ico-repeat" />

@@ -105,7 +105,7 @@
     pointer-events: none;
     perspective: 800px;
 }
-/* 中央封面舞台：玻璃卡 + 低频脉冲（--beat 由 ts 写入）+ 换歌 3D 翻转 */
+/* 中央封面舞台：玻璃卡 + 换歌 3D 翻转 */
 .cover-stage {
     width: 160px;
     height: 160px;
@@ -115,11 +115,7 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow:
         0 18px 50px rgba(0, 0, 0, 0.55),
-        0 0 0 0.5px rgba(255, 255, 255, 0.06) inset,
-        0 0 calc(var(--beat, 0) * 80px)
-            hsla(var(--hue), 90%, 60%, calc(var(--beat, 0) * 0.65));
-    transform: scale(calc(1 + var(--beat, 0) * 0.07));
-    will-change: transform;
+        0 0 0 0.5px rgba(255, 255, 255, 0.06) inset;
 }
 .cover-stage img {
     width: 100%;
@@ -467,6 +463,9 @@
 	color: #fff;
 	transform: scale(1.08);
 }
+/* 列表按钮仅手机端显示（歌单抽屉的开关） */
+.dock-btn-list { display: none; }
+.timeline-backdrop { display: none; }
 #ico-pause, #ico-repeat-one, #ico-shuffle {
 	display: none;
 }
@@ -487,102 +486,217 @@
 	}
 }
 @media (max-width: 768px) {
-	/* —— 竖屏沉浸模式：封面舞台在上、歌词主体居中、歌单横向卡条、药丸底部 —— */
+	/* —— 手机：封面 + 歌名在上，歌词占据中部，歌单收进底部抽屉（药丸里的列表按钮开合）—— */
 	.center-overlay {
-		top: 14%;
+		top: 4.9rem;
+		transform: translateX(-50%);
 	}
 	.cover-stage {
-		width: 110px;
-		height: 110px;
-		border-radius: 18px;
-		margin-bottom: 0.75rem;
+		width: 150px;
+		height: 150px;
+		border-radius: 22px;
+		margin-bottom: 0.8rem;
 	}
-	.song-name { font-size: 1.2rem; }
-	.lyrics-overlay {
-		left: 50%;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		max-width: 88vw;
-		width: 88vw;
+	.song-name {
+		font-size: 1.15rem;
+		letter-spacing: 0.08em;
+		margin-bottom: 0.2rem;
 	}
+	.song-artist { font-size: 0.8rem; }
 
-	/* 歌单：竖列表 → 横向滑动封面卡条（点击切歌，当前项自动居中） */
-	.timeline-overlay {
-		position: fixed;
-		right: 0;
+	/* 歌词：夹在歌名与药丸之间，定高面板 + 上下渐隐 */
+	.lyrics-overlay {
 		left: 0;
-		top: auto;
-		bottom: 7.25rem;
+		right: 0;
+		top: 19.25rem;
+		bottom: 7.2rem;
 		transform: none;
 		width: auto;
-		max-height: none;
-		overflow: visible;
-		padding: 0 1rem;
+		max-width: none;
+		min-width: 0;
+		padding: 0 1.5rem;
 	}
-	.timeline-header {
-		padding: 0 0.25rem 0.5rem;
-		border-bottom: none;
+	.lyrics-panel {
+		height: 100%;
+		mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+		-webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
 	}
-	.timeline {
-		display: flex;
-		gap: 0.65rem;
-		max-height: none;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scroll-snap-type: x mandatory;
-		padding: 0.4rem 0.2rem;
-		touch-action: pan-x;
+	.lyrics-content {
+		gap: 1.1rem;
+		padding: 45vh 0;
 	}
-	.timeline-line { display: none; }
-	.track {
-		flex: 0 0 auto;
-		width: 132px;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 0;
-		padding: 0.5rem;
-		scroll-snap-align: center;
-		background: rgba(15, 15, 20, 0.5);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border-radius: 14px;
+	.lyric-line {
+		font-size: 1.2rem;
+		font-weight: 500;
+		transform-origin: center;
+		/* 当前句用 scale 放大而不是改字号，避免行高变化让下方歌词抖动 */
+		transition:
+			color 0.4s,
+			transform 0.45s cubic-bezier(0.34, 1.2, 0.64, 1),
+			text-shadow 0.4s;
 	}
-	.track-cover {
-		display: block;
-		width: 100%;
-		height: 88px;
-		object-fit: cover;
-		border-radius: 9px;
-		margin-bottom: 0.45rem;
-		background: hsl(var(--hue) 40% 20% / 0.6);
-	}
-	.track-node { display: none; }
-	.track-duration {
-		display: block;
-		margin: 0.3rem 0 0;
-		font-size: 0.65rem;
+	.lyric-line.near { color: rgba(255, 255, 255, 0.5); }
+	.lyric-line.active {
+		font-size: 1.2rem;
+		font-weight: 600;
+		transform: scale(1.12);
 	}
 
+	/* 歌单：默认收起，从底部滑出的抽屉 */
+	.timeline-backdrop {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 25;
+		background: rgba(0, 0, 0, 0.45);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s;
+	}
+	.music-page.list-open .timeline-backdrop {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	.timeline-overlay {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: auto;
+		bottom: 0;
+		z-index: 30;
+		width: auto;
+		max-height: 62vh;
+		padding: 0.6rem 0.75rem calc(1rem + env(safe-area-inset-bottom));
+		border-radius: 24px 24px 0 0;
+		border-bottom: none;
+		background: rgba(18, 18, 24, 0.86);
+		transform: translateY(105%);
+		visibility: hidden;
+		transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.4s;
+	}
+	.music-page.list-open .timeline-overlay {
+		transform: none;
+		visibility: visible;
+		transition-delay: 0s;
+	}
+	/* 抽屉顶部的小把手 */
+	.timeline-overlay::before {
+		content: "";
+		display: block;
+		width: 36px;
+		height: 4px;
+		margin: 0 auto 0.6rem;
+		border-radius: 2px;
+		background: rgba(255, 255, 255, 0.25);
+	}
+	.timeline { max-height: calc(62vh - 4.5rem); }
+	.timeline-line, .track-node { display: none; }
+	.track { gap: 0.75rem; padding: 0.5rem 0.6rem; }
+	.track:hover { transform: none; }
+	.track-cover {
+		display: block;
+		width: 40px;
+		height: 40px;
+		flex-shrink: 0;
+		object-fit: cover;
+		border-radius: 8px;
+		background: hsl(var(--hue) 40% 20% / 0.6);
+	}
+
+	/* 药丸：封面在上方已有，这里让位给列表按钮 */
 	.dock-pill {
 		min-width: 0;
 		width: calc(100vw - 2rem);
-		padding: 0.4rem;
-		gap: 0.4rem;
+		padding: 0.4rem 0.5rem 0.4rem 1rem;
+		gap: 0.5rem;
 		bottom: 1rem;
 	}
-	.dock-title { max-width: 80px; }
+	.dock-cover { display: none; }
 	.dock-meta { display: none; }
+	.dock-btn-list { display: inline-flex; }
+}
+
+/* ===== 桌面端（>1024px）：封面在左、歌词居中偏右、歌单在右 =====
+   歌词占据画面主体，参考常规音乐软件的横向三栏布局；平板与手机沿用上面的布局。 */
+@media (min-width: 1025px) {
+	/* 左栏：大封面 + 歌名 + 歌手，垂直居中 */
+	.center-overlay {
+		left: 21vw;
+		top: 46%;
+	}
+	.cover-stage {
+		width: 240px;
+		height: 240px;
+		border-radius: 28px;
+		margin-bottom: 1.6rem;
+	}
+	.song-name {
+		font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+		letter-spacing: 0.1em;
+	}
+
+	/* 中栏：歌词。上下留出导航栏与底部药丸的位置，面板定高，渐隐遮罩才对得准 */
+	.lyrics-overlay {
+		left: 38vw;
+		top: 6.2rem;
+		bottom: 7.8rem;
+		transform: none;
+		width: clamp(320px, calc(100vw - 38vw - 240px - 6vw - 2rem), 680px);
+		max-width: none;
+		min-width: 0;
+	}
+	.lyrics-panel {
+		height: 100%;
+		mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+		-webkit-mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+	}
+	.lyrics-content {
+		align-items: flex-start;
+		gap: 1.5rem;
+		/* 右侧留白给放大后的当前句，避免被面板裁切 */
+		padding: 45vh 2.5rem 45vh 0.5rem;
+	}
+	.lyric-line {
+		font-size: 1.6rem;
+		font-weight: 600;
+		line-height: 1.5;
+		text-align: left;
+		color: rgba(255, 255, 255, 0.28);
+		transform-origin: left center;
+		/* 当前句用 scale 放大而不是改字号，避免改变行高导致下方歌词位置抖动 */
+		transition:
+			color 0.4s,
+			transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1),
+			text-shadow 0.4s;
+	}
+	.lyric-line.near {
+		color: rgba(255, 255, 255, 0.5);
+	}
+	.lyric-line:hover {
+		color: rgba(255, 255, 255, 0.78);
+	}
+	.lyric-line.active {
+		font-size: 1.6rem;
+		font-weight: 700;
+		color: #fff;
+		transform: scale(1.14);
+	}
+	.lyrics-placeholder {
+		text-align: left;
+		font-size: 1.1rem;
+	}
+
+	/* 右栏：歌单收窄，把空间让给歌词 */
+	.timeline-overlay {
+		right: 3vw;
+		width: 240px;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
 		animation-duration: 0.01ms !important;
 		transition-duration: 0.01ms !important;
-	}
-	/* 封面脉冲是静态 transform 计算值，需显式禁用 */
-	.cover-stage {
-		transform: none !important;
 	}
 	.cover-stage.is-flipping {
 		animation: none !important;
