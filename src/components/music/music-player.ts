@@ -140,8 +140,6 @@ if (!mgr) {
 			stageCover.classList.add("is-flipping");
 			window.setTimeout(() => stageCover.classList.remove("is-flipping"), 800);
 		}
-		// 封面尺寸变化后刷新环形频谱的圆心/半径
-		requestAnimationFrame(refreshRingMetrics);
 	}
 
 	function updatePlayStateUI(playing: boolean) {
@@ -445,10 +443,6 @@ if (!mgr) {
 		"(prefers-reduced-motion: reduce)",
 	).matches;
 
-	interface Pulse {
-		r: number;
-		alpha: number;
-	}
 	interface Paw {
 		x: number;
 		y: number;
@@ -459,7 +453,6 @@ if (!mgr) {
 		hueOff: number;
 		alpha: number;
 	}
-	const pulses: Pulse[] = [];
 	const paws: Paw[] = [];
 
 	// 读取某个对数频带的能量（0-1）：窄频带插值，宽频带取最大/均值混合
@@ -538,8 +531,6 @@ if (!mgr) {
 	}
 
 	function onBeat() {
-		pulses.push({ r: ringMetrics.baseR, alpha: 0.55 * (0.6 + kick * 0.4) });
-		if (pulses.length > 5) pulses.shift();
 		if (reducedMotion) return;
 		const w = canvas.clientWidth;
 		const h = canvas.clientHeight;
@@ -555,102 +546,6 @@ if (!mgr) {
 				hueOff: Math.random() * 50 - 15,
 				alpha: 0.5 + Math.random() * 0.3,
 			});
-		}
-	}
-
-	// 环形频谱几何缓存：圆心跟随中央封面舞台中心，基径随封面大小自适应
-	// （各断点的 .center-overlay 位置不同，动态读取可保证任何断点都对齐）
-	const ringHalf = 48;
-	const ringMetrics = { cx: 0, cy: 0, baseR: 190, maxLen: 90 };
-	function refreshRingMetrics() {
-		const rect = stageCover?.getBoundingClientRect();
-		const isMobile = window.matchMedia("(max-width: 768px)").matches;
-		if (!rect || rect.width === 0) {
-			// 封面未渲染时退回断点估算
-			ringMetrics.cx = canvas.clientWidth / 2;
-			ringMetrics.cy =
-				canvas.clientHeight * (isMobile ? 0.18 : isTablet() ? 0.3 : 0.38);
-			ringMetrics.baseR = isMobile
-				? Math.min(140, canvas.clientWidth * 0.32)
-				: Math.min(210, canvas.clientWidth * 0.22);
-		} else {
-			ringMetrics.cx = rect.left + rect.width / 2;
-			ringMetrics.cy = rect.top + rect.height / 2;
-			ringMetrics.baseR = rect.width / 2 + 28;
-		}
-		ringMetrics.maxLen = isMobile
-			? Math.max(50, ringMetrics.baseR * 0.7)
-			: Math.max(90, ringMetrics.baseR * 0.95);
-	}
-	function isTablet() {
-		return window.matchMedia("(max-width: 1024px)").matches;
-	}
-	refreshRingMetrics();
-
-	// 中心环形频谱：围绕封面的辐射光柱，鼓点时整体外扩
-	function drawSpectrumRing(hue: number) {
-		const ctx = canvasCtx!;
-		const { cx, cy, maxLen } = ringMetrics;
-		const baseR = ringMetrics.baseR * (1 + kick * 0.05);
-		const bars = ringHalf * 2;
-
-		// 基线圆圈：虚线缓慢旋转，随鼓点变亮变粗
-		ctx.save();
-		ctx.beginPath();
-		ctx.setLineDash([2, 10]);
-		ctx.lineDashOffset = -performance.now() / 90;
-		ctx.arc(cx, cy, baseR - 8, 0, Math.PI * 2);
-		ctx.strokeStyle = `hsla(${hue}, 80%, 70%, ${0.2 + kick * 0.5})`;
-		ctx.lineWidth = 1 + kick * 2.5;
-		ctx.stroke();
-		ctx.restore();
-
-		// 光柱：双 pass（粗线低透明做光晕，细线做主体）
-		ctx.lineCap = "round";
-		for (let pass = 0; pass < 2; pass++) {
-			ctx.lineWidth = pass === 0 ? 7 : 2.6;
-			for (let i = 0; i < bars; i++) {
-				const side = i < ringHalf ? i : bars - 1 - i;
-				// 低频在顶部，向下渐入高频，左右镜像
-				const bi = Math.min(
-					BANDS - 1,
-					Math.floor((side / ringHalf) * BANDS * 0.9),
-				);
-				const v = bandVals[bi];
-				const angle = (i / bars) * Math.PI * 2 - Math.PI / 2;
-				const len = 5 + v * maxLen;
-				const cosA = Math.cos(angle);
-				const sinA = Math.sin(angle);
-				const hh = hue + side * 1.1;
-				ctx.beginPath();
-				ctx.moveTo(cx + cosA * baseR, cy + sinA * baseR);
-				ctx.lineTo(cx + cosA * (baseR + len), cy + sinA * (baseR + len));
-				ctx.strokeStyle =
-					pass === 0
-						? `hsla(${hh}, 90%, 60%, ${0.1 + v * 0.35})`
-						: `hsla(${hh}, 95%, ${62 + v * 20}%, ${0.4 + v * 0.6})`;
-				ctx.stroke();
-			}
-		}
-		ctx.lineCap = "butt";
-	}
-
-	// 鼓点冲击波：从封面外缘向外扩散并淡出
-	function drawPulses(hue: number) {
-		const ctx = canvasCtx!;
-		for (let i = pulses.length - 1; i >= 0; i--) {
-			const p = pulses[i];
-			p.r += 4 + (1 - p.alpha) * 6;
-			p.alpha *= 0.935;
-			if (p.alpha < 0.02) {
-				pulses.splice(i, 1);
-				continue;
-			}
-			ctx.beginPath();
-			ctx.arc(ringMetrics.cx, ringMetrics.cy, p.r, 0, Math.PI * 2);
-			ctx.strokeStyle = `hsla(${hue + 20}, 90%, 70%, ${p.alpha})`;
-			ctx.lineWidth = 1.5 + p.alpha * 5;
-			ctx.stroke();
 		}
 	}
 
@@ -782,10 +677,8 @@ if (!mgr) {
 			ctx.fill();
 		}
 
-		// 底部频谱条始终绘制（暂停时回落为低矮的底线），环形与冲击波仅播放时绘制
+		// 底部频谱条始终绘制（暂停时回落为低矮的底线）
 		drawBottomBars(w, h, hue);
-		if (isPlaying || pulses.length > 0) drawPulses(hue);
-		if (isPlaying) drawSpectrumRing(hue);
 		drawPaws(h, hue);
 
 		// 节拍发光：冲量写入 --beat，驱动封面脉冲与歌名光晕（每 2 帧更新，避免频繁样式重算）
@@ -822,7 +715,6 @@ if (!mgr) {
 	drawVisualizer();
 	window.addEventListener("resize", () => {
 		resizeCanvas();
-		refreshRingMetrics();
 	});
 
 	// ===== 初始化 =====
