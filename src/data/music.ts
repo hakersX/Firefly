@@ -33,7 +33,7 @@ export const musicPlaylist: MusicTrack[] = [
 		artist: "猫神X",
 		url: "/assets/music/月光下的玫瑰.mp3",
 		cover: "/assets/music/cover/月光下的玫瑰.jpg",
-		lrc: "/assets/music/lrc/茉莉信.lrc",
+		lrc: "/assets/music/lrc/月光下的玫瑰.lrc",
 	},
 	{
 		name: "茉莉信",
