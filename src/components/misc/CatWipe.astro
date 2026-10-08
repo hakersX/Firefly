@@ -44,7 +44,7 @@
 		pointer-events: none;
 		background: var(--cw-bg);
 		clip-path: circle(0px at var(--wx, 50%) var(--wy, 50%));
-		transition: clip-path 240ms cubic-bezier(0.5, 0, 0.3, 1);
+		transition: clip-path 140ms cubic-bezier(0.5, 0, 0.3, 1);
 	}
 	:root.dark #cat-wipe {
 		--cw-bg: linear-gradient(135deg, oklch(0.27 0.05 calc(var(--hue) + 250)), oklch(0.2 0.015 var(--hue)));
@@ -73,7 +73,7 @@
 	/* 揭开：去掉 hold 后圆形向落点收缩 */
 	#cat-wipe.reveal {
 		visibility: visible;
-		transition-duration: 300ms;
+		transition-duration: 180ms;
 	}
 
 	/* 一排猫爪依次踩过 */
@@ -163,7 +163,7 @@
 				location.href = href;
 			}
 			w.addEventListener("transitionend", nav, { once: true });
-			setTimeout(nav, 360); // 兜底
+			setTimeout(nav, 220); // 兜底
 		}
 
 		// capture 阶段先于 swup 处理，拦下需要整页刷新的链接
@@ -222,7 +222,7 @@
 			root.classList.remove("cat-wipe-hold");
 			var end = function () { w.classList.remove("reveal"); };
 			w.addEventListener("transitionend", end, { once: true });
-			setTimeout(end, 500);
+			setTimeout(end, 300);
 		}
 		if (document.documentElement.classList.contains("cat-wipe-hold")) {
 			if (document.readyState === "loading") {
