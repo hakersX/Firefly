@@ -137,6 +137,13 @@ export default defineConfig({
 			globalInstance: true,
 			// 滚动相关配置优化
 			resolveUrl: (url) => url,
+			// 首页 / 音乐页 / 书籍页 / 日记评论页是独立布局，没有 swup 容器：
+			// 与它们互相跳转时让浏览器原生整页跳转，不要让 swup 先请求一遍再因容器不匹配而放弃
+			ignore: (url) => {
+				const standalone = /^\/(?:$|\?|#|music(?:\/|$)|books(?:\/|$)|dynamic\/comments)/;
+				const here = globalThis.location?.pathname ?? "";
+				return standalone.test(url) || standalone.test(here);
+			},
 			animateHistoryBrowsing: false,
 			skipPopStateHandling: (event) => {
 				// 跳过锚点链接的处理，让浏览器原生处理

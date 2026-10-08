@@ -32,7 +32,6 @@ import { defaultFavicons } from "@/constants/icon";
 import type { Favicon } from "@/types/config";
 import { isHomePage } from "@/utils/layout-utils";
 import { url } from "@/utils/url-utils";
-import CatWipe from "@/components/misc/CatWipe.astro";
 
 import "@/styles/main.css";
 import "@/styles/variables.styl";
@@ -586,20 +585,6 @@ const siteLang = lang.replace("_", "-");
 
     <!-- Font Setup (Astro Font API) -->
     <FontSetup />
-
-    <!-- 猫爪转场：整页刷新到达时先盖住屏幕，避免白闪（揭开逻辑见 CatWipe.astro） -->
-    <script is:inline>
-      try {
-        var cw = sessionStorage.getItem("catWipe");
-        if (cw) {
-          var cwp = JSON.parse(cw);
-          var cwr = document.documentElement;
-          cwr.classList.add("cat-wipe-hold");
-          cwr.style.setProperty("--wx", cwp.x + "px");
-          cwr.style.setProperty("--wy", cwp.y + "px");
-        }
-      } catch (e) {}
-    </script>
   </head>
   <body
     class="min-h-screen"
@@ -661,8 +646,6 @@ const siteLang = lang.replace("_", "-");
     <!-- Tab 代码块交互 -->
     <CodeGroupManager />
 
-    <!-- 猫爪转场覆盖层 -->
-    <CatWipe />
   </body>
 </html>
 
