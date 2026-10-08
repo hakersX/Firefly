@@ -117,6 +117,9 @@ const siteLang = lang.replace("_", "-");
 <!doctype html>
 <html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "rectangle"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
   <head>
+    <script type="speculationrules" is:inline>
+      {"prefetch":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/api/*","/*.xml","/*.json","/rss*","/admin*"]}}]},"eagerness":"moderate"}]}
+    </script>
     <meta charset="UTF-8" />
     <style is:inline>
 			@layer properties, theme, base, components, utilities;

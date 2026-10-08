@@ -11,47 +11,41 @@
 /* Main Content Transition */
 .transition-main {
     transition:
-        opacity 420ms ease-out,
-        transform 620ms cubic-bezier(0.34, 1.4, 0.64, 1),
-        filter 420ms ease-out;
+        opacity 220ms ease-out,
+        transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Leaving Animation */
 .transition-leaving {
     transition:
-        transform 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        opacity 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        filter 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        transform 100ms ease-in,
+        opacity 100ms ease-in;
 }
 
 /* State: Changing (Swup) */
 html.is-changing .transition-main {
     transition:
-        opacity 420ms ease-out,
-        transform 620ms cubic-bezier(0.34, 1.4, 0.64, 1),
-        filter 420ms ease-out;
+        opacity 220ms ease-out,
+        transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.is-leaving .transition-main {
     transition:
-        opacity 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        transform 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
-        filter 160ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        opacity 100ms ease-in,
+        transform 100ms ease-in;
 }
 
 /* State: Animating (Entering) */
 html.is-animating .transition-main {
     opacity: 0;
-    transform: translateY(2.2rem) scale(0.975);
-    filter: blur(10px);
+    transform: translateY(0.9rem);
 }
 
 /* State: Leaving（离场动画由内层 #content-wrapper.transition-leaving 承担，
    与外层 .transition-main 的进场规则互不覆盖） */
 html.is-animating.is-leaving .transition-leaving {
-    transform: translateY(-1rem) scale(0.995);
+    transform: translateY(-0.4rem);
     opacity: 0;
-    filter: blur(5px);
 }
 
 /* Swup Fade Fallback */
@@ -105,12 +99,12 @@ html.is-animating .transition-swup-fade {
 
 /* 文章卡片：从下方弹出并轻微回正，配合逐个延迟形成「依次蹦出」的节奏 */
 .onload-animation.post-card-item {
-    animation: card-pop 560ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+    animation: card-pop 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes card-pop {
     from {
         opacity: 0;
-        transform: translateY(2.4rem) scale(0.94) rotate(-1.2deg);
+        transform: translateY(1.2rem) scale(0.97);
     }
     to {
         opacity: 1;

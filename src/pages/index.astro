@@ -103,10 +103,10 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 <div class="cat-home">
 {/* 两侧装饰插画：歌川广重浮世绘（大都会博物馆开放获取，CC0），宽屏时从左右弹入 */}
 <figure class="bento-side bento-side-left" aria-hidden="true">
-	<img src={url("/assets/images/home/hiroshige-cat-window.jpg")} alt="" loading="eager" decoding="async" />
+	<img src={url("/assets/images/home/hiroshige-cat-window.jpg")} alt="" loading="eager" decoding="async" fetchpriority="low" />
 </figure>
 <figure class="bento-side bento-side-right" aria-hidden="true">
-	<img src={url("/assets/images/home/hiroshige-plum-garden.jpg")} alt="" loading="eager" decoding="async" />
+	<img src={url("/assets/images/home/hiroshige-plum-garden.jpg")} alt="" loading="eager" decoding="async" fetchpriority="low" />
 </figure>
 <main class="bento-page">
 	<div class="bento-notice">
