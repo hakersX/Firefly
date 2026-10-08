@@ -39,7 +39,7 @@ export const fontsList: FontDefinition[] = [
 	{
 		name: "Noto Serif SC",
 		cssVariable: "--font-noto-serif-sc",
-		provider: "fontsource",
+		provider: "google",
 		weights: ["400", "600", "700"],
 		styles: ["normal"],
 		subsets: ["latin", "chinese-simplified"],

@@ -61,10 +61,12 @@ const codeFontFamily = codeFontVar
 ---
 
 <!-- Astro Font API: 自动下载、缓存并生成优化的 @font-face -->
+{/* 正文字体只预加载 latin 子集：中文字体按 unicode-range 切成上百个分片，
+     由浏览器按页面实际用到的字符按需下载；全部预加载会一次拉下几 MB */}
 {Array.from(allCssVars).map((cssVar) => (
   <Font
     cssVariable={cssVar as any}
-    preload={selectedFontVars.includes(cssVar)}
+    preload={selectedFontVars.includes(cssVar) ? [{ subset: "latin" }] : false}
   />
 ))}
 
