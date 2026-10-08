@@ -499,3 +499,82 @@ a.b-card {
 		transform: none;
 	}
 }
+
+/* ---------- 两侧装饰图：进入首页时从左右弹入 ----------
+ * 只在宽屏（两侧有足够空白）显示；窄屏直接隐藏，不影响卡片布局。
+ */
+.bento-side {
+	display: none;
+	position: fixed;
+	top: 6.5rem;
+	bottom: 2.5rem;
+	width: clamp(150px, calc((100vw - 1120px) / 2 - 3rem), 280px);
+	z-index: 0;
+	margin: 0;
+	border-radius: 28px;
+	overflow: hidden;
+	pointer-events: none;
+	box-shadow: 0 24px 48px -20px oklch(0.3 0.08 var(--hue) / 0.55);
+	opacity: 0;
+	will-change: transform, opacity;
+}
+.bento-side img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: cover;
+	object-position: center;
+	transform: scale(1.14); /* 裁掉浮世绘四周的纸边 */
+	filter: saturate(1.05) contrast(1.02);
+}
+.bento-side-left {
+	left: calc((100vw - 1120px) / 4 - clamp(150px, calc((100vw - 1120px) / 2 - 3rem), 280px) / 2);
+	--fade-dir: 270deg;
+	animation: bento-in-left 1.1s 0.25s cubic-bezier(0.34, 1.45, 0.5, 1) forwards,
+		bento-float 7s 1.5s ease-in-out infinite alternate;
+}
+.bento-side-right {
+	right: calc((100vw - 1120px) / 4 - clamp(150px, calc((100vw - 1120px) / 2 - 3rem), 280px) / 2);
+	--fade-dir: 90deg;
+	animation: bento-in-right 1.1s 0.4s cubic-bezier(0.34, 1.45, 0.5, 1) forwards,
+		bento-float 8s 1.6s ease-in-out infinite alternate-reverse;
+}
+@keyframes bento-in-left {
+	from {
+		opacity: 0;
+		transform: translateX(-140%) rotate(-6deg) scale(0.92);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes bento-in-right {
+	from {
+		opacity: 0;
+		transform: translateX(140%) rotate(6deg) scale(0.92);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes bento-float {
+	from {
+		translate: 0 -6px;
+	}
+	to {
+		translate: 0 8px;
+	}
+}
+@media (min-width: 1520px) {
+	.bento-side {
+		display: block;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.bento-side {
+		animation: none !important;
+		opacity: 1;
+	}
+}
