@@ -21,6 +21,7 @@ type PostData = {
 	licenseUrl: string;
 	comment: boolean;
 	password: string;
+	typography: string;
 	passwordHint: string;
 	series: string;
 	chapter: number;
@@ -61,6 +62,8 @@ const postsCollection: ContentCollection<PostData> = defineCollection({
 		licenseUrl: z.string().optional().default(""),
 		comment: z.boolean().optional().default(true),
 		password: z.string().optional().default(""),
+		// 排版预设，对应 src/styles/typography.css 里的 .typo-<值>
+		typography: z.string().optional().default(""),
 		passwordHint: z.string().optional().default(""),
 		// 连载系列：series 为专辑 id（对应 seriesConfig 中的 id），chapter 为章节序号
 		series: z.string().optional().default(""),

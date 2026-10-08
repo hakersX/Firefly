@@ -1,0 +1,58 @@
+/* 文章排版预设：在文章 frontmatter 里写 `typography: novel` 即可套用，无需在正文里手写 <style>。
+ * 后台（pnpm admin）的「排版风格」下拉框读的就是这里的预设，新增预设时记得同步 scripts/admin/index.html。
+ */
+
+/* 小说：首行缩进 2 字 */
+.custom-md.typo-novel p,
+.custom-md.typo-novel-kai p,
+.custom-md.typo-novel-song p {
+	text-indent: 2em;
+}
+
+/* 小说（楷体） */
+.custom-md.typo-novel-kai {
+	font-family: "楷体", "KaiTi", "STKaiti", serif;
+}
+
+/* 小说（宋体） */
+.custom-md.typo-novel-song {
+	font-family: "宋体", "SimSun", "Songti SC", serif;
+}
+
+/* 诗歌：整体居中，行距放宽 */
+.custom-md.typo-poem {
+	text-align: center;
+	line-height: 2.2;
+}
+
+/* ---- 正文中可直接使用的小工具类（后台工具栏会插入这些） ---- */
+.custom-md .align-center {
+	text-align: center;
+	text-indent: 0;
+}
+.custom-md .align-right {
+	text-align: right;
+	text-indent: 0;
+}
+.custom-md .no-indent,
+.custom-md .no-indent p {
+	text-indent: 0;
+}
+
+/* 场景插图及其说明 */
+.custom-md .scene-img {
+	display: block;
+	width: 100%;
+	max-width: 720px;
+	margin: 2.2rem auto;
+	border-radius: 12px;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.custom-md .scene-caption {
+	text-align: center;
+	text-indent: 0;
+	font-size: 0.85em;
+	opacity: 0.55;
+	margin: -1.4rem auto 2.2rem;
+	letter-spacing: 0.06em;
+}

@@ -1,21 +1,16 @@
 ---
-title: 《归》
+title: '《归》'
 published: 2026-08-14
 description: '一个关于等待、奔赴与永恒的故事。人间换了朝代，那场爱从未散场。'
 image: ''
-tags: [故事，爱情]
+tags: ['故事', '爱情']
 category: '故事'
 draft: false
-pinned: true
+pinned: false
 lang: ''
-slug: new_story
+typography: novel
+slug: 'new_story'
 ---
-
-<style>
-.custom-md p {
-  text-indent: 2em;
-}
-</style>
 
 在很久很久以前，长安城东市有家伞铺，铺面不大，檐下挂满油纸伞，风一吹便轻轻相撞，像无数把沉默的铃铛。年轻伞匠赵青梧手艺传自父亲，一把青竹伞做得极好，伞骨削得薄而韧，伞面绘的青竹从柄一路爬到顶，仿佛真能生出一片阴凉。他还有个妹妹叫蜜桃，是逃荒时父亲捡回来的，虽非血亲，却比亲妹妹还黏人。
 

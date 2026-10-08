@@ -8,17 +8,9 @@ category: '故事'
 draft: false
 pinned: true
 lang: ''
+typography: novel-kai
 slug: my_story
 ---
-
-<style>
-.custom-md {
-  font-family: '楷体', 'KaiTi', serif;
-}
-.custom-md p {
-  text-indent: 2em;
-}
-</style>
 
 这是，我的故事。
 
