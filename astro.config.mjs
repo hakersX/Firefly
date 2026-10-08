@@ -117,6 +117,9 @@ export default defineConfig({
 	integrations: [
 		swup({
 			theme: false,
+			// 默认 swup 要等页面加载完且浏览器空闲才初始化，期间点链接都是整页刷新、悬停预加载也不工作；
+			// 关掉后随页面脚本立即初始化，保证从第一次点击起就是无刷新切换
+			loadOnIdle: false,
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
 			// the default value `transition-` cause transition delay
 			// when the Tailwind class `transition-all` is used

@@ -49,13 +49,14 @@ html.is-animating.is-leaving .transition-leaving {
 }
 
 /* Swup Fade Fallback */
+/* swup 会等这些元素的过渡结束才继续（每次切页都要等），时长直接决定切页快慢 */
 html.is-changing .transition-swup-fade {
-    transition: all 200ms ease-out;
+    transition: opacity 90ms linear, transform 90ms linear;
 }
 
 html.is-animating .transition-swup-fade {
     opacity: 0;
-    transform: translateY(1rem);
+    transform: translateY(0.4rem);
 }
 
 /* 减少动态偏好：仅保留淡入淡出 */
