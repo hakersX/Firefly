@@ -23,6 +23,16 @@ export const friendsPageConfig: FriendsPageConfig = {
 // 友链配置
 export const friendsConfig: FriendLink[] = [
 	{
+		title: "张萌萌",
+		imgurl: "https://blog.nw177.cn/assets/avatar.webp",
+		desc: "春风得意马蹄疾 一日看尽长安花",
+		siteurl: "https://blog.nw177.cn",
+		rss: "https://blog.nw177.cn/rss.xml",
+		tags: ["Blog"],
+		weight: 11,
+		enabled: true,
+	},
+	{
 		title: "夏夜流萤",
 		imgurl:
 			"https://weavatar.com/avatar/d252655d40d6874417a720bad0a6c5f77f8f6a1fd2f882f8f338402dc37e4190?s=640",
