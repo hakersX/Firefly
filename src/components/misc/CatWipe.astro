@@ -64,6 +64,17 @@
 	html.dark.cat-wipe-hold {
 		background: oklch(0.2 0.015 var(--hue));
 	}
+	/* 遮罩元素在 body 最末尾，整页解析完才存在；到达时先把页面内容藏起来（只露出底色），
+	 * 否则会先闪出内容、遮罩才冒出来。2s 后无论如何都恢复显示，防止脚本失败时一直空白。 */
+	html.cat-wipe-hold body > :not(#cat-wipe) {
+		visibility: hidden !important;
+		animation: cw-unhide 0s 2s forwards;
+	}
+	@keyframes cw-unhide {
+		to {
+			visibility: visible;
+		}
+	}
 	html.cat-wipe-hold #cat-wipe {
 		visibility: visible;
 		pointer-events: all;
@@ -204,7 +215,7 @@
 		window.addEventListener("mouseover", prefetch, { passive: true });
 		window.addEventListener("touchstart", prefetch, { passive: true });
 
-		// 到达：<head> 里的脚本已给 html 加了 cat-wipe-hold，这里在 DOM 就绪后揭开
+		// 到达：<head> 里的脚本已给 html 加了 cat-wipe-hold（内容被藏起来），这里揭开
 		var revealed = false;
 		function reveal() {
 			if (revealed) return;
@@ -225,11 +236,9 @@
 			setTimeout(end, 300);
 		}
 		if (document.documentElement.classList.contains("cat-wipe-hold")) {
-			if (document.readyState === "loading") {
-				document.addEventListener("DOMContentLoaded", reveal, { once: true });
-			} else {
-				reveal();
-			}
+			// 本脚本在 body 末尾，执行时页面内容已解析完，直接揭开；
+			// 不再等 DOMContentLoaded（它要等所有模块脚本跑完，会让遮罩多盖很久）
+			reveal();
 			setTimeout(reveal, 1500); // 兜底：无论如何不能一直盖着
 		}
 
