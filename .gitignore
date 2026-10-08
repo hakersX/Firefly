@@ -47,3 +47,6 @@ package/
 .codex*
 .claude
 .mimocode
+
+# admin 后台删除的文章回收站
+.trash/

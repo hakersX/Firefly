@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>猫窝后台</title>
+<style>
+:root{--bg:#fbf7f3;--panel:#fff;--line:#eadfd5;--text:#2d2620;--mute:#8a7d70;--accent:#e8833a;--accent2:#fbe6d4;--danger:#d64545}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1713;--panel:#25201a;--line:#3a322a;--text:#eee6dc;--mute:#9b8f82;--accent:#f09a58;--accent2:#3b2a1d;--danger:#f06a6a}}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:16px;margin:0}
+header .sp{flex:1}
+main{flex:1;display:grid;grid-template-columns:260px minmax(360px,1fr) minmax(360px,1fr);min-height:0}
+section{min-width:0;min-height:0;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--panel);padding:5px 12px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger{color:var(--danger)}
+input,textarea,select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;width:100%}
+input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--accent)}
+.list-head{padding:10px;display:flex;gap:6px;border-bottom:1px solid var(--line)}
+#list{overflow:auto;flex:1}
+.item{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.item:hover,.item.active{background:var(--accent2)}
+.item.active{border-left:3px solid var(--accent)}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .m{font-size:12px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:var(--accent2);color:var(--accent);border-radius:4px;padding:0 5px;font-size:11px}
+#editor{overflow:auto}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+.meta label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mute)}
+.meta .full{grid-column:1/-1}
+.meta .chk{flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--text)}
+.meta .chk input{width:auto}
+#body{flex:1;min-height:320px;margin:12px;width:calc(100% - 24px);resize:none;font-family:ui-monospace,Consolas,monospace;line-height:1.6}
+.bar{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.bar .sp{flex:1}
+.tools{display:flex;gap:4px}.tools button{padding:3px 8px;font-size:12px}
+#status{font-size:12px;color:var(--mute)}
+#preview{border-right:0}
+.tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);align-items:center}
+.tabs button.on{background:var(--accent2);border-color:var(--accent)}
+#frame{flex:1;border:0;width:100%;background:#fff}
+#md{flex:1;overflow:auto;padding:16px 24px;display:none}
+#md img{max-width:100%}
+#md pre{background:var(--accent2);padding:10px;border-radius:8px;overflow:auto}
+#empty{margin:auto;color:var(--mute)}
+@media(max-width:1000px){main{grid-template-columns:200px 1fr}#preview{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐱 猫窝后台</h1><span id="status"></span><span class="sp"></span>
+  <a id="siteLink" href="http://localhost:4321/" target="_blank" style="color:var(--accent)">打开站点 ↗</a>
+</header>
+<main>
+  <section id="side">
+    <div class="list-head">
+      <input id="q" placeholder="搜索标题/分类…"><button class="primary" id="btnNew">＋ 新建</button>
+    </div>
+    <div id="list"></div>
+  </section>
+  <section id="editor">
+    <div id="empty">← 选择一篇文章，或点「新建」</div>
+    <div id="form" style="display:none;flex-direction:column;min-height:100%">
+      <div class="bar">
+        <button class="primary" id="btnSave">保存 (Ctrl+S)</button>
+        <button id="btnImg">插入图片</button>
+        <input type="file" id="file" accept="image/*" hidden>
+        <span class="tools">
+          <button data-wrap="center" title="选中文字居中">居中</button>
+          <button data-wrap="right" title="选中文字靠右">靠右</button>
+          <button data-wrap="none" title="取消首行缩进">不缩进</button>
+          <button data-mark title="高亮选中文字">高亮</button>
+          <button data-hr title="插入分隔线">分隔线</button>
+        </span>
+        <span class="sp"></span>
+        <button class="danger" id="btnDel">删除</button>
+      </div>
+      <div class="meta">
+        <label class="full">标题<input id="f_title"></label>
+        <label>发布日期<input id="f_published" type="date"></label>
+        <label>更新日期<input id="f_updated" type="date"></label>
+        <label>分类<input id="f_category"></label>
+        <label>标签（逗号分隔）<input id="f_tags"></label>
+        <label>封面图<input id="f_image"></label>
+        <label class="full">简介<input id="f_description"></label>
+        <label class="full">排版风格（不用再手写 style）
+          <select id="f_typography">
+            <option value="">默认</option>
+            <option value="novel">小说 · 首行缩进</option>
+            <option value="novel-kai">小说 · 楷体 + 首行缩进</option>
+            <option value="novel-song">小说 · 宋体 + 首行缩进</option>
+            <option value="poem">诗歌 · 居中</option>
+          </select>
+        </label>
+        <label class="chk"><input type="checkbox" id="f_draft">草稿（draft）</label>
+        <label class="chk"><input type="checkbox" id="f_pinned">置顶</label>
+        <div class="full" id="pathInfo" style="font-size:12px;color:var(--mute)"></div>
+      </div>
+      <textarea id="body" placeholder="在这里写 Markdown…（可直接粘贴/拖入图片）"></textarea>
+    </div>
+  </section>
+  <section id="preview">
+    <div class="tabs">
+      <button id="tabReal" class="on">真实站点预览</button>
+      <button id="tabMd">快速预览</button>
+      <span style="flex:1"></span>
+      <button id="btnReload" title="重新加载预览">⟳</button>
+    </div>
+    <iframe id="frame"></iframe>
+    <div id="md"></div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const FIELDS = ["title", "published", "updated", "category", "tags", "image", "description", "typography"];
+let posts = [], cur = null, dirty = false, devPort = 4321;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+const setStatus = (t) => ($("status").textContent = t);
+const mdPath = (p) => (/\.(md|mdx)$/i.test(p) ? p : p + ".md");
+
+async function loadList() {
+  posts = await api("/api/posts");
+  renderList();
+}
+function renderList() {
+  const kw = $("q").value.trim().toLowerCase();
+  $("list").innerHTML = "";
+  for (const p of posts) {
+    if (kw && !(p.title + p.category + p.path).toLowerCase().includes(kw)) continue;
+    const d = document.createElement("div");
+    d.className = "item" + (cur && cur.path === p.path ? " active" : "");
+    const t = document.createElement("div");
+    t.className = "t"; t.textContent = p.title;
+    const m = document.createElement("div");
+    m.className = "m";
+    const date = document.createElement("span");
+    date.textContent = p.published || "无日期";
+    m.appendChild(date);
+    for (const [on, text] of [[p.draft, "草稿"], [p.pinned, "置顶"], [p.category, p.category]]) {
+      if (!on) continue;
+      const s = document.createElement("span");
+      s.className = "tag"; s.textContent = text;
+      m.appendChild(s);
+    }
+    d.append(t, m);
+    d.onclick = () => open(p.path);
+    $("list").appendChild(d);
+  }
+}
+$("q").oninput = renderList;
+
+const confirmLeave = () => !dirty || confirm("当前修改尚未保存，确定放弃？");
+
+function fill(data, content) {
+  for (const f of FIELDS) $("f_" + f).value = f === "tags" ? (data.tags || []).join(", ") : (data[f] ?? "");
+  $("f_draft").checked = !!data.draft;
+  $("f_pinned").checked = !!data.pinned;
+  $("body").value = content;
+  cur.slug = data.slug || "";
+  cur.extra = Object.fromEntries(Object.entries(data).filter(([k]) => ![...FIELDS, "draft", "pinned", "slug"].includes(k)));
+}
+function collect() {
+  const data = { ...cur.extra };
+  data.title = $("f_title").value.trim();
+  data.published = $("f_published").value;
+  if ($("f_updated").value) data.updated = $("f_updated").value;
+  data.description = $("f_description").value;
+  data.image = $("f_image").value;
+  if ($("f_typography").value) data.typography = $("f_typography").value;
+  data.tags = $("f_tags").value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+  data.category = $("f_category").value;
+  data.draft = $("f_draft").checked;
+  data.pinned = $("f_pinned").checked;
+  if (cur.slug) data.slug = cur.slug;
+  return { data, content: $("body").value };
+}
+function show(on) {
+  $("empty").style.display = on ? "none" : "";
+  $("form").style.display = on ? "flex" : "none";
+}
+
+async function open(p) {
+  if (!confirmLeave()) return;
+  try {
+    const { data, content } = await api("/api/post?path=" + encodeURIComponent(p));
+    cur = { path: p, isNew: false };
+    fill(data, content);
+    $("pathInfo").textContent = "文件：" + p;
+    $("btnDel").style.display = "";
+    dirty = false; show(true); renderList(); reloadFrame(); renderMd(); setStatus("");
+  } catch (e) { alert("打开失败：" + e.message); }
+}
+
+$("btnNew").onclick = () => {
+  if (!confirmLeave()) return;
+  cur = { path: "", isNew: true };
+  fill({ published: new Date().toISOString().slice(0, 10), draft: true, tags: [] }, "");
+  $("pathInfo").textContent = "文件名与链接将根据标题自动生成";
+  $("btnDel").style.display = "none";
+  show(true); dirty = false; renderList(); renderMd();
+  $("f_title").focus();
+};
+
+
+async function save() {
+  if (!cur) return;
+  try {
+    if (cur.isNew) {
+      const title = $("f_title").value.trim();
+      if (!title) return alert("请先填写标题");
+      let base = (await api("/api/slugify?name=" + encodeURIComponent(title))).slug || "post-" + Date.now();
+      const taken = new Set(posts.flatMap((x) => [x.path, x.slug]));
+      let n = base, i = 2;
+      while (taken.has(n + ".md") || taken.has(n)) n = base + "-" + i++;
+      cur.path = n + ".md"; cur.slug = n;
+    }
+    const p = cur.path;
+    await api("/api/post?path=" + encodeURIComponent(p) + (cur.isNew ? "&create=1" : ""), {
+      method: "PUT", body: JSON.stringify(collect()),
+    });
+    cur.isNew = false;
+    $("pathInfo").textContent = "文件：" + p; $("btnDel").style.display = "";
+    dirty = false;
+    setStatus("已保存 " + new Date().toLocaleTimeString());
+    await loadList();
+    setTimeout(reloadFrame, 900); // 等 dev server 热更新
+  } catch (e) { alert("保存失败：" + e.message); }
+}
+$("btnSave").onclick = save;
+addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
+});
+
+$("btnDel").onclick = async () => {
+  if (!cur || cur.isNew) return;
+  if (!confirm(`删除「${$("f_title").value}」？\n文件会被移到项目根目录的 .trash/ 文件夹，可手动找回。`)) return;
+  try {
+    const r = await api("/api/post?path=" + encodeURIComponent(cur.path), { method: "DELETE" });
+    setStatus("已删除 → " + r.trashed);
+    cur = null; dirty = false; show(false); $("frame").src = "about:blank"; await loadList();
+  } catch (e) { alert("删除失败：" + e.message); }
+};
+
+// 排版工具栏：插入的都是 typography.css 里的现成类，不用手写 style
+const WRAP = { center: "align-center", right: "align-right", none: "no-indent" };
+function insertAround(before, after, placeholder) {
+  const ta = $("body"), sel = ta.value.slice(ta.selectionStart, ta.selectionEnd) || placeholder;
+  ta.setRangeText(before + sel + after, ta.selectionStart, ta.selectionEnd, "select");
+  ta.focus(); ta.dispatchEvent(new Event("input"));
+}
+document.querySelectorAll(".tools button").forEach((b) => (b.onclick = () => {
+  const NL = String.fromCharCode(10);
+  if (b.dataset.wrap) insertAround('<div class="' + WRAP[b.dataset.wrap] + '">' + NL + NL, NL + NL + "</div>", "文字");
+  else if ("mark" in b.dataset) insertAround("<mark>", "</mark>", "重点");
+  else insertAround(NL + NL + "---" + NL + NL, "", "");
+}));
+
+// 图片：按钮选择 / 粘贴 / 拖拽
+async function upload(file) {
+  const name = file.name && file.name !== "image.png" ? file.name : `img-${Date.now()}.png`;
+  const post = cur.isNew ? "x.md" : cur.path;
+  const r = await api(`/api/upload?name=${encodeURIComponent(name)}&post=${encodeURIComponent(post)}`, { method: "POST", body: file });
+  const ta = $("body");
+  ta.setRangeText(`![](${r.url})`, ta.selectionStart, ta.selectionEnd, "end");
+  ta.dispatchEvent(new Event("input"));
+}
+const tryUpload = (f) => upload(f).catch((x) => alert("上传失败：" + x.message));
+$("btnImg").onclick = () => $("file").click();
+$("file").onchange = (e) => { if (e.target.files[0]) tryUpload(e.target.files[0]); e.target.value = ""; };
+$("body").addEventListener("paste", (e) => {
+  const f = [...e.clipboardData.files].find((f) => f.type.startsWith("image/"));
+  if (f) { e.preventDefault(); tryUpload(f); }
+});
+$("body").addEventListener("drop", (e) => {
+  const f = [...e.dataTransfer.files].find((f) => f.type.startsWith("image/"));
+  if (f) { e.preventDefault(); tryUpload(f); }
+});
+
+document.querySelectorAll("#form input, #form textarea").forEach((el) =>
+  el.addEventListener("input", () => {
+    dirty = true; setStatus("未保存…");
+    if (el.id === "body") renderMdSoon();
+  }));
+addEventListener("beforeunload", (e) => { if (dirty) e.preventDefault(); });
+
+// 预览
+function postUrl() {
+  if (!cur || cur.isNew) return null;
+  const slug = cur.slug || cur.path.replace(/\.(md|mdx)$/i, "");
+  return `http://localhost:${devPort}/posts/${slug}/`;
+}
+function reloadFrame() { const u = postUrl(); if (u) $("frame").src = u; }
+let timer;
+function renderMdSoon() { clearTimeout(timer); timer = setTimeout(renderMd, 200); }
+function renderMd() {
+  if (window.marked) $("md").innerHTML = marked.parse($("body").value);
+  else $("md").textContent = $("body").value;
+}
+function showTab(real) {
+  $("frame").style.display = real ? "" : "none";
+  $("md").style.display = real ? "none" : "block";
+  $("tabReal").classList.toggle("on", real);
+  $("tabMd").classList.toggle("on", !real);
+}
+$("btnReload").onclick = () => { reloadFrame(); renderMd(); };
+$("tabReal").onclick = () => showTab(true);
+$("tabMd").onclick = () => { showTab(false); renderMd(); };
+
+(async () => {
+  devPort = (await api("/api/config")).devPort;
+  $("siteLink").href = `http://localhost:${devPort}/`;
+  await loadList();
+})();
+</script>
+</body>
+</html>
