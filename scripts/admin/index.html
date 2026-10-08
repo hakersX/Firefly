@@ -38,6 +38,7 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
 #body{flex:1;min-height:320px;margin:12px;width:calc(100% - 24px);resize:none;font-family:ui-monospace,Consolas,monospace;line-height:1.6}
 .bar{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
 .bar .sp{flex:1}
+.modes{display:flex;gap:4px}.modes button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .tools{display:flex;gap:4px}.tools button{padding:3px 8px;font-size:12px}
 #status{font-size:12px;color:var(--mute)}
 #preview{border-right:0}
@@ -53,7 +54,9 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
 </head>
 <body>
 <header>
-  <h1>🐱 猫窝后台</h1><span id="status"></span><span class="sp"></span>
+  <h1>🐱 猫窝后台</h1>
+  <span class="modes"><button class="on" data-kind="posts">文章</button><button data-kind="dynamic">日记</button></span>
+  <span id="status"></span><span class="sp"></span>
   <a id="siteLink" href="http://localhost:4321/" target="_blank" style="color:var(--accent)">打开站点 ↗</a>
 </header>
 <main>
@@ -69,7 +72,9 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
       <div class="bar">
         <button class="primary" id="btnSave">保存 (Ctrl+S)</button>
         <button id="btnImg">插入图片</button>
+        <button id="btnAudio" title="上传 mp3 等音频，页面里可直接播放">插入音频</button>
         <input type="file" id="file" accept="image/*" hidden>
+        <input type="file" id="fileAudio" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" hidden>
         <span class="tools">
           <button data-wrap="center" title="选中文字居中">居中</button>
           <button data-wrap="right" title="选中文字靠右">靠右</button>
@@ -80,7 +85,13 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
         <span class="sp"></span>
         <button class="danger" id="btnDel">删除</button>
       </div>
-      <div class="meta">
+      <div class="meta" id="metaDiary" style="display:none">
+        <label>时间<input id="d_published" type="datetime-local" step="1"></label>
+        <label>地点<input id="d_location" placeholder="例如：无锡"></label>
+        <label class="chk"><input type="checkbox" id="d_pinned">置顶</label>
+        <div class="full" id="pathInfoD" style="font-size:12px;color:var(--mute)"></div>
+      </div>
+      <div class="meta" id="metaPost">
         <label class="full">标题<input id="f_title"></label>
         <label>发布日期<input id="f_published" type="date"></label>
         <label>更新日期<input id="f_updated" type="date"></label>
@@ -119,7 +130,12 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
 <script>
 const $ = (id) => document.getElementById(id);
 const FIELDS = ["title", "published", "updated", "category", "tags", "image", "description", "typography"];
-let posts = [], cur = null, dirty = false, devPort = 4321;
+let posts = [], cur = null, dirty = false, devPort = 4321, kind = "posts";
+const isD = () => kind === "dynamic";
+const kq = () => "kind=" + kind;
+const pad2 = (n) => String(n).padStart(2, "0");
+// 本地时间 → "YYYY-MM-DD HH:mm:ss"（日记 frontmatter 格式）
+const nowStamp = () => { const d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds()); };
 
 async function api(path, opts = {}) {
   const r = await fetch(path, opts);
@@ -131,7 +147,7 @@ const setStatus = (t) => ($("status").textContent = t);
 const mdPath = (p) => (/\.(md|mdx)$/i.test(p) ? p : p + ".md");
 
 async function loadList() {
-  posts = await api("/api/posts");
+  posts = await api("/api/posts?" + kq());
   renderList();
 }
 function renderList() {
@@ -164,6 +180,14 @@ $("q").oninput = renderList;
 const confirmLeave = () => !dirty || confirm("当前修改尚未保存，确定放弃？");
 
 function fill(data, content) {
+  if (isD()) {
+    $("d_published").value = String(data.published || "").replace(" ", "T");
+    $("d_location").value = data.location || "";
+    $("d_pinned").checked = !!data.pinned;
+    $("body").value = content;
+    cur.extra = Object.fromEntries(Object.entries(data).filter(([k]) => !["published", "pinned", "location"].includes(k)));
+    return;
+  }
   for (const f of FIELDS) $("f_" + f).value = f === "tags" ? (data.tags || []).join(", ") : (data[f] ?? "");
   $("f_draft").checked = !!data.draft;
   $("f_pinned").checked = !!data.pinned;
@@ -172,6 +196,11 @@ function fill(data, content) {
   cur.extra = Object.fromEntries(Object.entries(data).filter(([k]) => ![...FIELDS, "draft", "pinned", "slug"].includes(k)));
 }
 function collect() {
+  if (isD()) {
+    const t = $("d_published").value.replace("T", " ");
+    const data = { ...cur.extra, published: t.length === 16 ? t + ":00" : t, location: $("d_location").value.trim(), pinned: $("d_pinned").checked };
+    return { data, content: $("body").value };
+  }
   const data = { ...cur.extra };
   data.title = $("f_title").value.trim();
   data.published = $("f_published").value;
@@ -194,10 +223,10 @@ function show(on) {
 async function open(p) {
   if (!confirmLeave()) return;
   try {
-    const { data, content } = await api("/api/post?path=" + encodeURIComponent(p));
+    const { data, content } = await api("/api/post?" + kq() + "&path=" + encodeURIComponent(p));
     cur = { path: p, isNew: false };
     fill(data, content);
-    $("pathInfo").textContent = "文件：" + p;
+    $("pathInfo").textContent = $("pathInfoD").textContent = "文件：" + p;
     $("btnDel").style.display = "";
     dirty = false; show(true); renderList(); reloadFrame(); renderMd(); setStatus("");
   } catch (e) { alert("打开失败：" + e.message); }
@@ -206,18 +235,26 @@ async function open(p) {
 $("btnNew").onclick = () => {
   if (!confirmLeave()) return;
   cur = { path: "", isNew: true };
-  fill({ published: new Date().toISOString().slice(0, 10), draft: true, tags: [] }, "");
-  $("pathInfo").textContent = "文件名与链接将根据标题自动生成";
+  if (isD()) fill({ published: nowStamp(), location: "" }, "");
+  else fill({ published: new Date().toISOString().slice(0, 10), draft: true, tags: [] }, "");
+  $("pathInfo").textContent = $("pathInfoD").textContent = isD() ? "文件名会按时间自动生成" : "文件名与链接将根据标题自动生成";
   $("btnDel").style.display = "none";
   show(true); dirty = false; renderList(); renderMd();
-  $("f_title").focus();
+  (isD() ? $("body") : $("f_title")).focus();
 };
 
 
 async function save() {
   if (!cur) return;
   try {
-    if (cur.isNew) {
+    if (cur.isNew && isD()) {
+      const t = ($("d_published").value || "").replace("T", "-").replace(/:/g, "").replace(/-(\d{2})(\d{2})(\d{2})?$/, (m, a, b, c) => "-" + a + b + (c || "00"));
+      if (!t) return alert("请先选择时间");
+      let n = t, i = 2;
+      const taken = new Set(posts.map((x) => x.path));
+      while (taken.has(n + ".md")) n = t + "-" + i++;
+      cur.path = n + ".md";
+    } else if (cur.isNew) {
       const title = $("f_title").value.trim();
       if (!title) return alert("请先填写标题");
       let base = (await api("/api/slugify?name=" + encodeURIComponent(title))).slug || "post-" + Date.now();
@@ -227,11 +264,11 @@ async function save() {
       cur.path = n + ".md"; cur.slug = n;
     }
     const p = cur.path;
-    await api("/api/post?path=" + encodeURIComponent(p) + (cur.isNew ? "&create=1" : ""), {
+    await api("/api/post?" + kq() + "&path=" + encodeURIComponent(p) + (cur.isNew ? "&create=1" : ""), {
       method: "PUT", body: JSON.stringify(collect()),
     });
     cur.isNew = false;
-    $("pathInfo").textContent = "文件：" + p; $("btnDel").style.display = "";
+    $("pathInfo").textContent = $("pathInfoD").textContent = "文件：" + p; $("btnDel").style.display = "";
     dirty = false;
     setStatus("已保存 " + new Date().toLocaleTimeString());
     await loadList();
@@ -245,9 +282,9 @@ addEventListener("keydown", (e) => {
 
 $("btnDel").onclick = async () => {
   if (!cur || cur.isNew) return;
-  if (!confirm(`删除「${$("f_title").value}」？\n文件会被移到项目根目录的 .trash/ 文件夹，可手动找回。`)) return;
+  if (!confirm(`删除「${isD() ? $("body").value.trim().slice(0, 20) : $("f_title").value}」？\n文件会被移到项目根目录的 .trash/ 文件夹，可手动找回。`)) return;
   try {
-    const r = await api("/api/post?path=" + encodeURIComponent(cur.path), { method: "DELETE" });
+    const r = await api("/api/post?" + kq() + "&path=" + encodeURIComponent(cur.path), { method: "DELETE" });
     setStatus("已删除 → " + r.trashed);
     cur = null; dirty = false; show(false); $("frame").src = "about:blank"; await loadList();
   } catch (e) { alert("删除失败：" + e.message); }
@@ -269,22 +306,27 @@ document.querySelectorAll(".tools button").forEach((b) => (b.onclick = () => {
 
 // 图片：按钮选择 / 粘贴 / 拖拽
 async function upload(file) {
+  setStatus("上传中…");
   const name = file.name && file.name !== "image.png" ? file.name : `img-${Date.now()}.png`;
   const post = cur.isNew ? "x.md" : cur.path;
-  const r = await api(`/api/upload?name=${encodeURIComponent(name)}&post=${encodeURIComponent(post)}`, { method: "POST", body: file });
+  const r = await api(`/api/upload?${kq()}&name=${encodeURIComponent(name)}&post=${encodeURIComponent(post)}`, { method: "POST", body: file });
   const ta = $("body");
-  ta.setRangeText(`![](${r.url})`, ta.selectionStart, ta.selectionEnd, "end");
+  const NL = String.fromCharCode(10);
+  const md = r.audio ? NL + NL + `<audio controls preload="none" src="${r.url}"></audio>` + NL + NL : `![](${r.url})`;
+  ta.setRangeText(md, ta.selectionStart, ta.selectionEnd, "end");
   ta.dispatchEvent(new Event("input"));
 }
-const tryUpload = (f) => upload(f).catch((x) => alert("上传失败：" + x.message));
+const tryUpload = (f) => upload(f).then(() => setStatus("上传完成，别忘了保存")).catch((x) => { setStatus(""); alert("上传失败：" + x.message); });
 $("btnImg").onclick = () => $("file").click();
+$("btnAudio").onclick = () => $("fileAudio").click();
+$("fileAudio").onchange = (e) => { if (e.target.files[0]) tryUpload(e.target.files[0]); e.target.value = ""; };
 $("file").onchange = (e) => { if (e.target.files[0]) tryUpload(e.target.files[0]); e.target.value = ""; };
 $("body").addEventListener("paste", (e) => {
   const f = [...e.clipboardData.files].find((f) => f.type.startsWith("image/"));
   if (f) { e.preventDefault(); tryUpload(f); }
 });
 $("body").addEventListener("drop", (e) => {
-  const f = [...e.dataTransfer.files].find((f) => f.type.startsWith("image/"));
+  const f = [...e.dataTransfer.files].find((f) => f.type.startsWith("image/") || f.type.startsWith("audio/") || /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(f.name));
   if (f) { e.preventDefault(); tryUpload(f); }
 });
 
@@ -297,6 +339,7 @@ addEventListener("beforeunload", (e) => { if (dirty) e.preventDefault(); });
 
 // 预览
 function postUrl() {
+  if (isD()) return cur ? `http://localhost:${devPort}/dynamic/` : null;
   if (!cur || cur.isNew) return null;
   const slug = cur.slug || cur.path.replace(/\.(md|mdx)$/i, "");
   return `http://localhost:${devPort}/posts/${slug}/`;
@@ -317,6 +360,22 @@ function showTab(real) {
 $("btnReload").onclick = () => { reloadFrame(); renderMd(); };
 $("tabReal").onclick = () => showTab(true);
 $("tabMd").onclick = () => { showTab(false); renderMd(); };
+
+// 切换 文章 / 日记
+function setMode(k) {
+  if (k === kind) return;
+  if (!confirmLeave()) return;
+  kind = k; cur = null; dirty = false; show(false); $("frame").src = "about:blank";
+  document.querySelectorAll(".modes button").forEach((b) => b.classList.toggle("on", b.dataset.kind === k));
+  $("metaPost").style.display = isD() ? "none" : "";
+  $("metaDiary").style.display = isD() ? "" : "none";
+  document.querySelector(".tools").style.display = isD() ? "none" : "";
+  $("q").placeholder = isD() ? "搜索日记内容/地点…" : "搜索标题/分类…";
+  $("empty").textContent = isD() ? "← 选择一篇日记，或点「新建」写今天的" : "← 选择一篇文章，或点「新建」";
+  $("body").placeholder = isD() ? "今天发生了什么…（可直接粘贴/拖入图片）" : "在这里写 Markdown…（可直接粘贴/拖入图片）";
+  loadList();
+}
+document.querySelectorAll(".modes button").forEach((b) => (b.onclick = () => setMode(b.dataset.kind)));
 
 (async () => {
   devPort = (await api("/api/config")).devPort;

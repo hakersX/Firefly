@@ -56,3 +56,15 @@
 	margin: -1.4rem auto 2.2rem;
 	letter-spacing: 0.06em;
 }
+
+/* 音频：后台「插入音频」生成的 <audio controls>，文章和日记里都能直接播放 */
+.custom-md audio,
+.dynamic-content audio {
+	display: block;
+	width: 100%;
+	max-width: 480px;
+	height: 44px;
+	margin: 0.75rem 0;
+	border-radius: 999px;
+	accent-color: var(--primary);
+}
