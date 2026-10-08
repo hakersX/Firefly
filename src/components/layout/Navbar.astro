@@ -45,7 +45,8 @@ const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
 const navbarMenuAlign = siteConfig.navbar.menuAlign ?? "center";
 const isNavbarMenuCentered = navbarMenuAlign === "center";
 // 灵动岛样式：导航栏收窄为居中悬浮胶囊（仅桌面端生效）
-const islandStyle = siteConfig.navbar.islandStyle ?? false;
+const minimalStyle = siteConfig.navbar.minimalStyle ?? false;
+const islandStyle = !minimalStyle && (siteConfig.navbar.islandStyle ?? false);
 
 // 检查是否为首页
 const isHomePageCheck = isHomePage(Astro.url.pathname);
@@ -137,7 +138,7 @@ const logoVariants = await Promise.all(
 		})),
 );
 ---
-<div id="navbar" class="z-50" style={`--navbar-glass-blur: ${navbarBlur}px;`} data-transparent-mode={navbarTransparentMode} data-is-home={isHomePageCheck} data-full-width={navbarWidthFull} data-navbar-style={islandStyle ? "island" : "bar"}>
+<div id="navbar" class="z-50" style={`--navbar-glass-blur: ${navbarBlur}px;`} data-transparent-mode={navbarTransparentMode} data-is-home={isHomePageCheck} data-full-width={navbarWidthFull} data-navbar-style={minimalStyle ? "minimal" : islandStyle ? "island" : "bar"}>
     <div class:list={[
         className,
         "overflow-visible! h-18 px-4"
@@ -332,6 +333,36 @@ function loadButtonScript() {
 }
 
 loadButtonScript();
+
+// 极简模式：向下滚动隐藏导航栏，向上滚动再出现；离开顶部后加一层淡淡的毛玻璃
+(function initMinimalScroll() {
+    if (window.minimalScrollInit) return;
+    const navbar = document.getElementById("navbar");
+    if (!navbar || navbar.getAttribute("data-navbar-style") !== "minimal") return;
+    window.minimalScrollInit = true;
+
+    let lastY = window.pageYOffset || 0;
+    let ticking = false;
+
+    function update() {
+        const y = window.pageYOffset || document.documentElement.scrollTop;
+        const delta = y - lastY;
+        navbar!.classList.toggle("min-scrolled", y > 24);
+        const menuOpen = !!document.querySelector("#navbar [aria-expanded='true']");
+        if (y <= 80 || delta < -4 || menuOpen) navbar!.classList.remove("min-hidden");
+        else if (delta > 6) navbar!.classList.add("min-hidden");
+        if (Math.abs(delta) > 4) lastY = y;
+        ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+        }
+    }, { passive: true });
+    update();
+})();
 
 // 灵动岛模式：滚动后收紧悬浮胶囊，增强「灵动」反馈
 (function initIslandScrollDetection() {

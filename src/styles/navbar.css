@@ -436,3 +436,110 @@ body.wallpaper-transparent #navbar-wrapper #navbar[data-full-width="true"] > div
         backdrop-filter: none !important;
     }
 }
+
+/* ============================================
+ * 极简模式 (Minimal navbar)
+ * 透明背景、纯文字菜单；向下滚动隐藏，向上滚动出现。
+ * 离开页面顶部后才加一层淡淡的毛玻璃，保证文字可读。
+ * ============================================ */
+html body #navbar[data-navbar-style="minimal"] {
+    transition:
+        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease;
+}
+html body #navbar[data-navbar-style="minimal"].min-hidden {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 条状容器：透明、无边框无阴影（覆盖各壁纸透明模式 / 暗色 / 滚动态） */
+html body #navbar[data-navbar-style="minimal"] > div,
+html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode] > div,
+html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].scrolled > div,
+:root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode] > div,
+:root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].scrolled > div {
+    height: 3.5rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    --navbar-surface-blur: 0px !important;
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* 离开顶部后：淡淡的毛玻璃底 */
+html body #navbar[data-navbar-style="minimal"].min-scrolled > div,
+html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].min-scrolled > div,
+:root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].min-scrolled > div {
+    background: color-mix(in oklch, var(--page-bg) 72%, transparent) !important;
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+
+/* 纯文字菜单：去掉按钮底色、图标，改为文字颜色 / 下划线反馈 */
+html body #navbar[data-navbar-style="minimal"] .btn-plain {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0.5rem;
+}
+html body #navbar[data-navbar-style="minimal"] .navbar-icon {
+    display: none !important;
+}
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > a.btn-plain,
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > button.btn-plain {
+    height: 2.25rem;
+    padding-left: 0.75rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    position: relative;
+}
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > button.btn-plain {
+    padding-right: 1.6rem;
+}
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > a.btn-plain {
+    padding-right: 0.75rem;
+}
+html body #navbar[data-navbar-style="minimal"] .dropdown-arrow {
+    right: 0.4rem;
+    font-size: 1rem;
+    opacity: 0.6;
+}
+/* 菜单项悬停：文字变主题色，底部浮出一条细线 */
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > .btn-plain::after {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.3rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > .btn-plain:hover {
+    color: var(--primary);
+}
+html body #navbar[data-navbar-style="minimal"] [data-dropdown] > .btn-plain:hover::after {
+    transform: scaleX(1);
+}
+/* 右侧图标按钮：悬停只变色 */
+html body #navbar[data-navbar-style="minimal"] .btn-plain:hover {
+    color: var(--primary);
+}
+@media (prefers-reduced-motion: reduce) {
+    html body #navbar[data-navbar-style="minimal"],
+    html body #navbar[data-navbar-style="minimal"] > div {
+        transition: none;
+    }
+}
+
+/* 极简模式：下拉菜单和浮动面板需要足够的底色，否则会透出下面的文字 */
+html body #navbar[data-navbar-style="minimal"] .dropdown-content,
+html body #navbar[data-navbar-style="minimal"] .float-panel {
+    background: color-mix(in oklch, var(--card-bg) 94%, transparent) !important;
+    backdrop-filter: blur(18px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+}

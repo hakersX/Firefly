@@ -13,124 +13,29 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	// 基础导航栏链接
 	const links: NavBarLink[] = [];
 
-	// 主页
+	// 扁平导航：常用入口直接摆在桌面导航栏上，次要页面收进「更多」
 	links.push(LinkPresets.Home);
-
-	// 文章：只留一个入口，分类 / 标签 / 归档 / 连载都收进文章页顶部的筛选条（CategoryBar）
 	links.push({
 		...LinkPresets.Posts,
 		name: "文章",
 		icon: "material-symbols:article",
 	});
-
-	// 我的及其子菜单
+	links.push(LinkPresets.Dynamic);
+	links.push(LinkPresets.Gallery);
+	links.push(LinkPresets.Music);
+	links.push(LinkPresets.Friends);
+	links.push({ ...LinkPresets.About, name: "关于" });
 	links.push({
-		name: "我的",
+		name: "更多",
 		url: "#",
-		icon: "material-symbols:person",
+		icon: "material-symbols:more-horiz",
 		children: [
-			// 动态
-			LinkPresets.Dynamic,
-
-
-			// 追番
+			LinkPresets.Tools,
 			LinkPresets.Anime,
-
-			// VNDB
-			// LinkPresets.VNDB,
-
-			// 番组计划
-			LinkPresets.Bangumi,
-
-			// 书签导航
+			LinkPresets.Books,
 			LinkPresets.Booknav,
 		],
 	});
-    // 记录及其子菜单
-	links.push({
-		name: "记录",
-		url: "#",
-		icon: "material-symbols:book-2-rounded",
-		children: [
-			// 音乐
-			LinkPresets.Music,
-			// 书籍
-			LinkPresets.Books,
-			//相册
-			LinkPresets.Gallery,
-		],
-	});
-	// 工具
-	links.push(LinkPresets.Tools);
-	//社交及其子菜单
-	links.push({
-		name: "社交",
-		url: "#",
-		icon: "material-symbols:group",
-		children: [
-			// 友链
-			LinkPresets.Friends,
-
-			// 留言
-			LinkPresets.Guestbook,
-		],
-	});
-	// 关于及其子菜单
-	links.push({
-		name: "关于",
-		url: "#",
-		icon: "material-symbols:info",
-		children: [
-			// 打赏
-			LinkPresets.Sponsor,
-
-			// 关于页面
-			LinkPresets.About,
-			{
-				name: "GitHub",
-				url: "https://github.com/hakersX/Firefly",
-				external: true,
-				icon: "fa7-brands:github",
-			},
-			// {
-			// 	name: "Gitee",
-			// 	url: "https://gitee.com/CuteLeaf/Firefly",
-			// 	external: true,
-			// 	icon: "fa7-brands:gitee",
-			// },
-			// {
-			// 	name: "QQ交流群",
-			// 	url: "https://qm.qq.com/q/ZGsFa8qX2G",
-			// 	external: true,
-			// 	icon: "fa7-brands:qq",
-			// },
-			{
-				name: "Firefly文档",
-				url: "https://docs-firefly.cuteleaf.cn",
-				external: true,
-				icon: "material-symbols:docs",
-			},
-		],
-	});
-
-	// 自定义导航栏链接
-	// links.push({
-	// 	name: "链接",
-	// 	url: "#",
-	// 	icon: "material-symbols:link",
-	// 	// 子菜单
-	// 	children: [
-			
-	// 	],
-	// });
-
-	// 文档链接
-	// links.push({
-	// 	name: "文档",
-	// 	url: "https://docs-firefly.cuteleaf.cn",
-	// 	external: true,
-	// 	icon: "material-symbols:docs",
-	// });
 
 	return { links } as NavBarConfig;
 };

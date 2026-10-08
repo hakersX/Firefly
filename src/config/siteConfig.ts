@@ -82,6 +82,8 @@ export const siteConfig: SiteConfig = {
 		followTheme: false,
 		// 导航栏是否固定在顶部并始终可见
 		stickyNavbar: true,
+		// 极简样式：透明背景 + 纯文字菜单，向下滚动隐藏、向上滚动出现（开启后 islandStyle 不生效）
+		minimalStyle: true,
 		// 灵动岛样式：导航栏收窄为居中悬浮胶囊，四周留白 + 全圆角 + 毛玻璃 + 阴影（仅桌面端生效）
 		islandStyle: true,
 	},
