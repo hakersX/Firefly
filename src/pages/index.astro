@@ -164,15 +164,15 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 		{/* 动态 */}
 		<section class="b-card b-diary">
 			<div class="b-head">
-				<h2 class="b-title">动态</h2>
-				<a class="b-more" href={url("/dynamic/")}>全部动态 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+				<h2 class="b-title">日记</h2>
+				<a class="b-more" href={url("/dynamic/")}>全部日记 <Icon name="material-symbols:arrow-forward-rounded" /></a>
 			</div>
 			{dynamics.length ? dynamics.map((d) => (
 				<a class="diary-item" href={url("/dynamic/")}>
 					<div class="diary-date">{d.date}</div>
 					<p class="diary-body">{d.text}</p>
 				</a>
-			)) : <p class="b-empty">还没有动态</p>}
+			)) : <p class="b-empty">还没有日记</p>}
 		</section>
 
 		{/* 分类 / 标签 */}

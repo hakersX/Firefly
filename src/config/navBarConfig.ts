@@ -156,7 +156,7 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		icon: "material-symbols:list-alt",
 	},
 	Dynamic: {
-		name: "动态",
+		name: "日记",
 		url: "/dynamic/",
 		icon: "material-symbols:forum-rounded",
 		pageKey: "dynamic",
