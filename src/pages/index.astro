@@ -1,19 +1,15 @@
 ---
 /**
- * 首页 index.astro —— 猫窝风格
+ * 首页 index.astro —— 便当格（bento）布局
  *
- *   首屏：CatHero      — 暖色天空 + 窗台猫咪剪影 + 名字/标语/入口按钮
- *   下方：CatAnnounce  — 气泡公告条
- *         CatStats     — 统计卡片
- *         CatChips     — 分类 / 标签胶囊
- *         CatSocial    — 社交链接
+ * 一屏卡片：欢迎卡 / 时钟 / 最近文章 / 动态 / 分类标签 / 营业天数 / 留言 / 日历 / 社交 / 音乐
+ * 样式见 src/components/home/bento.css，配色沿用 cat-home.css。
  */
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import "@/components/home/bento.css";
 import "@/components/home/cat-home.css";
-import CatAnnounce from "@/components/home/CatAnnounce.astro";
-import CatChips from "@/components/home/CatChips.astro";
-import CatHero from "@/components/home/CatHero.astro";
-import CatSocial from "@/components/home/CatSocial.astro";
-import CatStats from "@/components/home/CatStats.astro";
+import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import Navbar from "@/components/layout/Navbar.astro";
 import {
 	backgroundWallpaper,
@@ -27,6 +23,7 @@ import {
 	getSortedPostsList,
 	getTagList,
 } from "@/utils/content-utils";
+import { getPostUrlBySlug, getTagUrl, url } from "@/utils/url-utils";
 
 const isBannerMode = backgroundWallpaper.mode === "banner";
 const isFullscreenMode = backgroundWallpaper.mode === "fullscreen";
@@ -47,35 +44,38 @@ const postCount = visiblePosts.length;
 const categoryCount = categories.length;
 const tagCount = tags.length;
 const startDate = new Date(siteConfig.siteStartDate ?? "2026-01-01");
-const today = new Date();
 const runningDays = Math.max(
 	0,
-	Math.floor((today.getTime() - startDate.getTime()) / 86400000),
+	Math.floor((Date.now() - startDate.getTime()) / 86400000),
 );
 
-const announcementMessages = [
-	"喵~ 欢迎来到猫神X的猫窝",
-	`猫窝里已经囤了 ${postCount} 篇文章 · ${categoryCount} 个分区 · ${tagCount} 个标签`,
-	"记录技术 · 分享生活 · 偶尔讲故事",
-	`猫窝已经营业 ${runningDays} 天啦`,
-];
+const fmt = (d: Date) =>
+	`${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
 
-const stats = [
-	{ icon: "material-symbols:article", target: postCount, label: "文章", url: "/articles/" },
-	{
-		icon: "material-symbols:folder-open-rounded",
-		target: categoryCount,
-		label: "分类",
-		url: "/categories/",
-	},
-	{ icon: "material-symbols:tag-rounded", target: tagCount, label: "标签", url: "/tags/" },
-	{
-		icon: "material-symbols:calendar-month-rounded",
-		target: runningDays,
-		label: "营业天数",
-		url: "/archive/",
-	},
-];
+const recentPosts = visiblePosts.slice(0, 5).map((p) => ({
+	title: p.data.title,
+	date: fmt(p.data.published),
+	href: getPostUrlBySlug(p.data.slug || p.id),
+}));
+
+const dynamics = (await getCollection("dynamic"))
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime())
+	.slice(0, 2)
+	.map((d) => ({
+		date: fmt(d.data.published),
+		text: (d.body ?? "")
+			.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+			.replace(/[#>*`_]/g, "")
+			.trim(),
+	}));
+
+// 日历高亮：有文章发布的日期（YYYY-M-D）
+const postDates = visiblePosts.map((p) => {
+	const d = p.data.published;
+	return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+});
+
+const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活 · 偶尔讲故事。";
 ---
 
 <Layout
@@ -101,54 +101,192 @@ const stats = [
 </div>
 
 <div class="cat-home">
-	<CatHero
-		name={profileConfig.name}
-		slogan="躬身入局，心为主理，行有尺度"
-		subtitle="欢迎来到猫神X的猫窝"
-	/>
+<main class="bento-page">
+	<div class="bento-notice">
+		<Icon name="material-symbols:campaign-rounded" />
+		<span>{notice}</span>
+	</div>
 
-	<CatAnnounce messages={announcementMessages} />
-	<CatStats stats={stats} />
-	<CatChips kind="categories" title="猫窝分区" subtitle="按主题逛逛文章" items={categories} />
-	<CatChips kind="tags" title="猫薄荷标签" subtitle="点一个标签，找到相关的文章" items={tags} />
-	<CatSocial title="来找我玩" links={profileConfig.links} />
+	<div class="bento-grid">
+		{/* 欢迎卡 */}
+		<section class="b-card b-hero">
+			<div class="hero-top">
+				<div class="hero-welcome">WELCOME · {siteConfig.title}</div>
+				<div class="hero-avatar">
+					<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="w-full h-full" />
+				</div>
+			</div>
+			<div class="hero-mid">
+				<h1 class="hero-name">{profileConfig.name}</h1>
+				<p class="hero-slogan">躬身入局，心为主理，行有尺度</p>
+			</div>
+			<div>
+				<div class="hero-stats">
+					<div><b>{postCount}</b><span>文章</span></div>
+					<div><b>{categoryCount}</b><span>分类</span></div>
+					<div><b>{tagCount}</b><span>标签</span></div>
+				</div>
+				<div class="hero-actions">
+					<a class="hero-btn" href={url("/about/")}><Icon name="material-symbols:pets" />关于我</a>
+					<a class="hero-btn" href={url("/articles/")}><Icon name="material-symbols:article-rounded" />看文章</a>
+				</div>
+			</div>
+		</section>
 
-	<footer class="cat-footer">
+		{/* 时钟 */}
+		<section class="b-card b-clock">
+			<div class="clock-time" id="bento-time">--:--<small>:--</small></div>
+			<div class="clock-date" id="bento-date"></div>
+			<div class="clock-hello" id="bento-hello">喵~</div>
+		</section>
+
+		{/* 最近写下 */}
+		<section class="b-card b-recent">
+			<div class="b-head">
+				<h2 class="b-title">最近写下</h2>
+				<a class="b-more" href={url("/articles/")}>全部文章 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+			</div>
+			{recentPosts.length ? (
+				<ul class="b-list">
+					{recentPosts.map((p) => (
+						<li>
+							<a href={p.href}>
+								<span class="li-dot"></span>
+								<span class="li-text">{p.title}</span>
+								<span class="li-date">{p.date.slice(5)}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			) : <p class="b-empty">还没有文章</p>}
+		</section>
+
+		{/* 动态 */}
+		<section class="b-card b-diary">
+			<div class="b-head">
+				<h2 class="b-title">动态</h2>
+				<a class="b-more" href={url("/dynamic/")}>全部动态 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+			</div>
+			{dynamics.length ? dynamics.map((d) => (
+				<a class="diary-item" href={url("/dynamic/")}>
+					<div class="diary-date">{d.date}</div>
+					<p class="diary-body">{d.text}</p>
+				</a>
+			)) : <p class="b-empty">还没有动态</p>}
+		</section>
+
+		{/* 分类 / 标签 */}
+		<section class="b-card b-chips">
+			<div class="b-head">
+				<h2 class="b-title">猫窝分区</h2>
+				<a class="b-more" href={url("/categories/")}>全部 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+			</div>
+			<div class="chip-wrap">
+				{categories.slice(0, 6).map((c) => (
+					<a class="chip" href={c.url}>{c.name}</a>
+				))}
+				{tags.slice(0, 6).map((t) => (
+					<a class="chip" href={getTagUrl(t.name)}>#{t.name}</a>
+				))}
+			</div>
+		</section>
+
+		{/* 营业天数 */}
+		<section class="b-card b-days">
+			<div class="days-label">猫窝已经营业</div>
+			<div class="days-num">{runningDays}<small>天</small></div>
+			<div class="days-sub">自 {siteConfig.siteStartDate} 起</div>
+		</section>
+
+		{/* 留言 */}
+		<a class="b-card b-guest" href={url("/guestbook/")}>
+			<Icon class="entry-icon" name="material-symbols:chat-bubble-rounded" />
+			<div class="entry-title">留个言吧</div>
+			<div class="entry-sub">路过就说两句</div>
+		</a>
+
+		{/* 日历 */}
+		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)}>
+			<div class="cal-head">
+				<h2 class="b-title" id="cal-title">日历</h2>
+			</div>
+			<div class="cal-grid" id="cal-grid"></div>
+			<div class="cal-legend">高亮的日子 = 发过文章</div>
+		</section>
+
+		{/* 社交 */}
+		<section class="b-card b-social">
+			<div class="b-head"><h2 class="b-title">来找我玩</h2></div>
+			<div class="social-tiles">
+				{profileConfig.links.map((l) => (
+					<a
+						class="social-tile"
+						href={l.url}
+						target={/^https?:\/\//.test(l.url) ? "_blank" : undefined}
+						rel="noopener noreferrer"
+					>
+						<Icon name={l.icon ?? "mdi:web"} />
+						<span>{l.name}</span>
+					</a>
+				))}
+			</div>
+		</section>
+
+		{/* 音乐 */}
+		<a class="b-card b-music" href={url("/music/")}>
+			<Icon class="entry-icon" name="material-symbols:music-note-rounded" />
+			<div class="entry-title">此刻的旋律</div>
+			<div class="entry-sub">去听听歌</div>
+		</a>
+	</div>
+
+	<footer class="bento-footer">
 		<p>&copy; {new Date().getFullYear()} {siteConfig.title} &middot; 猫猫已就位 🐾</p>
 	</footer>
+</main>
 </div>
 
 <script is:inline>
-	function initReveal() {
-		var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		var reveals = Array.from(document.querySelectorAll(".reveal:not(.is-visible)"));
-		if (reveals.length === 0) return;
-
-		if (reduceMotion) {
-			reveals.forEach(function (el) { el.classList.add("is-visible"); });
-			return;
+	function initBento() {
+		var t = document.getElementById("bento-time");
+		if (!t) return;
+		var pad = function (n) { return String(n).padStart(2, "0"); };
+		function tick() {
+			var d = new Date();
+			t.innerHTML = pad(d.getHours()) + ":" + pad(d.getMinutes()) + "<small>:" + pad(d.getSeconds()) + "</small>";
+			document.getElementById("bento-date").textContent =
+				d.getFullYear() + " 年 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日 · 周" + "日一二三四五六"[d.getDay()];
+			var h = d.getHours();
+			document.getElementById("bento-hello").textContent =
+				h < 6 ? "夜深了，早点睡喵~" : h < 11 ? "早上好喵~" : h < 14 ? "中午好，吃饭了吗~" : h < 18 ? "下午好喵~" : "晚上好喵~";
 		}
+		tick();
+		if (window.__bentoTimer) clearInterval(window.__bentoTimer);
+		window.__bentoTimer = setInterval(tick, 1000);
 
-		var io = new IntersectionObserver(
-			function (entries) {
-				for (var i = 0; i < entries.length; i++) {
-					if (entries[i].isIntersecting) {
-						entries[i].target.classList.add("is-visible");
-						io.unobserve(entries[i].target);
-					}
-				}
-			},
-			{ threshold: 0.08, rootMargin: "0px 0px -10% 0px" }
-		);
-		reveals.forEach(function (el) { io.observe(el); });
+		// 日历
+		var cal = document.getElementById("bento-cal");
+		var posts = new Set(JSON.parse(cal.dataset.posts || "[]"));
+		var now = new Date(), y = now.getFullYear(), m = now.getMonth();
+		document.getElementById("cal-title").textContent = y + " 年 " + (m + 1) + " 月";
+		var html = "一二三四五六日".split("").map(function (c) { return '<div class="dow">' + c + "</div>"; }).join("");
+		var offset = (new Date(y, m, 1).getDay() + 6) % 7;
+		for (var i = 0; i < offset; i++) html += "<div></div>";
+		var days = new Date(y, m + 1, 0).getDate();
+		for (var d = 1; d <= days; d++) {
+			var cls = "d";
+			if (posts.has(y + "-" + (m + 1) + "-" + d)) cls += " has-post";
+			if (d === now.getDate()) cls += " today";
+			html += '<div class="' + cls + '">' + d + "</div>";
+		}
+		document.getElementById("cal-grid").innerHTML = html;
 	}
-
 	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", initReveal, { once: true });
+		document.addEventListener("DOMContentLoaded", initBento, { once: true });
 	} else {
-		initReveal();
+		initBento();
 	}
-	document.addEventListener("swup:contentReplaced", initReveal);
+	document.addEventListener("swup:contentReplaced", initBento);
 </script>
 
 </Layout>
