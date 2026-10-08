@@ -1,0 +1,7 @@
+# Cloudflare 静态资源响应头（构建时复制到 dist/ 根目录）
+# 文档：https://developers.cloudflare.com/workers/static-assets/headers/
+
+# Astro 构建产物（JS / CSS / 字体 / 优化后的图片）文件名都带内容哈希：
+# 内容一变文件名就变，所以可以放心长期缓存，切换页面时不必再逐个向服务器确认。
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
