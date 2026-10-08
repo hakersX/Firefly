@@ -453,14 +453,17 @@ html body #navbar[data-navbar-style="minimal"].min-hidden {
     pointer-events: none;
 }
 
-/* 条状容器：透明、无边框无阴影（覆盖各壁纸透明模式 / 暗色 / 滚动态） */
+/* 条状容器：薄底色（约 42% 不透明）、无边框无阴影（覆盖各壁纸透明模式 / 暗色 / 滚动态） */
 html body #navbar[data-navbar-style="minimal"] > div,
 html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode] > div,
 html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].scrolled > div,
 :root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode] > div,
 :root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].scrolled > div {
     height: 3.5rem !important;
-    background: transparent !important;
+    /* 顶部也保留一层薄薄的底色，壁纸偏暗时文字依然看得清 */
+    background: color-mix(in oklch, var(--page-bg) 42%, transparent) !important;
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -468,7 +471,7 @@ html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-m
     transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
 }
 
-/* 离开顶部后：淡淡的毛玻璃底 */
+/* 离开顶部后：底色加深到约 72% */
 html body #navbar[data-navbar-style="minimal"].min-scrolled > div,
 html[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].min-scrolled > div,
 :root.dark[data-has-wallpaper] #navbar[data-navbar-style="minimal"][data-transparent-mode].min-scrolled > div {
