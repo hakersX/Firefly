@@ -2,7 +2,9 @@
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { Icon } from "astro-icon/components";
+import { seriesConfig, siteConfig } from "@/config";
 import { getCategoryList, getSortedPostsList } from "@/utils/content-utils";
+import { getAllSeries } from "@/utils/series-utils";
 import { url } from "@/utils/url-utils";
 
 interface Props {
@@ -14,6 +16,13 @@ const { currentPostCategory } = Astro.props as Props;
 const categories = await getCategoryList();
 const totalPosts = (await getSortedPostsList()).length;
 const homeUrl = url("/");
+const articlesUrl = url("/articles/");
+const seriesUrl = url("/series/");
+const tagsUrl = url("/tags/");
+const seriesEnabled = !!(siteConfig.pages.series && seriesConfig.enable);
+const seriesCount = seriesEnabled ? (await getAllSeries()).length : 0;
+// 没有任何连载时不显示入口，避免出现「连载 0」的空页面
+const showSeries = seriesCount > 0;
 const archiveUrl = url("/archive/");
 
 // 服务端计算初始高亮 pill（首屏无需等 JS）。
@@ -23,6 +32,9 @@ const pathname = Astro.url.pathname.replace(/\/$/, "");
 const homePath = homeUrl.replace(/\/$/, "");
 const archivePath = archiveUrl.replace(/\/$/, "");
 const isHome = pathname === homePath || pathname === "" || pathname === "/";
+const isArticles = pathname === "/articles" || pathname.startsWith("/articles/");
+const isSeries = pathname === "/series" || pathname.startsWith("/series/");
+const isTags = pathname === "/tags" || pathname.startsWith("/tags/");
 const isCategories = pathname === "/categories";
 const isArchive = pathname === archivePath;
 const postCategory = (currentPostCategory || "").trim();
@@ -32,7 +44,10 @@ function initialActive(categoryName: string): {
 	active?: boolean;
 	soft?: boolean;
 } {
-	if (isHome) return categoryName === "" ? { active: true } : {};
+	if (isArticles) return categoryName === "" ? { active: true } : {};
+	if (isSeries) return categoryName === "__series__" ? { active: true } : {};
+	if (isTags) return categoryName === "__tags__" ? { active: true } : {};
+	if (isHome) return {};
 	if (isCategories)
 		return categoryName === "__categories__" ? { active: true } : {};
 	if (isArchive) return categoryName === "__archive__" ? { active: true } : {};
@@ -50,15 +65,29 @@ function initialActive(categoryName: string): {
 >
   <div class="category-bar-inner flex gap-2">
     <a
-      href={homeUrl}
-      class="category-pill focus-ring-inset text-sm px-3 py-1.5 shrink-0
+      href={articlesUrl}
+      class="category-pill focus-ring-inset text-sm px-4 py-1.5 whitespace-nowrap shrink-0
              transition-colors duration-150 ease-out flex items-center justify-center"
       data-category-name=""
       data-active={initialActive("").active ? "" : undefined}
-      aria-label={i18n(I18nKey.home)}
     >
-      <Icon is:inline name="material-symbols:home" class="text-lg" />
+      全部
+      <span class="pill-count">{totalPosts}</span>
     </a>
+    {
+      showSeries && (
+        <a
+          href={seriesUrl}
+          class="category-pill focus-ring-inset text-sm px-4 py-1.5 whitespace-nowrap shrink-0
+                 transition-colors duration-150 ease-out flex items-center justify-center"
+          data-category-name="__series__"
+          data-active={initialActive("__series__").active ? "" : undefined}
+        >
+          连载
+          <span class="pill-count">{seriesCount}</span>
+        </a>
+      )
+    }
     <a
       href={archiveUrl}
       class="category-pill focus-ring-inset text-sm px-4 py-1.5 whitespace-nowrap shrink-0
@@ -96,14 +125,13 @@ function initialActive(categoryName: string): {
     </div>
     <div class="category-divider shrink-0 more-divider" aria-hidden="true"></div>
     <a
-      href={url("/categories/")}
+      href={tagsUrl}
       class="category-pill focus-ring-inset text-sm px-3 py-1.5 shrink-0
              transition-colors duration-150 ease-out flex items-center justify-center gap-1"
-      data-category-name="__categories__"
-      data-active={initialActive("__categories__").active ? "" : undefined}
-      aria-label={i18n(I18nKey.more)}
+      data-category-name="__tags__"
+      data-active={initialActive("__tags__").active ? "" : undefined}
     >
-      <span>{i18n(I18nKey.more)}</span>
+      <span>标签</span>
       <Icon is:inline name="fa7-solid:chevron-right" class="text-sm" />
     </a>
   </div>
@@ -176,11 +204,17 @@ function initialActive(categoryName: string): {
     const homePath = (bar.getAttribute("data-home-path") || "/").replace(/\/$/, "");
     const archivePath = (bar.getAttribute("data-archive-path") || "/archive").replace(/\/$/, "");
     const isHome = pathname === homePath || pathname === "" || pathname === "/";
+    const isArticles = pathname === "/articles" || pathname.startsWith("/articles/");
+    const isSeries = pathname === "/series" || pathname.startsWith("/series/");
+    const isTags = pathname === "/tags" || pathname.startsWith("/tags/");
     const isArchive = pathname === archivePath;
     const isCategories = pathname === "/categories";
 
     return {
       isHome,
+      isArticles,
+      isSeries,
+      isTags,
       isArchive,
       isCategories,
       activeCategory: currentUrl.searchParams.get("category") || "",
@@ -190,7 +224,7 @@ function initialActive(categoryName: string): {
   }
 
   function setActiveCategory(bar: HTMLElement, currentUrl: URL) {
-    const { isHome, isArchive, isCategories, activeCategory, hasTag, hasUncategorized } =
+    const { isHome, isArticles, isSeries, isTags, isArchive, isCategories, activeCategory, hasTag, hasUncategorized } =
       getCategoryBarState(bar, currentUrl);
     const postCategory = (bar.getAttribute("data-current-post-category") || "").trim();
 
@@ -200,11 +234,14 @@ function initialActive(categoryName: string): {
       pill.removeAttribute("data-soft-active");
     });
 
-    if (isHome) {
-      bar.querySelector<HTMLAnchorElement>('.category-pill[data-category-name=""]')
+    const activate = (name: string) =>
+      bar.querySelector<HTMLAnchorElement>(`.category-pill[data-category-name="${name}"]`)
         ?.setAttribute("data-active", "");
-      return;
-    }
+
+    if (isArticles) return activate("");
+    if (isSeries) return activate("__series__");
+    if (isTags) return activate("__tags__");
+    if (isHome) return;
 
     if (isCategories) {
       bar.querySelector<HTMLAnchorElement>('.category-pill[data-category-name="__categories__"]')

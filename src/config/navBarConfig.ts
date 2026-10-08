@@ -16,25 +16,13 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	// 主页
 	links.push(LinkPresets.Home);
 
-	// 文章及其子菜单
+	// 文章：只留一个入口，分类 / 标签 / 归档 / 连载都收进文章页顶部的筛选条（CategoryBar）
 	links.push({
+		...LinkPresets.Posts,
 		name: "文章",
-		url: "#",
 		icon: "material-symbols:article",
-		children: [
-			// 文章列表
-			LinkPresets.Posts,
-
-			// 归档
-			LinkPresets.Archive,
-
-			// 分类
-			LinkPresets.Categories,
-
-			// 标签
-			LinkPresets.Tags,
-		],
 	});
+
 	// 我的及其子菜单
 	links.push({
 		name: "我的",
@@ -70,8 +58,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Books,
 			//相册
 			LinkPresets.Gallery,
-			// 连载故事
-			LinkPresets.Series,
 		],
 	});
 	// 工具
