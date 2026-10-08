@@ -29,6 +29,26 @@ export interface ToolCategory {
 
 export const toolsConfig: ToolCategory[] = [
 	{
+		name: "音乐创作",
+		icon: "material-symbols:music-note-rounded",
+		tools: [
+			{
+				id: "suno",
+				name: "Suno",
+				description: "AI 写歌：输入歌词和风格，生成完整的歌曲",
+				url: "https://suno.com/create?wid=default",
+				icon: "material-symbols:library-music-rounded",
+			},
+			{
+				id: "aisong-lrc",
+				name: "AiSong LRC 生成器",
+				description: "识别歌曲的歌词时间轴，生成 LRC 歌词文件",
+				url: "https://aisong.io/zh/lrc-generator",
+				icon: "material-symbols:lyrics-rounded",
+			},
+		],
+	},
+	{
 		name: "免费视频观看",
 		icon: "material-symbols:live-tv-rounded",
 		tools: [
@@ -165,4 +185,5 @@ export const toolsConfig: ToolCategory[] = [
 			},
 		],
 	},
+	
 ];
