@@ -333,7 +333,7 @@ const foldOnFilter = collapseAllButFirst;
         bannerTitle.textContent = newTitle;
         // HUD 故障闪烁反馈：切换分类/标签时标题 glitch 一下
         bannerTitle.classList.remove("bpt-glitch-flash");
-        void (bannerTitle as HTMLElement).offsetWidth; // 强制 reflow 重启动画
+        void bannerTitle.offsetWidth; // 强制 reflow 重启动画
         bannerTitle.classList.add("bpt-glitch-flash");
         window.setTimeout(
           () => bannerTitle.classList.remove("bpt-glitch-flash"),
