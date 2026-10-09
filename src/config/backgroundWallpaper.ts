@@ -110,13 +110,6 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			pageTitleSize: "2.75rem",
 			// 非首页打字副标题字体大小
 			pageSubtitleSize: "1.25rem",
-			// 文章详情页横幅：标题和描述下方的打字机副标题，置空或删除即可关闭
-			// 字号沿用 pageSubtitleSize，打字速度沿用上面的 typewriter
-			postSubtitle: [
-				"Turn the Page, Light the Night",
-				"Between the Lines, Fireflies Glow",
-				"Read Slowly, Dream Softly",
-			],
 		},
 		// 文章横幅信息："description" 显示描述，"meta" 显示日期、字数和阅读时长
 		postInfo: {

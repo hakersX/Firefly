@@ -193,13 +193,6 @@ const pageBannerTitleSize = backgroundWallpaper.common?.homeText?.pageTitleSize;
 const pageBannerSubtitleSize =
 	backgroundWallpaper.common?.homeText?.pageSubtitleSize ?? "1.25rem";
 const pageTypewriter = backgroundWallpaper.common?.homeText?.typewriter;
-// 文章页横幅打字机副标题（空数组 / 空字符串视为关闭）
-const rawPostSubtitle = backgroundWallpaper.common?.homeText?.postSubtitle;
-const postBannerSubtitle = (
-	Array.isArray(rawPostSubtitle) ? rawPostSubtitle.length : rawPostSubtitle
-)
-	? rawPostSubtitle
-	: undefined;
 
 // 手机端非首页不显示banner的CSS类
 const mobileNonHomeBannerClass = !isHomePageCheck ? "mobile-hide-banner" : "";
@@ -1039,16 +1032,6 @@ const hasMultipleImages =
                                     </span>
                                 </span>
                             )}
-                        </div>
-                    )}
-                    {postBannerSubtitle && (
-                        <div class="banner-subtitle banner-post-subtitle text-white/90 leading-snug" style={`font-size: ${pageBannerSubtitleSize}`}>
-                            <TypewriterText
-                                text={postBannerSubtitle}
-                                speed={pageTypewriter?.speed}
-                                deleteSpeed={pageTypewriter?.deleteSpeed}
-                                pauseTime={pageTypewriter?.pauseTime}
-                            />
                         </div>
                     )}
                 </div>
