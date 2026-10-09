@@ -708,25 +708,17 @@ const viewConfigStr = JSON.stringify({
         });
 
         // ── Cleanup on DOM removal ───────────────────────────────
-        var observer = new MutationObserver(function (mutations) {
-            for (var i = 0; i < mutations.length; i++) {
-                var removed = mutations[i].removedNodes;
-                for (var j = 0; j < removed.length; j++) {
-                    if (removed[j] === widget || (removed[j].contains && removed[j].contains(widget))) {
-                        // Widget removed from DOM – clean up event listeners
-                        Object.keys(handlers).forEach(function (name) {
-                            window.removeEventListener(name, handlers[name]);
-                        });
-                        observer.disconnect();
-                        clearTimeout(local.scrollTimeout);
-                        return;
-                    }
-                }
-            }
+        // 换页时由 initAll 统一检查：widget 已不在文档里就卸掉它挂在 window 上的监听。
+        // （以前用 MutationObserver 盯父节点，但整页替换会把父节点一起换掉，观察不到）
+        instances.push({
+            widget: widget,
+            destroy: function () {
+                Object.keys(handlers).forEach(function (name) {
+                    window.removeEventListener(name, handlers[name]);
+                });
+                clearTimeout(local.scrollTimeout);
+            },
         });
-        if (widget.parentNode) {
-            observer.observe(widget.parentNode, { childList: true });
-        }
 
         // ── Init: either sync existing state or trigger init ─────
         var currentState = mgr.getState();
@@ -741,9 +733,15 @@ const viewConfigStr = JSON.stringify({
     }
 
     // 每个 widget 只初始化一次。本脚本在 swup 容器之外，只在整页加载时执行一次；
-    // 换页时由 swup:page:view 再扫一遍：导航栏那份 widget 不会被替换、带着标记跳过，
-    // 随容器换进来的新 widget 没有标记，正常初始化（旧实例由内部的 MutationObserver 清理）。
+    // 换页时由 swup:page:view 再扫一遍：先清理已被换出文档的旧 widget，
+    // 导航栏那份 widget 不会被替换、带着标记跳过，随容器换进来的新 widget 没有标记，正常初始化。
+    var instances = [];
     function initAll() {
+        instances = instances.filter(function (inst) {
+            if (inst.widget.isConnected) return true;
+            inst.destroy();
+            return false;
+        });
         var widgets = document.querySelectorAll('.music-player-widget');
         for (var i = 0; i < widgets.length; i++) {
             var w = widgets[i];

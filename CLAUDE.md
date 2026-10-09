@@ -88,6 +88,14 @@ LQIP data is generated into `src/constants/lqips.json` and committed — regener
 
 `reloadScripts` is off in the swup integration; `src/utils/swup-scripts.ts` (wired in `Layout.astro`) re-runs only scripts inside the swup containers plus head scripts newly added by the head plugin. Scripts outside the containers run once per full page load — if one must react to navigation, listen for `swup:page:view` / `astro:page-load` (swup 4 never fires the v2 `swup:contentReplaced` event). Note Astro drops `data-swup-ignore-script` from `define:vars` scripts, so that attribute can't be relied on there.
 
+### Cross-layout navigation (music keeps playing)
+
+The home, music and books pages use their own layouts without the MainGridLayout containers. Every layout wraps everything except the navbar (`#top-row`) in `<div id="swup-page" class="contents">`; `src/utils/swup-page-swap.ts` switches `visit.containers` to `#swup-page` whenever either end of a visit is one of those pages, so the navbar, the global `MusicManager` `<audio>` and other `Layout.astro` parts persist and music never restarts. Only `/dynamic/comments` (iframe embed) is still ignored by swup. On such whole-page swaps every script inside `#swup-page` re-runs, including `data-swup-ignore-script` ones, so:
+
+- inline scripts in those pages must guard document/window listeners and timers (check `isConnected` / a `window.__flag`) or they pile up on each visit;
+- bundled module scripts execute only once per session — page UI that lives inside `#swup-page` must (re)mount on `swup:page:view` and tear down its window listeners when its DOM is gone (see `src/components/music/music-player.ts`);
+- the navbar markup must stay identical across layouts, since it is never replaced.
+
 ## Deployment
 
 - **Vercel** (default, `vercel.json`)

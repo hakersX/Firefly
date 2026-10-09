@@ -137,6 +137,9 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 	</div>
 </div>
 
+{/* 导航栏以外的整页内容。首页 / 音乐页 / 书架页与普通页面布局不同，跳转涉及它们时 swup 整块替换这里，
+    导航栏和全站播放器保持不动，音乐不中断（见 src/utils/swup-page-swap.ts） */}
+<div id="swup-page" class="contents">
 <div class="cat-home">
 {/* 两侧装饰插画：歌川广重浮世绘（大都会博物馆开放获取，CC0），宽屏时从左右弹入 */}
 <figure class="bento-side bento-side-left" aria-hidden="true">
@@ -305,6 +308,11 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 		var t = document.getElementById("bento-time");
 		if (!t) return;
 		function tick() {
+			// 经 swup 离开首页后时钟已不在文档里，停掉定时器（回到首页时本脚本会重跑、重新计时）
+			if (!t.isConnected) {
+				clearInterval(window.__bentoTimer);
+				return;
+			}
 			var d = new Date();
 			t.innerHTML = pad(d.getHours()) + ":" + pad(d.getMinutes()) + "<small>:" + pad(d.getSeconds()) + "</small>";
 			document.getElementById("bento-date").textContent =
@@ -452,21 +460,35 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			render();
 		}
 
-		window.addEventListener("fm:lyrics", function (e) {
-			lyrics = e.detail.lyrics || [];
-			status = e.detail.status;
-			index = -1;
-			render();
+		// 首页经 swup 进出时本脚本会重跑：离开首页后（歌词条已不在文档里）卸掉这一份监听
+		var listeners = {
+			"fm:lyrics": function (e) {
+				lyrics = e.detail.lyrics || [];
+				status = e.detail.status;
+				index = -1;
+				render();
+			},
+			"fm:lrc-index": function (e) {
+				index = e.detail.index;
+				render();
+			},
+			"fm:play-state": function (e) {
+				playing = !!(e.detail && e.detail.isPlaying);
+				render();
+			},
+			"fm:init": sync,
+		};
+		function unbind() {
+			if (box.isConnected) return;
+			Object.keys(listeners).forEach(function (name) {
+				window.removeEventListener(name, listeners[name]);
+			});
+			document.removeEventListener("swup:page:view", unbind);
+		}
+		Object.keys(listeners).forEach(function (name) {
+			window.addEventListener(name, listeners[name]);
 		});
-		window.addEventListener("fm:lrc-index", function (e) {
-			index = e.detail.index;
-			render();
-		});
-		window.addEventListener("fm:play-state", function (e) {
-			playing = !!(e.detail && e.detail.isPlaying);
-			render();
-		});
-		window.addEventListener("fm:init", sync);
+		document.addEventListener("swup:page:view", unbind);
 		sync();
 	})();
 </script>
@@ -561,5 +583,6 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			.catch(function () {});
 	})();
 </script>
+</div>
 
 </Layout>

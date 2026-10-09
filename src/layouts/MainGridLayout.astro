@@ -351,6 +351,10 @@ const hasMultipleImages =
     </div>
 </div>
 
+{/* 导航栏以外的整页内容。首页 / 音乐页 / 书架页与普通页面布局不同，跳转涉及它们时 swup 整块替换这里，
+    导航栏和全站播放器保持不动，音乐不中断（见 src/utils/swup-page-swap.ts） */}
+<div id="swup-page" class="contents">
+
 <!-- Wallpaper - 如果允许切换则始终渲染，否则只渲染当前模式 -->
 {(isWallpaperSwitchable || isBannerMode || isFullscreenMode || isOverlayMode) && (
 <div id="wallpaper-wrapper" class:list={[
@@ -1233,6 +1237,9 @@ const hasMultipleImages =
 -->
 <script is:inline data-swup-ignore-script>
     (function initTouchCodeCopyReveal() {
+        // 整页替换（swup-page-swap）时会重跑本脚本，委托监听只挂一次
+        if (window.__touchCodeCopyBound) return;
+        window.__touchCodeCopyBound = true;
         var CLASS = 'ff-copy-revealed';
 
         // 委托到 document，swup 换页后无需重新绑定
@@ -1256,7 +1263,7 @@ const hasMultipleImages =
         });
     })();
 </script>
-
+</div>
 
 </Layout>
 
