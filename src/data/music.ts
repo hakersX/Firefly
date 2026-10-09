@@ -37,10 +37,17 @@ export const musicPlaylist: MusicTrack[] = [
 	},
 	{
 		name: "月下的玫瑰",
-		artist: "猫神X",
+		artist: "苏星婕",
 		url: "/assets/music/月光下的玫瑰.mp3",
 		cover: "/assets/music/cover/月光下的玫瑰.jpg",
 		lrc: "/assets/music/lrc/月光下的玫瑰.lrc",
+	},
+	{
+		name: "这世上的雨",
+		artist: "猫神X",
+		url: "/assets/music/这世上的雨.mp3",
+		cover: "/assets/music/cover/这世上的雨.jpg",
+		lrc: "/assets/music/lrc/这世上的雨.lrc",
 	},
 	{
 		name: "茉莉信",
