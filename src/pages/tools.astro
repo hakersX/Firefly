@@ -1,12 +1,11 @@
 ---
 import { Icon } from "astro-icon/components";
 import ToolCard from "@/components/tools/ToolCard.astro";
-import { siteConfig } from "@/config";
 import { toolsConfig } from "@/config/toolsConfig";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title={`工具 - ${siteConfig.title}`}>
+<MainGridLayout title="工具">
 	{/* 分类标签栏 */}
 	<div id="tools-category-bar" class="tools-category-bar mb-4 flex flex-wrap gap-2">
 		<button class="tools-cat-btn active" data-category="all">
