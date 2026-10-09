@@ -242,6 +242,18 @@ a.b-card {
 	font-size: 0.8rem;
 	color: var(--muted);
 }
+/* 访客所在城市的天气：拿到数据前不显示，失败就一直不显示 */
+.clock-weather {
+	margin-top: 0.3rem;
+	font-size: 0.85rem;
+	color: var(--muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.clock-weather[hidden] {
+	display: none;
+}
 
 /* ---------- 列表（最近写下 / 日记） ---------- */
 .b-list {
