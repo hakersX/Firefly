@@ -2,7 +2,7 @@
 /**
  * 首页 index.astro —— 便当格（bento）布局
  *
- * 一屏卡片：欢迎卡 / 时钟 / 最近文章 / 动态 / 分类标签 / 营业天数 / 留言 / 日历 / 社交 / 音乐
+ * 一屏卡片：欢迎卡 / 时钟 / 最近文章 / 动态 / 分类标签 / 营业天数 / 日历 / 音乐 / 社交
  * 样式见 src/components/home/bento.css，配色沿用 cat-home.css。
  */
 import { getCollection } from "astro:content";
@@ -10,10 +10,12 @@ import { Icon } from "astro-icon/components";
 import "@/components/home/bento.css";
 import "@/components/home/cat-home.css";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
+import MusicPlayer from "@/components/features/MusicPlayer.astro";
 import Navbar from "@/components/layout/Navbar.astro";
 import {
 	backgroundWallpaper,
 	displaySettingsConfig,
+	musicPlayerConfig,
 	profileConfig,
 	siteConfig,
 } from "@/config";
@@ -241,13 +243,6 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			<div class="days-sub">自 {siteConfig.siteStartDate} 起</div>
 		</section>
 
-		{/* 留言 */}
-		<a class="b-card b-guest" href={url("/guestbook/")}>
-			<Icon class="entry-icon" name="material-symbols:chat-bubble-rounded" />
-			<div class="entry-title">留个言吧</div>
-			<div class="entry-sub">路过就说两句</div>
-		</a>
-
 		{/* 日历 */}
 		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)} data-holidays={JSON.stringify(holidays)}>
 			<div class="cal-head">
@@ -256,6 +251,28 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			<div class="cal-grid" id="cal-grid"></div>
 			<div class="cal-legend">高亮 = 发过文章 · <span class="cal-badge off">休</span> 放假 · <span class="cal-badge work">班</span> 调休</div>
 		</section>
+
+		{/* 音乐：与导航栏、侧栏共用同一个播放器（MusicManager），在哪个上面操作都会同步 */}
+		{musicPlayerConfig.showInSidebar !== false ? (
+			<section class="b-card b-music">
+				<div class="b-head">
+					<h2 class="b-title">此刻的旋律</h2>
+					<a class="b-more" href={url("/music/")}>音乐页 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+				</div>
+				<MusicPlayer id="home-music-player" />
+				{/* 正在播放的歌词：当前句 + 下一句，数据来自 MusicManager 的 fm:* 事件 */}
+				<div class="home-lrc" id="home-lrc" aria-live="polite">
+					<p class="home-lrc-cur">♪ 点一下播放，听听此刻的旋律</p>
+					<p class="home-lrc-next"></p>
+				</div>
+			</section>
+		) : (
+			<a class="b-card b-music b-music-entry" href={url("/music/")}>
+				<Icon class="entry-icon" name="material-symbols:music-note-rounded" />
+				<div class="entry-title">此刻的旋律</div>
+				<div class="entry-sub">去听听歌</div>
+			</a>
+		)}
 
 		{/* 社交 */}
 		<section class="b-card b-social">
@@ -274,13 +291,6 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 				))}
 			</div>
 		</section>
-
-		{/* 音乐 */}
-		<a class="b-card b-music" href={url("/music/")}>
-			<Icon class="entry-icon" name="material-symbols:music-note-rounded" />
-			<div class="entry-title">此刻的旋律</div>
-			<div class="entry-sub">去听听歌</div>
-		</a>
 	</div>
 
 	<footer class="bento-footer">
@@ -401,6 +411,64 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 	} else {
 		initBento();
 	}
+</script>
+
+<script is:inline>
+	(function () {
+		var box = document.getElementById("home-lrc");
+		var mgr = window.__fireflyMusic;
+		if (!box || !mgr) return;
+		var cur = box.querySelector(".home-lrc-cur");
+		var next = box.querySelector(".home-lrc-next");
+
+		var lyrics = [];
+		var index = -1;
+		var status = "none";
+		var playing = false;
+
+		function show(a, b) {
+			if (cur.textContent === a && next.textContent === b) return;
+			cur.textContent = a;
+			next.textContent = b;
+			// 换句时重新触发淡入动画
+			box.classList.remove("is-changing");
+			void box.offsetWidth;
+			box.classList.add("is-changing");
+		}
+
+		function render() {
+			if (!playing && index < 0) return show("♪ 点一下播放，听听此刻的旋律", "");
+			if (status === "loading") return show("歌词加载中…", "");
+			if (!lyrics.length) return show("♪ 纯音乐，请欣赏", "");
+			if (index < 0) return show("♪ 前奏…", lyrics[0].text);
+			show(lyrics[index].text, lyrics[index + 1] ? lyrics[index + 1].text : "");
+		}
+
+		function sync() {
+			var s = mgr.getState();
+			lyrics = s.lyrics || [];
+			index = s.currentLrcIndex;
+			playing = !!s.isPlaying;
+			render();
+		}
+
+		window.addEventListener("fm:lyrics", function (e) {
+			lyrics = e.detail.lyrics || [];
+			status = e.detail.status;
+			index = -1;
+			render();
+		});
+		window.addEventListener("fm:lrc-index", function (e) {
+			index = e.detail.index;
+			render();
+		});
+		window.addEventListener("fm:play-state", function (e) {
+			playing = !!(e.detail && e.detail.isPlaying);
+			render();
+		});
+		window.addEventListener("fm:init", sync);
+		sync();
+	})();
 </script>
 
 {/* 装饰性小天气：按访客 IP 定位城市，再查 Open-Meteo 当前天气。全部免 Key；
