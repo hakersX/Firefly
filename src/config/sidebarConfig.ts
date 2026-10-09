@@ -119,33 +119,34 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				},
 			},
 		},
-		{
-			// 组件类型：站点统计组件
-			type: "stats",
-			// 是否启用该组件
-			enable: true,
-			// 组件位置
-			position: "top",
-			// 是否在文章详情页显示
-			showOnPostPage: false,
-		},
-		{
-			// 组件类型：站点信息组件
-			type: "siteInfo",
-			// 是否启用该组件
-			enable: true,
-			// 组件位置
-			position: "top",
-			// 是否在文章详情页显示
-			showOnPostPage: true,
-			// 组件专属配置
-			specificConfig: {
-				siteInfo: {
-					// 未能识别的构建平台回退显示文本，可自定义
-					unknownBuildPlatform: "Unknown CI",
-				},
-			},
-		},
+		// 站点统计、站点信息卡片暂时停用，想恢复时取消下面两段注释即可
+		// {
+			// // 组件类型：站点统计组件
+			// type: "stats",
+			// // 是否启用该组件
+			// enable: true,
+			// // 组件位置
+			// position: "top",
+			// // 是否在文章详情页显示
+			// showOnPostPage: false,
+		// },
+		// {
+			// // 组件类型：站点信息组件
+			// type: "siteInfo",
+			// // 是否启用该组件
+			// enable: true,
+			// // 组件位置
+			// position: "top",
+			// // 是否在文章详情页显示
+			// showOnPostPage: true,
+			// // 组件专属配置
+			// specificConfig: {
+				// siteInfo: {
+					// // 未能识别的构建平台回退显示文本，可自定义
+					// unknownBuildPlatform: "Unknown CI",
+				// },
+			// },
+		// },
 		{
 			// 组件类型：日历组件
 			type: "calendar",
@@ -295,28 +296,29 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				},
 			},
 		},
-		{
-			// 组件类型：站点统计组件
-			type: "stats",
-			// 是否启用该组件
-			enable: true,
-			// 是否在文章详情页显示
-			showOnPostPage: true,
-		},
-		{
-			// 组件类型：站点信息组件
-			type: "siteInfo",
-			// 是否启用该组件
-			enable: true,
-			// 是否在文章详情页显示
-			showOnPostPage: true,
-			// 组件专属配置
-			specificConfig: {
-				siteInfo: {
-					// 未能识别的构建平台回退显示文本，可自定义
-					unknownBuildPlatform: "Unknown CI",
-				},
-			},
-		},
+		// 站点统计、站点信息卡片暂时停用，想恢复时取消下面两段注释即可
+		// {
+			// // 组件类型：站点统计组件
+			// type: "stats",
+			// // 是否启用该组件
+			// enable: true,
+			// // 是否在文章详情页显示
+			// showOnPostPage: true,
+		// },
+		// {
+			// // 组件类型：站点信息组件
+			// type: "siteInfo",
+			// // 是否启用该组件
+			// enable: true,
+			// // 是否在文章详情页显示
+			// showOnPostPage: true,
+			// // 组件专属配置
+			// specificConfig: {
+				// siteInfo: {
+					// // 未能识别的构建平台回退显示文本，可自定义
+					// unknownBuildPlatform: "Unknown CI",
+				// },
+			// },
+		// },
 	],
 };

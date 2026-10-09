@@ -84,6 +84,19 @@ function albumDir(id: string): string {
 	return path.join(GALLERY_DIR, id);
 }
 
+// 新相册的 id 自动生成（album-xxxxxx），既不和已有相册重复，也不撞上已存在的图片目录
+async function generateAlbumId(albums: Album[]): Promise<string> {
+	for (;;) {
+		const id = `album-${Math.random().toString(36).slice(2, 8).padEnd(6, "0")}`;
+		if (albums.some((a) => a.id === id)) continue;
+		try {
+			await fs.access(path.join(GALLERY_DIR, id));
+		} catch {
+			return id;
+		}
+	}
+}
+
 // 上传的文件名只保留安全字符；重名时自动加序号，不覆盖已有图片
 async function safeFileName(dir: string, raw: string): Promise<string> {
 	const ext = path.extname(raw).toLowerCase();
@@ -192,17 +205,14 @@ async function handleApi(
 
 	// POST /albums —— 新建相册
 	if (!id && method === "POST") {
-		const body = await readJson(req);
-		const newId = String(body.id ?? "").trim();
-		const dir = albumDir(newId);
-		if (albums.some((a) => a.id === newId)) throw new HttpError(409, "这个相册 id 已经存在");
-		const fields = pickFields(body);
+		const fields = pickFields(await readJson(req));
 		if (!fields.name) throw new HttpError(400, "请填写相册名称");
-		await fs.mkdir(dir, { recursive: true });
+		const newId = await generateAlbumId(albums);
+		await fs.mkdir(albumDir(newId), { recursive: true });
 		albums.unshift({ id: newId, ...fields } as Album);
 		await writeAlbums(albums);
 		log(`gallery-admin: 新建相册 ${newId}`);
-		return send(res, 201, { ok: true });
+		return send(res, 201, { ok: true, id: newId });
 	}
 
 	const index = albums.findIndex((a) => a.id === id);

@@ -23,6 +23,16 @@ export const friendsPageConfig: FriendsPageConfig = {
 // 友链配置
 export const friendsConfig: FriendLink[] = [
 	{
+		title: "年华",
+		imgurl: "https://q1.qlogo.cn/g?b=qq&nk=1323860289&s=640",
+		desc: "分享生活和技术。",
+		siteurl: "https://blog.amamo.top",
+		rss: "https://blog.amamo.top/rss.xml",
+		tags: ["Blog"],
+		weight: 12,
+		enabled: true,
+	},
+	{
 		title: "张萌萌",
 		imgurl: "https://blog.nw177.cn/assets/avatar.webp",
 		desc: "春风得意马蹄疾 一日看尽长安花",

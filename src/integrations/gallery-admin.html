@@ -184,9 +184,6 @@
 	<h2>新建相册</h2>
 	<form id="new-form" method="dialog" style="grid-template-columns: 1fr">
 		<label>相册名称 *<input name="name" required placeholder="比如：男生头像" /></label>
-		<label>相册 id *（用于目录名和网址，只能小写字母、数字、短横线）
-			<input name="id" required pattern="[a-z0-9][a-z0-9-]*" placeholder="比如：boy-avatars" />
-		</label>
 		<label>描述<input name="description" /></label>
 		<label>日期<input name="date" type="date" /></label>
 		<div class="row" style="justify-content: flex-end">
@@ -257,7 +254,6 @@
 			</div>
 			<form id="album-form">
 				<label>相册名称 *<input name="name" required value="${esc(a.name)}" /></label>
-				<label>相册 id（决定目录和网址，不可修改）<input value="${esc(a.id)}" readonly /></label>
 				<label class="wide">描述<textarea name="description">${esc(a.description)}</textarea></label>
 				<label>日期<input name="date" type="date" value="${esc(a.date)}" /></label>
 				<label>拍摄地点<input name="location" value="${esc(a.location)}" /></label>
@@ -416,13 +412,13 @@
 		e.preventDefault();
 		const fields = formFields(e.target);
 		try {
-			await api("/albums", {
+			const { id } = await api("/albums", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(fields),
 			});
 			dialog.close();
-			await load(fields.id);
+			await load(id);
 			toast("相册已创建，可以上传图片了");
 		} catch (err) {
 			toast(err.message, true);

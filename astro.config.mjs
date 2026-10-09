@@ -77,13 +77,20 @@ export default defineConfig({
 		if (!fontConfig.enable) return [];
 
 		const used = collectUsedFontCssVars(fontConfig);
+		// 本地 dev 连不上 Google Fonts，每次启动都要白等约 40 秒超时重试；
+		// dev 下改用空 provider（不发请求，浏览器直接用 fallbacks），构建时照常走 Google
+		const isDev = process.argv.includes("dev");
+		const skippedGoogle = {
+			name: "google-skipped-in-dev",
+			resolveFont: () => ({ fonts: [] }),
+		};
 		return fontsList
 			.filter((f) => used.has(f.cssVariable))
 			.map((f) => {
 				let provider;
 				switch (f.provider) {
 					case "google":
-						provider = fontProviders.google();
+						provider = isDev ? skippedGoogle : fontProviders.google();
 						break;
 					case "fontsource":
 						provider = fontProviders.fontsource();
