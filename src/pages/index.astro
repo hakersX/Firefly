@@ -2,7 +2,7 @@
 /**
  * 首页 index.astro —— 便当格（bento）布局
  *
- * 一屏卡片：欢迎卡 / 时钟 / 最近文章 / 动态 / 分类标签 / 营业天数 / 日历 / 音乐 / 社交
+ * 一屏卡片：欢迎卡 / 时钟 / 最近文章 / 日记 / 营业天数 / 相册 / 音乐 / 日历 / 社交（最底一整行）
  * 样式见 src/components/home/bento.css，配色沿用 cat-home.css。
  */
 import { getCollection } from "astro:content";
@@ -15,6 +15,7 @@ import Navbar from "@/components/layout/Navbar.astro";
 import {
 	backgroundWallpaper,
 	displaySettingsConfig,
+	galleryConfig,
 	musicPlayerConfig,
 	profileConfig,
 	siteConfig,
@@ -25,7 +26,8 @@ import {
 	getSortedPostsList,
 	getTagList,
 } from "@/utils/content-utils";
-import { getPostUrlBySlug, getTagUrl, url } from "@/utils/url-utils";
+import { scanAlbumPhotos } from "@/utils/gallery-utils";
+import { getPostUrlBySlug, url } from "@/utils/url-utils";
 
 const isBannerMode = backgroundWallpaper.mode === "banner";
 const isFullscreenMode = backgroundWallpaper.mode === "fullscreen";
@@ -112,6 +114,25 @@ for (const days of await Promise.all([
 ])) {
 	for (const d of days) holidays[d.date] = [d.name, d.isOffDay ? 1 : 0];
 }
+
+// 相册：未加密的相册按日期从新到旧，取最多 8 张照片（每张链到所在相册），下方一行介绍最新的一本
+const publicAlbums = siteConfig.pages.gallery
+	? galleryConfig.albums
+			.filter((album) => !album.password)
+			.map((album) => ({
+				...album,
+				href: url(`/gallery/${album.id}/`),
+				photos: scanAlbumPhotos(album.id),
+			}))
+			.filter((album) => album.photos.length > 0)
+			.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
+	: [];
+const galleryPhotos = publicAlbums
+	.flatMap((album) =>
+		album.photos.map((src) => ({ src, album: album.name, href: album.href })),
+	)
+	.slice(0, 8);
+const latestAlbum = publicAlbums[0];
 
 const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活 · 偶尔讲故事。";
 ---
@@ -223,22 +244,6 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			)) : <p class="b-empty">还没有日记</p>}
 		</section>
 
-		{/* 分类 / 标签 */}
-		<section class="b-card b-chips">
-			<div class="b-head">
-				<h2 class="b-title">猫窝分区</h2>
-				<a class="b-more" href={url("/categories/")}>全部 <Icon name="material-symbols:arrow-forward-rounded" /></a>
-			</div>
-			<div class="chip-wrap">
-				{categories.slice(0, 6).map((c) => (
-					<a class="chip" href={c.url}>{c.name}</a>
-				))}
-				{tags.slice(0, 6).map((t) => (
-					<a class="chip" href={getTagUrl(t.name)}>#{t.name}</a>
-				))}
-			</div>
-		</section>
-
 		{/* 营业天数 */}
 		<section class="b-card b-days">
 			<div class="days-label">猫窝已经营业</div>
@@ -246,14 +251,30 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			<div class="days-sub">自 {siteConfig.siteStartDate} 起</div>
 		</section>
 
-		{/* 日历 */}
-		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)} data-holidays={JSON.stringify(holidays)}>
-			<div class="cal-head">
-				<h2 class="b-title" id="cal-title">日历</h2>
-			</div>
-			<div class="cal-grid" id="cal-grid"></div>
-			<div class="cal-legend">高亮 = 发过文章 · <span class="cal-badge off">休</span> 放假 · <span class="cal-badge work">班</span> 调休</div>
-		</section>
+		{/* 相册：左下，与音乐、日历并排 */}
+		{galleryPhotos.length > 0 && (
+			<section class="b-card b-gallery">
+				<div class="b-head">
+					<h2 class="b-title">相册</h2>
+					<a class="b-more" href={url("/gallery/")}>全部相册 <Icon name="material-symbols:arrow-forward-rounded" /></a>
+				</div>
+				<div class="gallery-body">
+					<div class="gallery-strip">
+						{galleryPhotos.map((p) => (
+							<a class="gallery-thumb" href={p.href} title={p.album}>
+								<img src={p.src} alt={p.album} loading="lazy" decoding="async" />
+							</a>
+						))}
+					</div>
+					<a class="gallery-info" href={latestAlbum.href} title={latestAlbum.description}>
+						<span class="gallery-info-label">最新相册</span>
+						<span class="gallery-info-name">{latestAlbum.name}</span>
+						<span class="gallery-info-meta">{latestAlbum.photos.length} 张照片{latestAlbum.date ? ` · ${latestAlbum.date}` : ""}</span>
+						<span class="gallery-info-go">去看看 <Icon name="material-symbols:arrow-forward-rounded" /></span>
+					</a>
+				</div>
+			</section>
+		)}
 
 		{/* 音乐：与导航栏、侧栏共用同一个播放器（MusicManager），在哪个上面操作都会同步 */}
 		{musicPlayerConfig.showInSidebar !== false ? (
@@ -277,7 +298,16 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 			</a>
 		)}
 
-		{/* 社交 */}
+		{/* 日历 */}
+		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)} data-holidays={JSON.stringify(holidays)}>
+			<div class="cal-head">
+				<h2 class="b-title" id="cal-title">日历</h2>
+			</div>
+			<div class="cal-grid" id="cal-grid"></div>
+			<div class="cal-legend">高亮 = 发过文章 · <span class="cal-badge off">休</span> 放假 · <span class="cal-badge work">班</span> 调休</div>
+		</section>
+
+		{/* 社交：放在最下面一整行 */}
 		<section class="b-card b-social">
 			<div class="b-head"><h2 class="b-title">来找我玩</h2></div>
 			<div class="social-tiles">

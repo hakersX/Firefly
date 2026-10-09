@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>相册管理 · 本地后台</title>
+<style>
+	:root {
+		--bg: #fbf6f1;
+		--card: #ffffff;
+		--line: #eadfd5;
+		--ink: #3b2f2a;
+		--muted: #8a7a70;
+		--accent: #e8833a;
+		--danger: #d9534f;
+		--radius: 14px;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+		background: var(--bg);
+		color: var(--ink);
+		font-size: 14px;
+	}
+	header {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.9rem 1.4rem;
+		border-bottom: 1px solid var(--line);
+		background: var(--card);
+	}
+	header h1 { margin: 0; font-size: 1.1rem; }
+	header .hint { color: var(--muted); font-size: 0.8rem; }
+	header a { margin-left: auto; color: var(--accent); text-decoration: none; }
+	main {
+		display: grid;
+		grid-template-columns: 260px minmax(0, 1fr);
+		gap: 1.2rem;
+		max-width: 1200px;
+		margin: 1.2rem auto;
+		padding: 0 1.2rem;
+	}
+	.panel {
+		background: var(--card);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		padding: 1rem;
+	}
+	.album-list { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+	.album-list li {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.55rem 0.7rem;
+		border-radius: 10px;
+		cursor: pointer;
+	}
+	.album-list li:hover { background: var(--bg); }
+	.album-list li.active { background: var(--accent); color: #fff; }
+	.album-list li small { opacity: 0.75; }
+	.album-list .lock { margin-left: 0.25rem; }
+	button {
+		font: inherit;
+		border: 1px solid var(--line);
+		background: var(--card);
+		color: var(--ink);
+		border-radius: 10px;
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+	}
+	button:hover { border-color: var(--accent); color: var(--accent); }
+	button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+	button.primary:hover { filter: brightness(1.05); color: #fff; }
+	button.danger { color: var(--danger); }
+	button.danger:hover { border-color: var(--danger); }
+	button:disabled { opacity: 0.5; cursor: default; }
+	.row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+	h2 { margin: 0; font-size: 1.05rem; }
+	form {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.7rem 1rem;
+		margin: 1rem 0;
+	}
+	label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.8rem; }
+	label.wide { grid-column: 1 / -1; }
+	input, textarea {
+		font: inherit;
+		color: var(--ink);
+		padding: 0.5rem 0.65rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: #fff;
+	}
+	input:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent); border-color: var(--accent); }
+	input[readonly] { background: var(--bg); color: var(--muted); }
+	textarea { resize: vertical; min-height: 3.2rem; }
+	.drop {
+		margin: 1rem 0;
+		padding: 1.4rem;
+		border: 2px dashed var(--line);
+		border-radius: var(--radius);
+		text-align: center;
+		color: var(--muted);
+		cursor: pointer;
+		transition: border-color 0.2s, background 0.2s;
+	}
+	.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--accent); }
+	.photos {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 0.8rem;
+	}
+	.photo {
+		position: relative;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		overflow: hidden;
+		background: var(--bg);
+	}
+	.photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+	.photo .bar { display: flex; gap: 0.3rem; padding: 0.4rem; }
+	.photo .bar button { flex: 1; padding: 0.3rem 0.4rem; font-size: 0.75rem; }
+	.photo .name { padding: 0 0.5rem 0.4rem; font-size: 0.7rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.badge {
+		position: absolute;
+		top: 0.4rem;
+		left: 0.4rem;
+		padding: 0.1rem 0.45rem;
+		border-radius: 999px;
+		background: var(--accent);
+		color: #fff;
+		font-size: 0.7rem;
+	}
+	.empty { color: var(--muted); padding: 2rem; text-align: center; }
+	.toast {
+		position: fixed;
+		right: 1.2rem;
+		bottom: 1.2rem;
+		padding: 0.7rem 1rem;
+		border-radius: 12px;
+		background: var(--ink);
+		color: #fff;
+		opacity: 0;
+		transform: translateY(0.5rem);
+		transition: opacity 0.2s, transform 0.2s;
+		pointer-events: none;
+		max-width: 360px;
+	}
+	.toast.show { opacity: 1; transform: none; }
+	.toast.error { background: var(--danger); }
+	dialog { border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem; width: min(480px, 92vw); }
+	dialog::backdrop { background: rgba(0, 0, 0, 0.3); }
+	@media (max-width: 760px) {
+		main { grid-template-columns: 1fr; }
+		form { grid-template-columns: 1fr; }
+	}
+</style>
+</head>
+<body>
+<header>
+	<h1>🐾 相册管理</h1>
+	<span class="hint">本地后台 · 只在 pnpm dev 时可用 · 改动直接写入项目，记得提交推送</span>
+	<a href="/gallery/" target="_blank">打开相册页 ↗</a>
+</header>
+
+<main>
+	<aside class="panel">
+		<div class="row" style="justify-content: space-between">
+			<h2>相册</h2>
+			<button class="primary" id="btn-new">＋ 新建</button>
+		</div>
+		<ul class="album-list" id="album-list"></ul>
+	</aside>
+
+	<section class="panel" id="detail">
+		<div class="empty">左边选一个相册，或者新建一个</div>
+	</section>
+</main>
+
+<dialog id="new-dialog">
+	<h2>新建相册</h2>
+	<form id="new-form" method="dialog" style="grid-template-columns: 1fr">
+		<label>相册名称 *<input name="name" required placeholder="比如：男生头像" /></label>
+		<label>相册 id *（用于目录名和网址，只能小写字母、数字、短横线）
+			<input name="id" required pattern="[a-z0-9][a-z0-9-]*" placeholder="比如：boy-avatars" />
+		</label>
+		<label>描述<input name="description" /></label>
+		<label>日期<input name="date" type="date" /></label>
+		<div class="row" style="justify-content: flex-end">
+			<button type="button" id="new-cancel">取消</button>
+			<button type="submit" class="primary">创建</button>
+		</div>
+	</form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+	const API = "/__admin/gallery/api";
+	const state = { albums: [], current: null };
+	const $ = (s, el = document) => el.querySelector(s);
+	const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+	let toastTimer;
+	function toast(msg, isError) {
+		const el = $("#toast");
+		el.textContent = msg;
+		el.classList.toggle("error", !!isError);
+		el.classList.add("show");
+		clearTimeout(toastTimer);
+		toastTimer = setTimeout(() => el.classList.remove("show"), isError ? 4000 : 2200);
+	}
+
+	async function api(path, options = {}) {
+		const res = await fetch(API + path, options);
+		const data = await res.json().catch(() => ({}));
+		if (!res.ok) throw new Error(data.error || `请求失败（${res.status}）`);
+		return data;
+	}
+
+	async function load(selectId) {
+		state.albums = await api("/albums");
+		const id = selectId ?? state.current;
+		state.current = state.albums.some((a) => a.id === id) ? id : state.albums[0]?.id ?? null;
+		renderList();
+		renderDetail();
+	}
+
+	function renderList() {
+		$("#album-list").innerHTML = state.albums.length
+			? state.albums.map((a) => `
+				<li data-id="${esc(a.id)}" class="${a.id === state.current ? "active" : ""}">
+					<span>${esc(a.name)}${a.password ? '<span class="lock" title="已加密">🔒</span>' : ""}</span>
+					<small>${a.photos.length} 张</small>
+				</li>`).join("")
+			: '<li style="cursor:default;color:var(--muted)">还没有相册</li>';
+	}
+
+	function renderDetail() {
+		const a = state.albums.find((x) => x.id === state.current);
+		const box = $("#detail");
+		if (!a) {
+			box.innerHTML = '<div class="empty">左边选一个相册，或者新建一个</div>';
+			return;
+		}
+		const coverFile = a.cover ? a.cover.split("/").pop() : null;
+		box.innerHTML = `
+			<div class="row" style="justify-content: space-between">
+				<h2>${esc(a.name)}</h2>
+				<div class="row">
+					<a href="/gallery/${esc(a.id)}/" target="_blank"><button type="button">预览 ↗</button></a>
+					<button type="button" class="danger" id="btn-del-album">删除相册</button>
+				</div>
+			</div>
+			<form id="album-form">
+				<label>相册名称 *<input name="name" required value="${esc(a.name)}" /></label>
+				<label>相册 id（决定目录和网址，不可修改）<input value="${esc(a.id)}" readonly /></label>
+				<label class="wide">描述<textarea name="description">${esc(a.description)}</textarea></label>
+				<label>日期<input name="date" type="date" value="${esc(a.date)}" /></label>
+				<label>拍摄地点<input name="location" value="${esc(a.location)}" /></label>
+				<label class="wide">标签（逗号分隔）<input name="tags" value="${esc((a.tags || []).join("，"))}" /></label>
+				<label>访问密码（留空即不加密）<input name="password" value="${esc(a.password)}" autocomplete="off" /></label>
+				<label>密码提示<input name="passwordHint" value="${esc(a.passwordHint)}" /></label>
+				<input type="hidden" name="cover" value="${esc(a.cover)}" />
+				<div class="row wide" style="grid-column: 1 / -1; justify-content: flex-end">
+					<button type="submit" class="primary">保存相册信息</button>
+				</div>
+			</form>
+			<div class="drop" id="drop">
+				把图片拖到这里，或 <u>点击选择</u>（可多选，支持 jpg / png / webp / avif / gif）
+				<input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple hidden />
+			</div>
+			<div class="photos">
+				${a.photos.length ? a.photos.map((f) => `
+					<div class="photo" data-file="${esc(f)}">
+						${f === coverFile ? '<span class="badge">封面</span>' : ""}
+						<img src="/gallery/${esc(a.id)}/${encodeURIComponent(f)}?t=${Date.now()}" alt="${esc(f)}" loading="lazy" />
+						<div class="bar">
+							<button type="button" data-act="cover" ${f === coverFile ? "disabled" : ""}>设为封面</button>
+							<button type="button" class="danger" data-act="delete">删除</button>
+						</div>
+						<div class="name" title="${esc(f)}">${esc(f)}</div>
+					</div>`).join("") : '<div class="empty" style="grid-column:1/-1">这个相册还没有图片</div>'}
+			</div>`;
+	}
+
+	const formFields = (form) => Object.fromEntries(new FormData(form));
+
+	async function saveAlbum(fields) {
+		await api(`/albums/${encodeURIComponent(state.current)}`, {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(fields),
+		});
+	}
+
+	async function upload(files) {
+		const list = [...files].filter((f) => /\.(jpe?g|png|webp|avif|gif)$/i.test(f.name));
+		if (!list.length) return toast("没有可上传的图片", true);
+		const id = state.current;
+		let done = 0;
+		for (const file of list) {
+			toast(`上传中 ${done + 1}/${list.length}：${file.name}`);
+			try {
+				await api(`/albums/${encodeURIComponent(id)}/photos`, {
+					method: "POST",
+					headers: { "X-Filename": encodeURIComponent(file.name), "Content-Type": "application/octet-stream" },
+					body: file,
+				});
+				done++;
+			} catch (err) {
+				toast(`${file.name}：${err.message}`, true);
+			}
+		}
+		await load(id);
+		if (done) toast(`已上传 ${done} 张`);
+	}
+
+	// —— 事件 ——
+	$("#album-list").addEventListener("click", (e) => {
+		const li = e.target.closest("li[data-id]");
+		if (!li) return;
+		state.current = li.dataset.id;
+		renderList();
+		renderDetail();
+	});
+
+	$("#detail").addEventListener("submit", async (e) => {
+		if (e.target.id !== "album-form") return;
+		e.preventDefault();
+		try {
+			await saveAlbum(formFields(e.target));
+			await load();
+			toast("已保存");
+		} catch (err) {
+			toast(err.message, true);
+		}
+	});
+
+	$("#detail").addEventListener("click", async (e) => {
+		const a = state.albums.find((x) => x.id === state.current);
+		if (!a) return;
+		if (e.target.id === "btn-del-album") {
+			if (!confirm(`确定删除相册「${a.name}」吗？\n相册里的 ${a.photos.length} 张图片会从项目里一起删除。`)) return;
+			try {
+				await api(`/albums/${encodeURIComponent(a.id)}`, { method: "DELETE" });
+				state.current = null;
+				await load();
+				toast("相册已删除");
+			} catch (err) {
+				toast(err.message, true);
+			}
+			return;
+		}
+		if (e.target.closest("#drop")) {
+			$("#file-input").click();
+			return;
+		}
+		const btn = e.target.closest("button[data-act]");
+		if (!btn) return;
+		const file = btn.closest(".photo").dataset.file;
+		if (btn.dataset.act === "delete") {
+			if (!confirm(`确定删除 ${file} 吗？图片会从项目里删除。`)) return;
+			try {
+				await api(`/albums/${encodeURIComponent(a.id)}/photos/${encodeURIComponent(file)}`, { method: "DELETE" });
+				await load();
+				toast("已删除");
+			} catch (err) {
+				toast(err.message, true);
+			}
+		} else if (btn.dataset.act === "cover") {
+			const form = $("#album-form");
+			form.cover.value = `/gallery/${a.id}/${file}`;
+			try {
+				await saveAlbum(formFields(form));
+				await load();
+				toast("已设为封面");
+			} catch (err) {
+				toast(err.message, true);
+			}
+		}
+	});
+
+	$("#detail").addEventListener("change", (e) => {
+		if (e.target.id === "file-input" && e.target.files.length) upload(e.target.files);
+	});
+
+	for (const type of ["dragenter", "dragover"]) {
+		$("#detail").addEventListener(type, (e) => {
+			const drop = e.target.closest("#drop");
+			if (!drop) return;
+			e.preventDefault();
+			drop.classList.add("over");
+		});
+	}
+	$("#detail").addEventListener("dragleave", (e) => e.target.closest("#drop")?.classList.remove("over"));
+	$("#detail").addEventListener("drop", (e) => {
+		const drop = e.target.closest("#drop");
+		if (!drop) return;
+		e.preventDefault();
+		drop.classList.remove("over");
+		upload(e.dataTransfer.files);
+	});
+
+	// 新建相册
+	const dialog = $("#new-dialog");
+	$("#btn-new").addEventListener("click", () => {
+		$("#new-form").reset();
+		dialog.showModal();
+	});
+	$("#new-cancel").addEventListener("click", () => dialog.close());
+	$("#new-form").addEventListener("submit", async (e) => {
+		e.preventDefault();
+		const fields = formFields(e.target);
+		try {
+			await api("/albums", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(fields),
+			});
+			dialog.close();
+			await load(fields.id);
+			toast("相册已创建，可以上传图片了");
+		} catch (err) {
+			toast(err.message, true);
+		}
+	});
+
+	load().catch((err) => toast(err.message, true));
+</script>
+</body>
+</html>

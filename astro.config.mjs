@@ -51,6 +51,7 @@ import { remarkMermaid } from "./src/plugins/remark-mermaid.js";
 import { remarkPlantuml } from "./src/plugins/remark-plantuml.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 import { remarkWikiLink } from "./src/plugins/remark-wiki-link.js";
+import galleryAdmin from "./src/integrations/gallery-admin";
 import { collectUsedFontCssVars } from "./src/utils/fontHelper";
 
 if (process.env.NODE_ENV === "development") {
@@ -238,6 +239,8 @@ export default defineConfig({
 			},
 		}),
 		svelte(),
+		// 本地相册管理后台，只在 pnpm dev 时挂到开发服务器上（/__admin/gallery），不进正式构建
+		galleryAdmin(),
 		sitemap({
 			filter: (page) => {
 				// 根据页面开关配置过滤sitemap

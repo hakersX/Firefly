@@ -96,6 +96,10 @@ The home, music and books pages use their own layouts without the MainGridLayout
 - bundled module scripts execute only once per session — page UI that lives inside `#swup-page` must (re)mount on `swup:page:view` and tear down its window listeners when its DOM is gone (see `src/components/music/music-player.ts`);
 - the navbar markup must stay identical across layouts, since it is never replaced.
 
+### Local gallery admin (dev only)
+
+`src/integrations/gallery-admin.ts` (registered in `astro.config.mjs`) hooks `astro:server:setup` only, so it exists solely under `pnpm dev`: `/__admin/gallery` serves `gallery-admin.html` plus a JSON API that uploads / deletes images in `public/gallery/<id>/` and creates / edits / deletes albums in `src/data/gallery.json` (which `galleryConfig.ts` imports — don't move albums back into the TS file). It accepts loopback requests only, validates album ids and file names against path traversal, and re-runs `scripts/generate-lqips.ts` (debounced) after image changes. Nothing of it is emitted into `dist/`.
+
 ## Deployment
 
 - **Vercel** (default, `vercel.json`)
