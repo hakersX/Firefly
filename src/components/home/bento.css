@@ -424,8 +424,58 @@ a.b-card {
 	padding-bottom: 2px;
 }
 .cal-grid .d {
-	padding: 4px 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 3px 0 2px;
 	border-radius: 8px;
+	line-height: 1.15;
+}
+.cal-grid .dn {
+	font-variant-numeric: tabular-nums;
+}
+/* 农历 / 节日：格子很窄，只放两个字 */
+.cal-grid .lu {
+	max-width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	font-size: 0.55rem;
+	font-weight: 400;
+	color: var(--muted);
+}
+.cal-grid .d.festival .lu {
+	color: var(--accent);
+}
+.cal-grid .d.today .lu {
+	color: inherit;
+	opacity: 0.85;
+}
+/* 休 / 班 角标 */
+.cal-badge {
+	display: inline-block;
+	padding: 0 2px;
+	border-radius: 3px;
+	font-size: 0.5rem;
+	font-weight: 700;
+	line-height: 1.3;
+}
+.cal-badge.off {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+.cal-badge.work {
+	background: var(--muted);
+	color: var(--card);
+}
+.cal-grid .cal-badge {
+	position: absolute;
+	top: -2px;
+	right: -1px;
+}
+.cal-grid .d.today .cal-badge.off {
+	background: var(--on-accent);
+	color: var(--accent);
 }
 .cal-grid .d.has-post {
 	background: var(--bg-2);

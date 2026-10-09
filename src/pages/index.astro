@@ -75,6 +75,42 @@ const postDates = visiblePosts.map((p) => {
 	return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 });
 
+// 法定节假日与调休：构建时从 holiday-cn（整理自国务院办公厅通知）拉取今明两年，
+// 直接写进页面，访客端不再请求。拉取失败就不标，日历其余部分照常显示。
+// 新一年的安排（通常 11 月公布）在下次构建后生效。
+type HolidayDay = { name: string; date: string; isOffDay: boolean };
+const holidayCache: Map<number, HolidayDay[]> =
+	((globalThis as Record<string, unknown>).__holidayCache as Map<
+		number,
+		HolidayDay[]
+	>) ?? new Map();
+(globalThis as Record<string, unknown>).__holidayCache = holidayCache;
+async function loadHolidays(year: number): Promise<HolidayDay[]> {
+	const hit = holidayCache.get(year);
+	if (hit) return hit;
+	try {
+		const res = await fetch(
+			`https://cdn.jsdelivr.net/gh/NateScarlet/holiday-cn@master/${year}.json`,
+			{ signal: AbortSignal.timeout(8000) },
+		);
+		if (!res.ok) return [];
+		const days = ((await res.json()) as { days?: HolidayDay[] }).days ?? [];
+		holidayCache.set(year, days);
+		return days;
+	} catch {
+		return [];
+	}
+}
+const thisYear = new Date().getFullYear();
+// { "2026-10-01": ["国庆节", 1] }，1 = 放假，0 = 调休上班
+const holidays: Record<string, [string, 0 | 1]> = {};
+for (const days of await Promise.all([
+	loadHolidays(thisYear),
+	loadHolidays(thisYear + 1),
+])) {
+	for (const d of days) holidays[d.date] = [d.name, d.isOffDay ? 1 : 0];
+}
+
 const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活 · 偶尔讲故事。";
 ---
 
@@ -214,12 +250,12 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 		</a>
 
 		{/* 日历 */}
-		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)}>
+		<section class="b-card b-cal" id="bento-cal" data-posts={JSON.stringify(postDates)} data-holidays={JSON.stringify(holidays)}>
 			<div class="cal-head">
 				<h2 class="b-title" id="cal-title">日历</h2>
 			</div>
 			<div class="cal-grid" id="cal-grid"></div>
-			<div class="cal-legend">高亮的日子 = 发过文章</div>
+			<div class="cal-legend">高亮 = 发过文章 · <span class="cal-badge off">休</span> 放假 · <span class="cal-badge work">班</span> 调休</div>
 		</section>
 
 		{/* 社交 */}
@@ -255,10 +291,10 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 </div>
 
 <script is:inline>
+	function pad(n) { return String(n).padStart(2, "0"); }
 	function initBento() {
 		var t = document.getElementById("bento-time");
 		if (!t) return;
-		var pad = function (n) { return String(n).padStart(2, "0"); };
 		function tick() {
 			var d = new Date();
 			t.innerHTML = pad(d.getHours()) + ":" + pad(d.getMinutes()) + "<small>:" + pad(d.getSeconds()) + "</small>";
@@ -275,6 +311,7 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 		// 日历
 		var cal = document.getElementById("bento-cal");
 		var posts = new Set(JSON.parse(cal.dataset.posts || "[]"));
+		var holidays = JSON.parse(cal.dataset.holidays || "{}");
 		var now = new Date(), y = now.getFullYear(), m = now.getMonth();
 		document.getElementById("cal-title").textContent = y + " 年 " + (m + 1) + " 月";
 		var html = "一二三四五六日".split("").map(function (c) { return '<div class="dow">' + c + "</div>"; }).join("");
@@ -282,12 +319,83 @@ const notice = "喵~ 欢迎来到猫神X的猫窝：记录技术 · 分享生活
 		for (var i = 0; i < offset; i++) html += "<div></div>";
 		var days = new Date(y, m + 1, 0).getDate();
 		for (var d = 1; d <= days; d++) {
+			var date = new Date(y, m, d);
+			var key = y + "-" + pad(m + 1) + "-" + pad(d);
+			var lunar = lunarOf(date);
+			var festival = festivalOf(date, lunar);
+			var holiday = holidays[key];
 			var cls = "d";
 			if (posts.has(y + "-" + (m + 1) + "-" + d)) cls += " has-post";
 			if (d === now.getDate()) cls += " today";
-			html += '<div class="' + cls + '">' + d + "</div>";
+			if (festival) cls += " festival";
+
+			var tip = (m + 1) + " 月 " + d + " 日";
+			if (lunar) tip += " · 农历" + lunar.month + lunarDayName(lunar.day);
+			if (festival) tip += " · " + festival[1];
+			if (holiday) {
+				// 节日名与假日名相同（如国庆节当天）时不重复写
+				if (!festival || festival[1] !== holiday[0]) tip += " · " + holiday[0];
+				tip += holiday[1] ? "（放假）" : "（调休上班）";
+			}
+
+			var sub = festival ? festival[0] : lunar ? (lunar.day === 1 ? lunar.month : lunarDayName(lunar.day)) : "";
+			html += '<div class="' + cls + '" title="' + tip + '">' +
+				(holiday ? '<span class="cal-badge ' + (holiday[1] ? "off" : "work") + '">' + (holiday[1] ? "休" : "班") + "</span>" : "") +
+				'<span class="dn">' + d + "</span>" +
+				(sub ? '<span class="lu">' + sub + "</span>" : "") +
+				"</div>";
 		}
 		document.getElementById("cal-grid").innerHTML = html;
+	}
+
+	// 农历：用浏览器内置的中国历（Intl，zh-CN-u-ca-chinese），不支持时返回 null 只显示公历
+	var lunarFmt = null;
+	try {
+		lunarFmt = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", { month: "long", day: "numeric" });
+	} catch (e) {}
+	function lunarOf(date) {
+		if (!lunarFmt) return null;
+		var month = "", day = 0;
+		lunarFmt.formatToParts(date).forEach(function (p) {
+			if (p.type === "month") month = p.value;
+			if (p.type === "day") day = parseInt(p.value, 10);
+		});
+		return month && day ? { month: month, day: day } : null;
+	}
+	function lunarDayName(n) {
+		var digits = "一二三四五六七八九十";
+		if (n === 10) return "初十";
+		if (n === 20) return "二十";
+		if (n === 30) return "三十";
+		return ["初", "十", "廿"][Math.floor(n / 10)] + digits[(n % 10) - 1];
+	}
+
+	// 节日：[格子里的两字简称, 完整名称]；农历节日优先于公历节日
+	var LUNAR_FESTIVALS = {
+		"正月1": ["春节", "春节"], "正月15": ["元宵", "元宵节"], "五月5": ["端午", "端午节"],
+		"七月7": ["七夕", "七夕节"], "八月15": ["中秋", "中秋节"], "九月9": ["重阳", "重阳节"],
+		"腊月8": ["腊八", "腊八节"],
+	};
+	var SOLAR_FESTIVALS = {
+		"1-1": ["元旦", "元旦"], "5-1": ["劳动", "劳动节"], "6-1": ["儿童", "儿童节"],
+		"7-1": ["建党", "建党节"], "8-1": ["建军", "建军节"], "9-10": ["教师", "教师节"],
+		"10-1": ["国庆", "国庆节"], "12-25": ["圣诞", "圣诞节"],
+	};
+	function festivalOf(date, lunar) {
+		if (lunar) {
+			var lf = LUNAR_FESTIVALS[lunar.month + lunar.day];
+			if (lf) return lf;
+			// 除夕 = 正月初一的前一天（腊月可能只有 29 天）
+			var next = lunarOf(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1));
+			if (next && next.month === "正月" && next.day === 1) return ["除夕", "除夕"];
+		}
+		var mm = date.getMonth() + 1, dd = date.getDate();
+		var sf = SOLAR_FESTIVALS[mm + "-" + dd];
+		if (sf) return sf;
+		// 清明（节气）：21 世纪通用公式 [Y×0.2422+4.81]−[Y/4]，Y 为年份后两位
+		var yy = date.getFullYear() % 100;
+		if (mm === 4 && dd === Math.floor(yy * 0.2422 + 4.81) - Math.floor(yy / 4)) return ["清明", "清明"];
+		return null;
 	}
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", initBento, { once: true });
