@@ -19,6 +19,7 @@ const TRASH_DIR = path.join(ROOT, ".trash");
 const IMAGES_DIR = path.join(POSTS_DIR, "images");
 const DYNAMIC_IMG_DIR = path.join(ROOT, "public/assets/images/dynamic");
 const AUDIO_DIR = path.join(ROOT, "public/assets/audio");
+const SERIES_FILE = path.join(ROOT, "src/data/series.json");
 const PORT = Number(process.env.ADMIN_PORT) || 4399;
 const DEV_PORT = Number(process.env.DEV_PORT) || 4321;
 const EXT_RE = /\.(md|mdx)$/i;
@@ -198,6 +199,8 @@ function listPosts(kind = "posts") {
 					pinned: !!data.pinned,
 					category: data.category || "",
 					slug: data.slug || fallbackSlug,
+					series: String(data.series || "").trim(),
+					chapter: Number(data.chapter) || 0,
 				};
 			} catch {
 				return {
@@ -212,6 +215,57 @@ function listPosts(kind = "posts") {
 			}
 		})
 		.sort((a, b) => String(b.published).localeCompare(String(a.published)));
+}
+
+/* ---------- 连载作品 ----------
+ * 作品登记在 src/data/series.json（seriesConfig.ts 导入它），章节就是带 series + chapter 的普通文章。
+ * 作品 id 按名称拼音自动生成（同时是 /series/{id}/ 的网址），新建后不再改动，避免章节失联。
+ */
+const SERIES_FIELDS = ["name", "description", "cover", "status"];
+
+function readSeries() {
+	try {
+		return JSON.parse(fs.readFileSync(SERIES_FILE, "utf8"));
+	} catch {
+		return [];
+	}
+}
+
+function writeSeries(list) {
+	fs.writeFileSync(SERIES_FILE, `${JSON.stringify(list, null, "\t")}\n`);
+}
+
+function pickSeries(input) {
+	const out = {};
+	for (const k of SERIES_FIELDS) {
+		const v = String(input?.[k] ?? "").trim();
+		if (v) out[k] = v;
+	}
+	if (out.status !== "completed") out.status = "ongoing";
+	return out;
+}
+
+function listSeries() {
+	const chapters = listPosts().filter((p) => p.series);
+	const registered = readSeries();
+	const ids = new Set(registered.map((s) => s.id));
+	// 文章里用到但没登记的 series id 也列出来，方便补登记
+	const orphans = [...new Set(chapters.map((c) => c.series))]
+		.filter((id) => !ids.has(id))
+		.map((id) => ({ id, name: id, status: "ongoing", unregistered: true }));
+	return [...registered, ...orphans].map((s) => ({
+		...s,
+		chapters: chapters
+			.filter((c) => c.series === s.id)
+			.sort((a, b) => a.chapter - b.chapter || String(a.published).localeCompare(String(b.published))),
+	}));
+}
+
+function newSeriesId(name, taken) {
+	const base = slugify(name) || "series";
+	let id = base;
+	for (let i = 2; taken.has(id); i++) id = `${base}-${i}`;
+	return id;
 }
 
 async function readBody(req, limit = 30 * 1024 * 1024) {
@@ -239,6 +293,38 @@ async function handleApi(req, res, url) {
 	if (route === "GET /api/posts") return json(res, 200, listPosts(kind));
 	if (route === "GET /api/slugify")
 		return json(res, 200, { slug: slugify(q.get("name") || "") });
+
+	if (route === "GET /api/series") return json(res, 200, listSeries());
+
+	if (route === "PUT /api/series") {
+		const body = JSON.parse((await readBody(req)).toString("utf8"));
+		const fields = pickSeries(body);
+		if (!fields.name) throw httpError(400, "作品名称不能为空");
+		const list = readSeries();
+		const id = q.get("id");
+		if (!id) {
+			const taken = new Set([...list.map((s) => s.id), ...listPosts().map((p) => p.series)]);
+			const created = { id: newSeriesId(fields.name, taken), ...fields };
+			list.unshift(created);
+			writeSeries(list);
+			return json(res, 200, { ok: true, id: created.id });
+		}
+		const i = list.findIndex((s) => s.id === id);
+		// 未登记的 id（文章里写了但 series.json 没有）保存时顺手补登记
+		if (i < 0) list.unshift({ id, ...fields });
+		else list[i] = { id, ...fields };
+		writeSeries(list);
+		return json(res, 200, { ok: true, id });
+	}
+
+	if (route === "DELETE /api/series") {
+		const id = q.get("id");
+		if (listPosts().some((p) => p.series === id))
+			throw httpError(409, "这部作品下还有章节，先删掉或移走章节再删作品");
+		const list = readSeries();
+		writeSeries(list.filter((s) => s.id !== id));
+		return json(res, 200, { ok: true });
+	}
 
 	if (route === "GET /api/post") {
 		const full = resolvePost(q.get("path"), kind);

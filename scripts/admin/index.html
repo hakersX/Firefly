@@ -22,6 +22,7 @@ button.danger{color:var(--danger)}
 input,textarea,select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;width:100%}
 input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--accent)}
 .list-head{padding:10px;display:flex;gap:6px;border-bottom:1px solid var(--line)}
+.list-head button{white-space:nowrap;flex-shrink:0}
 #list{overflow:auto;flex:1}
 .item{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}
 .item:hover,.item.active{background:var(--accent2)}
@@ -49,13 +50,21 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
 #md img{max-width:100%}
 #md pre{background:var(--accent2);padding:10px;border-radius:8px;overflow:auto}
 #empty{margin:auto;color:var(--mute)}
+.series-head{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;background:var(--bg);display:flex;align-items:center;gap:6px}
+.series-head .t{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.series-head:hover,.series-head.active{background:var(--accent2)}
+.series-head.active{border-left:3px solid var(--accent)}
+.item.chapter{padding-left:24px}
+.list-empty{padding:16px 12px;color:var(--mute);font-size:13px}
+.seriesOnly{display:none!important}
+body.mode-series .seriesOnly{display:flex!important}
 @media(max-width:1000px){main{grid-template-columns:200px 1fr}#preview{display:none}}
 </style>
 </head>
 <body>
 <header>
   <h1>🐱 猫窝后台</h1>
-  <span class="modes"><button class="on" data-kind="posts">文章</button><button data-kind="dynamic">日记</button></span>
+  <span class="modes"><button class="on" data-kind="posts">文章</button><button data-kind="series">连载</button><button data-kind="dynamic">日记</button></span>
   <span id="status"></span><span class="sp"></span>
   <a id="siteLink" href="http://localhost:4321/" target="_blank" style="color:var(--accent)">打开站点 ↗</a>
 </header>
@@ -64,10 +73,30 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
     <div class="list-head">
       <input id="q" placeholder="搜索标题/分类…"><button class="primary" id="btnNew">＋ 新建</button>
     </div>
+    <div class="list-head" id="seriesHead" style="display:none">
+      <button id="btnNewSeries" style="flex:1">＋ 新建连载作品</button>
+    </div>
     <div id="list"></div>
   </section>
   <section id="editor">
     <div id="empty">← 选择一篇文章，或点「新建」</div>
+    <div id="seriesForm" style="display:none;flex-direction:column">
+      <div class="bar">
+        <button class="primary" id="btnSaveSeries">保存作品信息</button>
+        <button id="btnAddChapter">＋ 写新章节</button>
+        <span class="sp"></span>
+        <button class="danger" id="btnDelSeries">删除作品</button>
+      </div>
+      <div class="meta">
+        <label class="full">作品名称<input id="s_name" placeholder="例如：拾薪记"></label>
+        <label>连载状态
+          <select id="s_status"><option value="ongoing">连载中</option><option value="completed">已完结</option></select>
+        </label>
+        <label>封面图（留空则用第一章的封面）<input id="s_cover" placeholder="/assets/images/xxx.jpg 或图片网址"></label>
+        <label class="full">简介<textarea id="s_description" rows="6"></textarea></label>
+        <div class="full" id="seriesInfo" style="font-size:12px;color:var(--mute)"></div>
+      </div>
+    </div>
     <div id="form" style="display:none;flex-direction:column;min-height:100%">
       <div class="bar">
         <button class="primary" id="btnSave">保存 (Ctrl+S)</button>
@@ -92,6 +121,8 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
         <div class="full" id="pathInfoD" style="font-size:12px;color:var(--mute)"></div>
       </div>
       <div class="meta" id="metaPost">
+        <label class="seriesOnly">所属连载<select id="f_series"></select></label>
+        <label class="seriesOnly">第几章<input id="f_chapter" type="number" min="1" step="1"></label>
         <label class="full">标题<input id="f_title"></label>
         <label>发布日期<input id="f_published" type="date"></label>
         <label>更新日期<input id="f_updated" type="date"></label>
@@ -131,7 +162,11 @@ input:focus,textarea:focus{outline:2px solid var(--accent2);border-color:var(--a
 const $ = (id) => document.getElementById(id);
 const FIELDS = ["title", "published", "updated", "category", "tags", "image", "description", "typography"];
 let posts = [], cur = null, dirty = false, devPort = 4321, kind = "posts";
+// 连载：series 是作品列表（各自带 chapters），curSeries 是正在编辑的作品，selSeries 是「新章节」默认归属的作品
+let series = [], curSeries = null, selSeries = null;
 const isD = () => kind === "dynamic";
+const isS = () => kind === "series";
+const STATUS_TEXT = { ongoing: "连载中", completed: "已完结" };
 const kq = () => "kind=" + kind;
 const pad2 = (n) => String(n).padStart(2, "0");
 // 本地时间 → "YYYY-MM-DD HH:mm:ss"（日记 frontmatter 格式）
@@ -147,32 +182,59 @@ const setStatus = (t) => ($("status").textContent = t);
 const mdPath = (p) => (/\.(md|mdx)$/i.test(p) ? p : p + ".md");
 
 async function loadList() {
-  posts = await api("/api/posts?" + kq());
+  if (isS()) {
+    series = await api("/api/series");
+    posts = series.flatMap((s) => s.chapters);
+  } else {
+    posts = await api("/api/posts?" + kq());
+    // 连载章节统一放在「连载」里管理，文章列表只留单篇
+    if (kind === "posts") posts = posts.filter((p) => !p.series);
+  }
   renderList();
+}
+const tagEl = (text) => { const s = document.createElement("span"); s.className = "tag"; s.textContent = text; return s; };
+function postItem(p, label) {
+  const d = document.createElement("div");
+  d.className = "item" + (isS() ? " chapter" : "") + (cur && cur.path === p.path ? " active" : "");
+  const t = document.createElement("div");
+  t.className = "t"; t.textContent = label || p.title;
+  const m = document.createElement("div");
+  m.className = "m";
+  const date = document.createElement("span");
+  date.textContent = p.published || "无日期";
+  m.appendChild(date);
+  for (const [on, text] of [[p.draft, "草稿"], [p.pinned, "置顶"], [!isS() && p.category, p.category]]) {
+    if (on) m.appendChild(tagEl(text));
+  }
+  d.append(t, m);
+  d.onclick = () => open(p.path);
+  return d;
 }
 function renderList() {
   const kw = $("q").value.trim().toLowerCase();
   $("list").innerHTML = "";
+  if (isS()) return renderSeriesList(kw);
   for (const p of posts) {
     if (kw && !(p.title + p.category + p.path).toLowerCase().includes(kw)) continue;
-    const d = document.createElement("div");
-    d.className = "item" + (cur && cur.path === p.path ? " active" : "");
-    const t = document.createElement("div");
-    t.className = "t"; t.textContent = p.title;
-    const m = document.createElement("div");
-    m.className = "m";
-    const date = document.createElement("span");
-    date.textContent = p.published || "无日期";
-    m.appendChild(date);
-    for (const [on, text] of [[p.draft, "草稿"], [p.pinned, "置顶"], [p.category, p.category]]) {
-      if (!on) continue;
-      const s = document.createElement("span");
-      s.className = "tag"; s.textContent = text;
-      m.appendChild(s);
-    }
-    d.append(t, m);
-    d.onclick = () => open(p.path);
-    $("list").appendChild(d);
+    $("list").appendChild(postItem(p));
+  }
+}
+function renderSeriesList(kw) {
+  if (!series.length) {
+    $("list").innerHTML = '<div class="list-empty">还没有连载作品，点上面「新建连载作品」开始写第一部。</div>';
+    return;
+  }
+  for (const s of series) {
+    const chs = s.chapters.filter((c) => !kw || (c.title + s.name).toLowerCase().includes(kw));
+    if (kw && !chs.length) continue;
+    const h = document.createElement("div");
+    h.className = "series-head" + (curSeries && !cur && curSeries.id === s.id ? " active" : "");
+    const t = document.createElement("span");
+    t.className = "t"; t.textContent = "📖 " + s.name;
+    h.append(t, tagEl(s.unregistered ? "未登记" : STATUS_TEXT[s.status] || "连载中"), tagEl(s.chapters.length + " 章"));
+    h.onclick = () => openSeries(s.id);
+    $("list").appendChild(h);
+    for (const c of chs) $("list").appendChild(postItem(c, `第 ${c.chapter || "?"} 章 · ${c.title}`));
   }
 }
 $("q").oninput = renderList;
@@ -191,9 +253,16 @@ function fill(data, content) {
   for (const f of FIELDS) $("f_" + f).value = f === "tags" ? (data.tags || []).join(", ") : (data[f] ?? "");
   $("f_draft").checked = !!data.draft;
   $("f_pinned").checked = !!data.pinned;
+  const sel = $("f_series");
+  sel.innerHTML = "";
+  const opts = [["", "（不属于连载）"], ...series.map((s) => [s.id, s.name])];
+  if (data.series && !series.some((s) => s.id === data.series)) opts.push([data.series, data.series]);
+  for (const [v, t] of opts) sel.add(new Option(t, v));
+  sel.value = data.series || "";
+  $("f_chapter").value = data.chapter || "";
   $("body").value = content;
   cur.slug = data.slug || "";
-  cur.extra = Object.fromEntries(Object.entries(data).filter(([k]) => ![...FIELDS, "draft", "pinned", "slug"].includes(k)));
+  cur.extra = Object.fromEntries(Object.entries(data).filter(([k]) => ![...FIELDS, "draft", "pinned", "slug", "series", "chapter"].includes(k)));
 }
 function collect() {
   if (isD()) {
@@ -212,19 +281,29 @@ function collect() {
   data.category = $("f_category").value;
   data.draft = $("f_draft").checked;
   data.pinned = $("f_pinned").checked;
+  const sid = $("f_series").value;
+  if (sid) {
+    data.series = sid;
+    data.chapter = Math.max(1, Math.round(Number($("f_chapter").value)) || 1);
+  }
   if (cur.slug) data.slug = cur.slug;
   return { data, content: $("body").value };
 }
-function show(on) {
-  $("empty").style.display = on ? "none" : "";
-  $("form").style.display = on ? "flex" : "none";
+// pane: "empty" | "form"（文章/章节/日记编辑）| "series"（连载作品信息）
+function showPane(pane) {
+  $("empty").style.display = pane === "empty" ? "" : "none";
+  $("form").style.display = pane === "form" ? "flex" : "none";
+  $("seriesForm").style.display = pane === "series" ? "flex" : "none";
 }
+const show = (on) => showPane(on ? "form" : "empty");
 
 async function open(p) {
   if (!confirmLeave()) return;
   try {
     const { data, content } = await api("/api/post?" + kq() + "&path=" + encodeURIComponent(p));
     cur = { path: p, isNew: false };
+    curSeries = null;
+    if (data.series) selSeries = data.series;
     fill(data, content);
     $("pathInfo").textContent = $("pathInfoD").textContent = "文件：" + p;
     $("btnDel").style.display = "";
@@ -233,6 +312,7 @@ async function open(p) {
 }
 
 $("btnNew").onclick = () => {
+  if (isS()) return newChapter();
   if (!confirmLeave()) return;
   cur = { path: "", isNew: true };
   if (isD()) fill({ published: nowStamp(), location: "" }, "");
@@ -258,7 +338,9 @@ async function save() {
       const title = $("f_title").value.trim();
       if (!title) return alert("请先填写标题");
       let base = (await api("/api/slugify?name=" + encodeURIComponent(title))).slug || "post-" + Date.now();
-      const taken = new Set(posts.flatMap((x) => [x.path, x.slug]));
+      // 列表里可能只是单篇或只是章节，查重要对照全部文章
+      const all = await api("/api/posts?kind=posts");
+      const taken = new Set(all.flatMap((x) => [x.path, x.slug]));
       let n = base, i = 2;
       while (taken.has(n + ".md") || taken.has(n)) n = base + "-" + i++;
       cur.path = n + ".md"; cur.slug = n;
@@ -271,14 +353,92 @@ async function save() {
     $("pathInfo").textContent = $("pathInfoD").textContent = "文件：" + p; $("btnDel").style.display = "";
     dirty = false;
     setStatus("已保存 " + new Date().toLocaleTimeString());
+    if (!isD() && $("f_series").value) selSeries = $("f_series").value;
     await loadList();
     setTimeout(reloadFrame, 900); // 等 dev server 热更新
   } catch (e) { alert("保存失败：" + e.message); }
 }
 $("btnSave").onclick = save;
 addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+    e.preventDefault();
+    if ($("seriesForm").style.display !== "none") saveSeries(); else save();
+  }
 });
+
+// ---------- 连载作品 ----------
+const seriesUrl = (id) => `http://localhost:${devPort}/series/${encodeURIComponent(id)}/`;
+
+function openSeries(id) {
+  if (!confirmLeave()) return;
+  const s = series.find((x) => x.id === id);
+  if (!s) return;
+  cur = null; curSeries = { id, isNew: false }; selSeries = id;
+  $("s_name").value = s.unregistered ? "" : s.name;
+  $("s_status").value = s.status === "completed" ? "completed" : "ongoing";
+  $("s_cover").value = s.cover || "";
+  $("s_description").value = s.description || "";
+  $("seriesInfo").textContent = s.unregistered
+    ? `有 ${s.chapters.length} 章文章标记了这部作品，但它还没登记：填好名称保存即可。`
+    : s.chapters.length ? `共 ${s.chapters.length} 章（草稿章节只在本地显示）` : "还没有章节，点「写新章节」开始。没有章节的作品不会出现在网站上。";
+  $("btnDelSeries").style.display = s.unregistered ? "none" : "";
+  $("btnAddChapter").style.display = "";
+  dirty = false; setStatus(""); showPane("series"); renderList();
+  $("frame").src = s.chapters.length ? seriesUrl(id) : "about:blank";
+}
+
+$("btnNewSeries").onclick = () => {
+  if (!confirmLeave()) return;
+  cur = null; curSeries = { isNew: true };
+  for (const k of ["s_name", "s_cover", "s_description"]) $(k).value = "";
+  $("s_status").value = "ongoing";
+  $("seriesInfo").textContent = "保存后就可以开始写第一章了";
+  $("btnDelSeries").style.display = $("btnAddChapter").style.display = "none";
+  dirty = false; showPane("series"); renderList(); $("frame").src = "about:blank";
+  $("s_name").focus();
+};
+
+async function saveSeries() {
+  if (!curSeries) return;
+  const body = { name: $("s_name").value, status: $("s_status").value, cover: $("s_cover").value, description: $("s_description").value };
+  if (!body.name.trim()) return alert("请先填写作品名称");
+  try {
+    const r = await api("/api/series" + (curSeries.isNew ? "" : "?id=" + encodeURIComponent(curSeries.id)), { method: "PUT", body: JSON.stringify(body) });
+    dirty = false;
+    await loadList();
+    openSeries(r.id);
+    setStatus("已保存 " + new Date().toLocaleTimeString());
+  } catch (e) { alert("保存失败：" + e.message); }
+}
+$("btnSaveSeries").onclick = saveSeries;
+
+$("btnDelSeries").onclick = async () => {
+  if (!curSeries || curSeries.isNew) return;
+  const s = series.find((x) => x.id === curSeries.id);
+  if (s && s.chapters.length) return alert(`「${s.name}」下还有 ${s.chapters.length} 章，先把章节删掉（或改到别的作品）再删作品。`);
+  if (!confirm(`删除连载作品「${s ? s.name : ""}」？`)) return;
+  try {
+    await api("/api/series?id=" + encodeURIComponent(curSeries.id), { method: "DELETE" });
+    curSeries = null; dirty = false; showPane("empty"); $("frame").src = "about:blank";
+    setStatus("作品已删除");
+    await loadList();
+  } catch (e) { alert("删除失败：" + e.message); }
+};
+
+function newChapter(sid) {
+  if (!series.length) return alert("先点「新建连载作品」建一部作品，再写章节");
+  if (!confirmLeave()) return;
+  sid = sid || selSeries || series[0].id;
+  const s = series.find((x) => x.id === sid) || series[0];
+  const next = Math.max(0, ...s.chapters.map((c) => c.chapter || 0)) + 1;
+  cur = { path: "", isNew: true }; curSeries = null; selSeries = s.id;
+  fill({ published: new Date().toISOString().slice(0, 10), draft: true, tags: [], series: s.id, chapter: next }, "");
+  $("pathInfo").textContent = `「${s.name}」第 ${next} 章 · 文件名与链接将根据标题自动生成`;
+  $("btnDel").style.display = "none";
+  showPane("form"); dirty = false; renderList(); renderMd();
+  $("f_title").focus();
+}
+$("btnAddChapter").onclick = () => newChapter(curSeries && curSeries.id);
 
 $("btnDel").onclick = async () => {
   if (!cur || cur.isNew) return;
@@ -330,8 +490,8 @@ $("body").addEventListener("drop", (e) => {
   if (f) { e.preventDefault(); tryUpload(f); }
 });
 
-document.querySelectorAll("#form input, #form textarea").forEach((el) =>
-  el.addEventListener("input", () => {
+document.querySelectorAll("#form input, #form textarea, #form select, #seriesForm input, #seriesForm textarea, #seriesForm select").forEach((el) =>
+  el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
     dirty = true; setStatus("未保存…");
     if (el.id === "body") renderMdSoon();
   }));
@@ -365,13 +525,16 @@ $("tabMd").onclick = () => { showTab(false); renderMd(); };
 function setMode(k) {
   if (k === kind) return;
   if (!confirmLeave()) return;
-  kind = k; cur = null; dirty = false; show(false); $("frame").src = "about:blank";
+  kind = k; cur = null; curSeries = null; dirty = false; show(false); $("frame").src = "about:blank";
   document.querySelectorAll(".modes button").forEach((b) => b.classList.toggle("on", b.dataset.kind === k));
+  document.body.classList.toggle("mode-series", isS());
+  $("seriesHead").style.display = isS() ? "" : "none";
+  $("btnNew").textContent = isS() ? "＋ 新章节" : "＋ 新建";
   $("metaPost").style.display = isD() ? "none" : "";
   $("metaDiary").style.display = isD() ? "" : "none";
   document.querySelector(".tools").style.display = isD() ? "none" : "";
-  $("q").placeholder = isD() ? "搜索日记内容/地点…" : "搜索标题/分类…";
-  $("empty").textContent = isD() ? "← 选择一篇日记，或点「新建」写今天的" : "← 选择一篇文章，或点「新建」";
+  $("q").placeholder = isD() ? "搜索日记内容/地点…" : isS() ? "搜索作品/章节标题…" : "搜索标题/分类…";
+  $("empty").textContent = isD() ? "← 选择一篇日记，或点「新建」写今天的" : isS() ? "← 选择一部连载或某一章，或新建连载作品" : "← 选择一篇文章，或点「新建」";
   $("body").placeholder = isD() ? "今天发生了什么…（可直接粘贴/拖入图片）" : "在这里写 Markdown…（可直接粘贴/拖入图片）";
   loadList();
 }
