@@ -166,15 +166,11 @@ const textData = Array.isArray(text) ? JSON.stringify(text) : text;
     runInitWithDelay();
   }
 
-  // 支持页面切换时重新初始化（兼容不同 swup 事件名）
-  document.addEventListener("swup:contentReplaced", runInitWithDelay);
-  document.addEventListener("swup:content:replace", runInitWithDelay);
-  document.addEventListener("swup:page:view", runInitWithDelay);
-
-  // swup hooks（若可用）
-  if (typeof window !== "undefined" && window.swup?.hooks) {
-    window.swup.hooks.on("content:replace", runInitWithDelay);
-    window.swup.hooks.on("page:view", runInitWithDelay);
+  // 页面切换时重新初始化。本脚本位于 swup 容器内、每次换页都会重跑，
+  // 监听只挂一次，否则每切一页就多一份回调
+  if (!window.__typewriterSwupBound) {
+    window.__typewriterSwupBound = true;
+    document.addEventListener("swup:page:view", runInitWithDelay);
   }
 </script>
 

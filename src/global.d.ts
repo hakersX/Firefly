@@ -12,6 +12,7 @@ declare global {
 		swup: any;
 		spineModelInitialized?: boolean;
 		floatingTOCListenersInitialized?: boolean;
+		__typewriterSwupBound?: boolean;
 		// biome-ignore lint/suspicious/noExplicitAny: External library
 		spinePlayerInstance?: any;
 		pagefind: {

@@ -740,9 +740,9 @@ const viewConfigStr = JSON.stringify({
         }
     }
 
-    // 每个 widget 只初始化一次。导航栏那份 widget 在 swup 容器之外、DOM 不会被
-    // 替换，而本脚本每次导航都会被重跑；侧栏 widget 会被整体替换，新 DOM 上没有
-    // 这个标记，因此仍会正常重新初始化（旧实例由内部的 MutationObserver 清理）。
+    // 每个 widget 只初始化一次。本脚本在 swup 容器之外，只在整页加载时执行一次；
+    // 换页时由 swup:page:view 再扫一遍：导航栏那份 widget 不会被替换、带着标记跳过，
+    // 随容器换进来的新 widget 没有标记，正常初始化（旧实例由内部的 MutationObserver 清理）。
     function initAll() {
         var widgets = document.querySelectorAll('.music-player-widget');
         for (var i = 0; i < widgets.length; i++) {
@@ -754,6 +754,7 @@ const viewConfigStr = JSON.stringify({
     }
 
     initAll();
+    document.addEventListener('swup:page:view', initAll);
 })();
 </script>
 

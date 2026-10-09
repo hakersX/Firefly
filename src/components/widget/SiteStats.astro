@@ -180,9 +180,4 @@ const stats = [
 
   // 页面加载时更新
   updateDynamicStats();
-
-  // 页面切换时重新更新
-  document.addEventListener("swup:contentReplaced", () => {
-    setTimeout(updateDynamicStats, 100);
-  });
 </script>

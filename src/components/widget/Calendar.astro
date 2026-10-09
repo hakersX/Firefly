@@ -606,11 +606,6 @@ const postUrlPrefix = url("/posts/");
   
   // 页面加载时渲染日历
   initCalendar();
-
-  // 页面切换时重新渲染
-  document.addEventListener("swup:contentReplaced", () => {
-    setTimeout(initCalendar, 100);
-  });
 </script>
 
 <style>

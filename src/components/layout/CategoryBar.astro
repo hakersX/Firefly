@@ -431,13 +431,6 @@ function initialActive(categoryName: string): {
     updateCategoryBar();
     initScrollFeatures();
   });
-  document.addEventListener("swup:contentReplaced", () => {
-    updateCategoryBar();
-    // 某些 swup 生命周期下 URL/DOM 状态同步稍晚，下一帧再校正一次避免状态残留
-    requestAnimationFrame(() => {
-      updateCategoryBar();
-    });
-  });
 
   // 在 Swup 导航时提前更新状态，避免切换期间激活态闪烁
   function setupSwupEarlyUpdate() {

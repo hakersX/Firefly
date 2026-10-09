@@ -110,15 +110,48 @@ if (!lang) {
 }
 const siteLang = lang.replace("_", "-");
 
+// 首页 / 音乐页 / 书籍页 / 日记评论页是独立布局（不走 swup，与 astro.config.mjs 里 swup 的 ignore 保持一致）。
+// 普通页面之间由 swup 用 fetch 预加载，浏览器的 speculation 预取对它没用，只会让同一页面在悬停时被下载两遍；
+// 所以普通页面只预取跳往独立页的链接，独立页上的所有链接都是整页跳转，全部预取。
+const isStandalonePage =
+	/^\/(?:$|music(?:\/|$)|books(?:\/|$)|dynamic\/comments)/.test(
+		Astro.url.pathname,
+	);
+const speculationRules = JSON.stringify({
+	prefetch: [
+		{
+			where: isStandalonePage
+				? {
+						and: [
+							{ href_matches: "/*" },
+							{
+								not: {
+									href_matches: [
+										"/api/*",
+										"/*.xml",
+										"/*.json",
+										"/rss*",
+										"/admin*",
+									],
+								},
+							},
+						],
+					}
+				: {
+						href_matches: ["/", "/music/*", "/books/*", "/dynamic/comments*"],
+					},
+			eagerness: "moderate",
+		},
+	],
+});
+
 // 使用固定的banner偏移量，position配置用于图片定位
 ---
 
 <!doctype html>
 <html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "rectangle"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
   <head>
-    <script type="speculationrules" is:inline>
-      {"prefetch":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/api/*","/*.xml","/*.json","/rss*","/admin*"]}}]},"eagerness":"moderate"}]}
-    </script>
+    <script type="speculationrules" is:inline set:html={speculationRules} />
     <meta charset="UTF-8" />
     <style is:inline>
 			@layer properties, theme, base, components, utilities;
@@ -796,6 +829,7 @@ const siteLang = lang.replace("_", "-");
   } from "@/constants/constants";
   import { backgroundWallpaper, expressiveCodeConfig, siteConfig } from "@/config";
   import { initializeFloatingPanels } from "@/utils/floating-panel-utils";
+  import { setupContainerScripts } from "@/utils/swup-scripts";
 
   /* Preload fonts */
   // (async function() {
@@ -965,6 +999,8 @@ function disableAnimation() {
   }
 
   const setup = () => {
+    setupContainerScripts(window.swup);
+
     // 全屏壁纸模式：替换 swup 默认的回顶行为
     // 首页回顶部，其他页滚动到 #main-grid（与 ScrollDownIndicator 行为一致）
     window.swup.hooks.replace("scroll:top", (visit: { to: { url: string } }, args: { options: ScrollIntoViewOptions }) => {
@@ -1767,7 +1803,4 @@ function disableAnimation() {
 
   initImageLoadFadeIn();
   document.addEventListener('astro:page-load', initImageLoadFadeIn);
-  document.addEventListener('swup:contentReplaced', () => {
-    requestAnimationFrame(initImageLoadFadeIn);
-  });
 </script>
