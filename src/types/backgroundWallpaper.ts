@@ -27,10 +27,12 @@ export type BackgroundWallpaperConfig = {
 			};
 			// 非首页（文章列表、归档等）横幅文字：页面标题 + 打字机副标题
 			// 配置 pageSubtitle 后自动在非首页横幅上显示当前页面标题与打字文案，
-			// 置空或删除该配置即可关闭；文章详情页有独立的信息展示，不受影响
+			// 置空或删除该配置即可关闭；文章详情页用下面的 postSubtitle
 			pageSubtitle?: string | string[]; // 打字机副标题，支持单条或多条循环
 			pageTitleSize?: string; // 页面标题字体大小，如 "2.75rem"
 			pageSubtitleSize?: string; // 页面副标题字体大小，如 "1.25rem"
+			// 文章详情页横幅：在文章标题与描述下方显示的打字机副标题，置空或删除即关闭
+			postSubtitle?: string | string[];
 		};
 		postInfo?: {
 			mode: "description" | "meta";
