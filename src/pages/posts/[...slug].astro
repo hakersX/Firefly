@@ -61,7 +61,9 @@ const bannerPostMeta = {
 // 处理随机图：如果image为"api"，则从配置的API获取随机图
 const processedImage = processCoverImageSync(entry.data.image, entry.id);
 const apiUrls = getApiUrlList(entry.data.image, entry.id);
-const showPostCover = Boolean(processedImage && coverImageConfig.enableInPost);
+const showPostCover = Boolean(
+	processedImage && coverImageConfig.enableInPost && entry.data.coverInPost,
+);
 const usePostCoverOverlay =
 	showPostCover && (coverImageConfig.enableInPostOverlay ?? true);
 
