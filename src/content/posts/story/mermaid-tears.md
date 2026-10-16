@@ -2,7 +2,7 @@
 title: '《人鱼的眼泪》'
 published: 2026-10-16
 description: '2026 年，台风夜的海上风电场，一个研究海洋声学的年轻人录到了一段谁也认不出的歌声。他找了它很久，却不知道那个唱歌的人，一直坐在他身边。'
-image: ''
+image: '../images/mermaid-tears.jpg'
 tags: ['故事', '童话']
 category: '故事'
 draft: false
