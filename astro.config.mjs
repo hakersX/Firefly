@@ -21,7 +21,6 @@ import rehypeCallouts from "rehype-callouts";
 import rehypeCodeGroup from "rehype-code-group"; /* Tab 代码块 */
 import rehypeComponents from "rehype-components"; /* Render the custom directive content */
 import rehypeKatex from "rehype-katex";
-import rehypeSlug from "rehype-slug";
 import remarkAdmonitionToBlockquoteCallout from "remark-admonition-to-blockquote-callout";
 import remarkDirective from "remark-directive"; /* Handle directives */
 import remarkMath from "remark-math";
@@ -43,6 +42,7 @@ import rehypeExternalLinks from "./src/plugins/rehype-external-links.mjs";
 import rehypeFigure from "./src/plugins/rehype-figure.mjs";
 import rehypeImageReferrerPolicy from "./src/plugins/rehype-image-referrerpolicy.mjs";
 import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
+import rehypePinyinSlug from "./src/plugins/rehype-pinyin-slug.mjs";
 import { rehypePlantuml } from "./src/plugins/rehype-plantuml.mjs";
 import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
@@ -304,7 +304,7 @@ export default defineConfig({
 			rehypePlugins: [
 				[rehypeKatex, { katex }],
 				[rehypeCallouts, { theme: siteConfig.post.rehypeCallouts.theme }],
-				rehypeSlug,
+				rehypePinyinSlug,
 				rehypeCodeGroup,
 				[rehypeMermaid, mermaidConfig],
 				rehypePlantuml,
