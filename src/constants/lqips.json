@@ -2,7 +2,6 @@
   "src:assets/images/DesktopWallpaper/d6.avif": "d9e5ec9ca7aebda9b0",
   "src:assets/images/DesktopWallpaper/d5.avif": "e2dbe0e1dae1d9c9cd",
   "src:assets/images/DesktopWallpaper/d4.avif": "727991b7a7bbe2b8c2",
-  "src:assets/images/DesktopWallpaper/d3.avif": "4268936f829e99adc7",
   "src:assets/images/DesktopWallpaper/d2.avif": "b49db67a7e91d0aabc",
   "src:assets/images/DesktopWallpaper/d1.avif": "8b9bb59ba6bae7d7dd",
   "src:assets/images/MobileWallpaper/m6.avif": "a08eaac3abbfc7bdc8",
@@ -36,7 +35,6 @@
   "public:images/story/qixi-chongfeng.png": "7c6147775e45a37d56",
   "public:images/story/qixi-bridge.jpg": "333b463a424d454244",
   "src:assets/images/DesktopWallpaper/花朵和女孩.jpg": "3f4a484c575071726d",
-  "public:assets/images/my_story/苏念来找我.jpeg": "5e535d88798d7d7182",
   "public:assets/images/my_story/微信图片_20260825100809_70_1.jpg": "e8e6e5eeedeaf0eff0",
   "public:assets/images/my_story/fbfba042-a9aa-4962-b2d6-3b8cdd16120a.jpg": "c5b592bea887c19c74",
   "public:assets/images/my_story/dcacd3b5-3ce7-4384-926a-84bc14609a5b(1).jpg": "48443b292922605e5b",
@@ -57,6 +55,5 @@
   "src:assets/images/DesktopWallpaper/蓝发女仆.webp": "a4a8c8b3b9d6a3aad0",
   "src:content/posts/images/mermaid-tears.jpg": "d5c5d6beb5ca939cb6",
   "src:content/posts/images/mermaid-rescue.jpg": "385266324555363f48",
-  "public:gallery/album-8ow6eh/1.jpg": "a2a0ad8b8c9344424b",
-  "src:assets/images/DesktopWallpaper/车窗女孩.jpg": "a2a0ad8b8c9344424b"
+  "public:gallery/album-8ow6eh/1.jpg": "a2a0ad8b8c9344424b"
 }
