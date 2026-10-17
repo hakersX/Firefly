@@ -46,6 +46,13 @@ export const toolsConfig: ToolCategory[] = [
 				url: "https://aisong.io/zh/lrc-generator",
 				icon: "material-symbols:lyrics-rounded",
 			},
+			{
+				id: "jizura",
+				name: "JIZURA 字面",
+				description: "文字 PV 自动生成：把歌词做成动态文字视频",
+				url: "https://music.amamo.top/",
+				icon: "material-symbols:subtitles-rounded",
+			},
 		],
 	},
 	{
