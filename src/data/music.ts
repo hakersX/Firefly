@@ -29,6 +29,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
 	{
+		name: "等了一个秋天",
+		artist: "一只白羊",
+		url: "/assets/music/等了一个秋天.mp3",
+		cover: "/assets/music/cover/等了一个秋天.jpg",
+		lrc: "/assets/music/lrc/等了一个秋天.lrc",
+	},
+	{
 		name: "就让晚风替我说再见",
 		artist: "猫神X",
 		url: "/assets/music/就让晚风替我说再见.mp3",
@@ -42,13 +49,13 @@ export const musicPlaylist: MusicTrack[] = [
 		cover: "/assets/music/cover/月光下的玫瑰.jpg",
 		lrc: "/assets/music/lrc/月光下的玫瑰.lrc",
 	},
-	{
-		name: "这世上的雨",
-		artist: "猫神X",
-		url: "/assets/music/这世上的雨.mp3",
-		cover: "/assets/music/cover/这世上的雨.jpg",
-		lrc: "/assets/music/lrc/这世上的雨.lrc",
-	},
+	// {
+	// 	name: "这世上的雨",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/这世上的雨.mp3",
+	// 	cover: "/assets/music/cover/这世上的雨.jpg",
+	// 	lrc: "/assets/music/lrc/这世上的雨.lrc",
+	// },
 	{
 		name: "茉莉信",
 		artist: "猫神X",
