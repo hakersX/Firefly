@@ -29,6 +29,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
 	{
+		name: "电子布洛芬 Electronic ibuprofen",
+		artist: "BOY",
+		url: "/assets/music/电子布洛芬.mp3",
+		cover: "/assets/music/cover/电子布洛芬.jpg",
+		lrc: "/assets/music/lrc/电子布洛芬.lrc",
+	},
+	{
 		name: "等了一个秋天",
 		artist: "一只白羊",
 		url: "/assets/music/等了一个秋天.mp3",
@@ -77,13 +84,13 @@ export const musicPlaylist: MusicTrack[] = [
 		cover: "/assets/music/cover/65a7b5e3d0ce6f226a66887eeb7c7654.jpg",
 		lrc: "/assets/music/lrc/微弱的信号.lrc",
 	},
-	{
-		name: "再靠近一点点",
-		artist: "猫神X",
-		url: "/assets/music/再靠近一点点.mp3",
-		cover: "/assets/music/cover/再靠近一点点.jpg",
-		lrc: "/assets/music/lrc/再靠近一点点.lrc",
-	},
+	// {
+	// 	name: "再靠近一点点",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/再靠近一点点.mp3",
+	// 	cover: "/assets/music/cover/再靠近一点点.jpg",
+	// 	lrc: "/assets/music/lrc/再靠近一点点.lrc",
+	// },
 	{
 		name: "夏天路过的一场雨",
 		artist: "猫神X",
