@@ -1,5 +1,15 @@
 [
 	{
+		"id": "album-8ow6eh",
+		"name": "女孩们",
+		"description": "图片来源：B 站 UP 主 @殺一只榕 的视频截图，版权归原作者所有。",
+		"date": "2026-10-17",
+		"tags": [
+			"女孩"
+		],
+		"cover": "/gallery/album-8ow6eh/1.jpg"
+	},
+	{
 		"id": "boy-avatars",
 		"name": "男生头像",
 		"description": "收藏的男生头像。",
