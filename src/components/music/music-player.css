@@ -693,6 +693,127 @@
 	}
 }
 
+/* ===== 视觉增强：深色沉浸底 + 封面取色光晕 =====
+ * 音乐页固定用深色底，不随站点浅色主题变白（否则半透明背景会被冲成灰白，白字歌词看不清）。
+ * --cover-rgb 由 music-player.ts 从当前封面取色写入，这里的值只是取色前的默认色。
+ */
+.music-page {
+	--cover-rgb: 150 170 255;
+	background: #07070b;
+}
+.music-page::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	background: #07070b;
+}
+
+/* 背景：模糊调轻、透明度调高，让封面颜色透出来；整体缓慢漂移 */
+.bg-layer {
+	filter: blur(70px) saturate(1.7) brightness(0.9);
+	opacity: 0.9;
+	animation: bg-drift 40s ease-in-out infinite alternate;
+}
+.bg-layer::after {
+	background:
+		radial-gradient(ellipse at 30% 45%, rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.55) 75%),
+		linear-gradient(180deg, rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.55));
+}
+@keyframes bg-drift {
+	from {
+		transform: scale(1.35) translate(-2%, -1%) rotate(0deg);
+	}
+	to {
+		transform: scale(1.5) translate(2%, 2%) rotate(6deg);
+	}
+}
+
+/* 封面：彩色光晕 + 倒影；播放时呼吸、鼓点时光晕闪动，暂停时略缩小变淡 */
+.cover-stage {
+	scale: 0.94;
+	filter: saturate(0.8) brightness(0.88);
+	box-shadow:
+		0 24px 60px rgb(0 0 0 / 0.55),
+		0 0 calc(50px + var(--beat, 0) * 45px)
+			rgb(var(--cover-rgb) / calc(0.3 + var(--beat, 0) * 0.4));
+	-webkit-box-reflect: below 12px
+		linear-gradient(transparent 80%, rgb(255 255 255 / 0.16));
+	transition:
+		scale 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+		filter 0.8s,
+		box-shadow 0.12s;
+}
+.music-page.is-playing .cover-stage {
+	scale: 1;
+	filter: none;
+	animation: cover-breathe 6s ease-in-out infinite;
+}
+/* 换歌翻转优先于呼吸（选择器权重要和上一条一样高才能覆盖） */
+.music-page .cover-stage.is-flipping {
+	animation: cover-flip 0.75s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+@keyframes cover-breathe {
+	0%,
+	100% {
+		scale: 1;
+	}
+	50% {
+		scale: 1.025;
+	}
+}
+
+.song-name {
+	text-shadow:
+		0 4px 30px rgb(0 0 0 / 0.5),
+		0 0 calc(var(--beat, 0) * 26px) rgb(var(--cover-rgb) / calc(var(--beat, 0) * 0.7));
+}
+.song-artist {
+	opacity: 0.6;
+}
+
+/* 歌词：当前句用封面色发光 */
+.lyric-line.active {
+	text-shadow:
+		0 0 22px rgb(var(--cover-rgb) / 0.75),
+		0 0 46px rgb(var(--cover-rgb) / 0.35);
+}
+
+@media (max-width: 768px) {
+	/* 手机上封面下方紧挨着歌名，放不下倒影 */
+	.cover-stage {
+		-webkit-box-reflect: unset;
+	}
+}
+
+@media (min-width: 1025px) {
+	.cover-stage {
+		width: clamp(260px, 21vw, 320px);
+		height: clamp(260px, 21vw, 320px);
+		border-radius: 30px;
+		/* 给倒影留出位置 */
+		margin-bottom: 4.2rem;
+	}
+	/* 离当前句越远越虚，视线自然落在正在唱的那一句（参考 Apple Music 歌词页） */
+	.lyric-line {
+		color: rgb(255 255 255 / 0.32);
+		filter: blur(1.2px);
+		transition:
+			color 0.4s,
+			transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1),
+			text-shadow 0.4s,
+			filter 0.5s;
+	}
+	.lyric-line.near {
+		color: rgb(255 255 255 / 0.55);
+		filter: blur(0.4px);
+	}
+	.lyric-line.active,
+	.lyric-line:hover {
+		filter: none;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
 		animation-duration: 0.01ms !important;

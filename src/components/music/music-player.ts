@@ -144,6 +144,7 @@ function mount(): () => void {
 			coverImg.src = track.pic ?? "";
 			coverImg.alt = track.name;
 			bgLayer.style.backgroundImage = track.pic ? `url(${track.pic})` : "";
+			applyCoverTint(track.pic);
 
 			// 中央封面舞台：同步封面 + 3D 翻转过渡
 			if (stageImg.src !== track.pic) {
@@ -158,8 +159,51 @@ function mount(): () => void {
 			}
 		}
 
+		// 封面取色：缩到 24x24 读像素，按饱和度加权求平均，再提亮成适合发光的颜色，
+		// 写进 --cover-rgb 供歌词光晕、封面光晕使用。跨域图片读不了像素时沿用 CSS 默认色。
+		function applyCoverTint(src: string | undefined) {
+			if (!src) return;
+			const img = new Image();
+			img.decoding = "async";
+			img.onload = () => {
+				if (unmounted) return;
+				try {
+					const size = 24;
+					const c = document.createElement("canvas");
+					c.width = c.height = size;
+					const ctx = c.getContext("2d", { willReadFrequently: true });
+					if (!ctx) return;
+					ctx.drawImage(img, 0, 0, size, size);
+					const d = ctx.getImageData(0, 0, size, size).data;
+					let r = 0;
+					let g = 0;
+					let b = 0;
+					let w = 0;
+					for (let i = 0; i < d.length; i += 4) {
+						const max = Math.max(d[i], d[i + 1], d[i + 2]);
+						const min = Math.min(d[i], d[i + 1], d[i + 2]);
+						const sat = max ? (max - min) / max : 0;
+						const lum = (max + min) / 510;
+						// 偏好鲜艳、亮度适中的像素；过暗过亮（黑边、白字）权重很低
+						const wt = 0.04 + sat * Math.max(0, 1 - Math.abs(lum - 0.55) * 1.6);
+						r += d[i] * wt;
+						g += d[i + 1] * wt;
+						b += d[i + 2] * wt;
+						w += wt;
+					}
+					const k = Math.min(2.4, 225 / (Math.max(r, g, b) / w || 1));
+					const ch = (v: number) => Math.min(255, Math.round((v / w) * k));
+					root.style.setProperty("--cover-rgb", `${ch(r)} ${ch(g)} ${ch(b)}`);
+				} catch {
+					/* 跨域封面无法读取像素 */
+				}
+			};
+			img.src = src;
+		}
+
 		function updatePlayStateUI(playing: boolean) {
 			isPlaying = playing;
+			root.classList.toggle("is-playing", playing);
 			icoPlay.style.display = playing ? "none" : "inline-flex";
 			icoPause.style.display = playing ? "inline-flex" : "none";
 			dockCover.classList.toggle("is-playing", playing);
