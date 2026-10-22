@@ -232,6 +232,11 @@ function mount(): () => void {
 				});
 				const glow = toBrightness(vivid, 225);
 				root.style.setProperty("--cover-rgb", `${glow[0]} ${glow[1]} ${glow[2]}`);
+				// 播放按钮、进度条、歌单高亮的强调色：比光晕暗一些；按亮度决定按钮上的图标用白色还是深色
+				const accent = toBrightness(vivid, 200);
+				const luma = (0.2126 * accent[0] + 0.7152 * accent[1] + 0.0722 * accent[2]) / 255;
+				root.style.setProperty("--accent", css(accent));
+				root.style.setProperty("--accent-ink", luma > 0.62 ? "#1c1c22" : "#ffffff");
 			};
 			img.src = src;
 		}

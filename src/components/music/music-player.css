@@ -732,12 +732,57 @@
 	inherits: true;
 	initial-value: #15172a;
 }
+/* 强调色（播放按钮、进度条、歌单高亮）同样跟随封面，取色前先用站点主题色 */
+@property --accent {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #8a8fb5;
+}
 .music-page {
+	--accent: hsl(var(--hue) 80% 50%);
+	--accent-ink: #ffffff;
 	transition:
 		--c1 1.6s ease,
 		--c2 1.6s ease,
 		--c3 1.6s ease,
-		--c4 1.6s ease;
+		--c4 1.6s ease,
+		--accent 1.6s ease;
+}
+
+.dock-btn-main,
+.dock-btn-main:hover {
+	background: var(--accent);
+	color: var(--accent-ink);
+	box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 50%, transparent);
+	transition:
+		color 0.4s,
+		transform 0.2s,
+		filter 0.2s;
+}
+.dock-btn-main:hover {
+	filter: brightness(1.12);
+}
+.dock-fill {
+	background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #fff));
+	box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.dock-knob {
+	border-color: var(--accent);
+}
+.track.active {
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.track.active .node-dot {
+	background: var(--accent);
+	border-color: color-mix(in srgb, var(--accent) 60%, #fff);
+	box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 90%, transparent);
+}
+.timeline-line {
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--accent) 50%, transparent),
+		color-mix(in srgb, var(--accent) 5%, transparent)
+	);
 }
 .bg-layer {
 	background: var(--c4);
