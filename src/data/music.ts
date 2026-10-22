@@ -29,6 +29,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
 	{
+		name: "旧城夜雨",
+		artist: "猫神X",
+		url: "/assets/music/旧城夜雨.m4a",
+		cover: "/assets/music/cover/旧城夜雨.jpg",
+		lrc: "/assets/music/lrc/旧城夜雨.lrc",
+	},
+	{
 		name: "电子布洛芬 Electronic ibuprofen",
 		artist: "BOY",
 		url: "/assets/music/电子布洛芬.mp3",
