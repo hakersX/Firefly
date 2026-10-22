@@ -375,6 +375,65 @@ function mount(): () => void {
 			if ((e as KeyboardEvent).key === "Escape") setListOpen(false);
 		});
 
+		// ===== 沉浸模式 =====
+		// 隐藏导航栏和歌单，只留封面与歌词；能全屏就顺便进浏览器全屏。
+		// 鼠标 3 秒不动，播放药丸和光标一起淡出，动一下就回来。Esc / 退出全屏即退出沉浸。
+		const bImmersive = document.getElementById("b-immersive");
+		let idleTimer = 0;
+		const isImmersive = () => root.classList.contains("immersive");
+		function wake() {
+			root.classList.remove("idle");
+			window.clearTimeout(idleTimer);
+			if (isImmersive()) {
+				idleTimer = window.setTimeout(() => root.classList.add("idle"), 3000);
+			}
+		}
+		function relayoutLyrics() {
+			// 布局切换带过渡，过渡前后各重算一次歌词居中位置
+			window.dispatchEvent(new Event("resize"));
+			window.setTimeout(() => window.dispatchEvent(new Event("resize")), 700);
+		}
+		function setImmersive(on: boolean) {
+			if (on === isImmersive()) return;
+			root.classList.toggle("immersive", on);
+			// 导航栏在音乐页容器外面，靠 <html> 上的类来隐藏
+			document.documentElement.classList.toggle("music-immersive", on);
+			bImmersive?.setAttribute("aria-pressed", String(on));
+			if (bImmersive) bImmersive.title = on ? "退出沉浸模式（Esc）" : "沉浸模式";
+			if (on) {
+				setListOpen(false);
+				wake();
+				if (!document.fullscreenElement) {
+					document.documentElement.requestFullscreen?.().catch(() => {});
+				}
+			} else {
+				window.clearTimeout(idleTimer);
+				root.classList.remove("idle");
+				if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+			}
+			relayoutLyrics();
+		}
+		bImmersive?.addEventListener("click", () => setImmersive(!isImmersive()));
+		listen("keydown", (e) => {
+			// 全屏时 Esc 由浏览器处理（会触发下面的 fullscreenchange）；没进全屏时在这里退出
+			if ((e as KeyboardEvent).key === "Escape" && !document.fullscreenElement) {
+				setImmersive(false);
+			}
+		});
+		listen("pointermove", wake);
+		listen("pointerdown", wake);
+		const onFullscreenChange = () => {
+			if (!document.fullscreenElement) setImmersive(false);
+		};
+		document.addEventListener("fullscreenchange", onFullscreenChange);
+		cleanups.push(() => {
+			document.removeEventListener("fullscreenchange", onFullscreenChange);
+			window.clearTimeout(idleTimer);
+			// 离开音乐页时把导航栏放出来，并退出全屏
+			document.documentElement.classList.remove("music-immersive");
+			if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+		});
+
 		timeline.addEventListener("click", (e) => {
 			const track = (e.target as HTMLElement).closest(
 				".track",

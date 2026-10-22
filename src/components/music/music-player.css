@@ -814,6 +814,114 @@
 	}
 }
 
+/* ===== 沉浸模式（music-player.ts 切换 .immersive / .idle，<html> 上加 .music-immersive） ===== */
+.ico-immersive-off {
+	display: none;
+}
+.music-page.immersive .ico-immersive-on {
+	display: none;
+}
+.music-page.immersive .ico-immersive-off {
+	display: inline;
+}
+#b-immersive[aria-pressed="true"] {
+	color: #fff;
+	background: rgb(255 255 255 / 0.12);
+}
+
+/* 导航栏在音乐页容器外，靠 <html> 上的类收起 */
+html.music-immersive #top-row {
+	opacity: 0;
+	transform: translateY(-120%);
+}
+html.music-immersive #navbar-wrapper {
+	pointer-events: none;
+}
+
+.center-overlay,
+.lyrics-overlay {
+	transition:
+		left 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+		top 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+		width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cover-stage {
+	transition:
+		scale 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+		filter 0.8s,
+		box-shadow 0.12s,
+		width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+		height 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dock-pill {
+	transition:
+		opacity 0.5s,
+		transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 鼠标 3 秒不动：药丸和光标一起淡出 */
+.music-page.immersive.idle,
+.music-page.immersive.idle .visualizer {
+	cursor: none;
+}
+.music-page.immersive.idle .dock-pill {
+	opacity: 0;
+	transform: translateX(-50%) translateY(24px);
+	pointer-events: none;
+}
+.music-page.immersive .dock-btn-list {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	/* 手机：导航栏让出的空间整体上移 */
+	.music-page.immersive .center-overlay {
+		top: 2.5rem;
+	}
+	.music-page.immersive .lyrics-overlay {
+		top: 16.8rem;
+	}
+}
+
+@media (min-width: 769px) {
+	.timeline-overlay {
+		transition:
+			opacity 0.5s,
+			transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+			visibility 0s;
+	}
+	.music-page.immersive .timeline-overlay {
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(-50%) translateX(40px);
+		transition:
+			opacity 0.5s,
+			transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+			visibility 0s 0.5s;
+	}
+}
+
+@media (min-width: 1025px) {
+	/* 桌面：歌单让出的空间给封面和歌词，两栏都变大 */
+	.music-page.immersive .center-overlay {
+		left: 27vw;
+		top: 50%;
+	}
+	.music-page.immersive .cover-stage {
+		width: clamp(300px, 26vw, 420px);
+		height: clamp(300px, 26vw, 420px);
+	}
+	.music-page.immersive .lyrics-overlay {
+		left: 48vw;
+		top: 7vh;
+		bottom: 9vh;
+		width: clamp(360px, 44vw, 780px);
+	}
+	.music-page.immersive .lyric-line {
+		font-size: 2rem;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
 		animation-duration: 0.01ms !important;
