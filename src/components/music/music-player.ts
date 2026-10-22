@@ -78,7 +78,6 @@ function mount(): () => void {
 	const songName = $("song-name");
 	const songArtist = $("song-artist");
 	const songName2 = $("song-name-2");
-	const bgLayer = $("bg-layer");
 	const lyricsContent = $("lyrics-content");
 	const lyricsPanel = $("lyrics-panel");
 	const tCur = $("t-cur");
@@ -143,7 +142,6 @@ function mount(): () => void {
 			songArtist.textContent = track.artist;
 			coverImg.src = track.pic ?? "";
 			coverImg.alt = track.name;
-			bgLayer.style.backgroundImage = track.pic ? `url(${track.pic})` : "";
 			applyCoverTint(track.pic);
 
 			// 中央封面舞台：同步封面 + 3D 翻转过渡
@@ -159,44 +157,81 @@ function mount(): () => void {
 			}
 		}
 
-		// 封面取色：缩到 24x24 读像素，按饱和度加权求平均，再提亮成适合发光的颜色，
-		// 写进 --cover-rgb 供歌词光晕、封面光晕使用。跨域图片读不了像素时沿用 CSS 默认色。
+		// 封面取色：缩到 32x32 读像素，按颜色分桶（每通道 8 档），桶的权重偏向鲜艳、亮度适中的像素；
+		// 从权重最高的桶里挑出 4 个彼此差得够远的颜色作为关键色，写进 --c1~--c4 给流动背景用，
+		// 最鲜艳的那个提亮后写进 --cover-rgb 给歌词、封面光晕用。跨域图片读不了像素时沿用 CSS 默认色。
+		type RGB = [number, number, number];
+		const dist = (a: RGB, b: RGB) =>
+			Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		// 把颜色的最亮通道缩放到 target，统一明度（背景要暗一些，白字才看得清）
+		const toBrightness = (c: RGB, target: number): RGB => {
+			const k = target / (Math.max(...c) || 1);
+			return c.map((v) => Math.min(255, Math.round(v * k))) as RGB;
+		};
+		const css = (c: RGB) => `rgb(${c[0]} ${c[1]} ${c[2]})`;
+
+		function extractPalette(img: HTMLImageElement): RGB[] {
+			const size = 32;
+			const c = document.createElement("canvas");
+			c.width = c.height = size;
+			const ctx = c.getContext("2d", { willReadFrequently: true });
+			if (!ctx) return [];
+			ctx.drawImage(img, 0, 0, size, size);
+			const d = ctx.getImageData(0, 0, size, size).data;
+			const buckets = new Map<number, { w: number; sum: RGB }>();
+			for (let i = 0; i < d.length; i += 4) {
+				const max = Math.max(d[i], d[i + 1], d[i + 2]);
+				const min = Math.min(d[i], d[i + 1], d[i + 2]);
+				const sat = max ? (max - min) / max : 0;
+				const lum = (max + min) / 510;
+				// 过暗过亮（黑边、白字）权重很低，但不为 0：黑白灰封面也能取到颜色
+				const wt = 0.15 + sat * Math.max(0, 1 - Math.abs(lum - 0.5) * 1.5) * 2;
+				const key = ((d[i] >> 5) << 6) | ((d[i + 1] >> 5) << 3) | (d[i + 2] >> 5);
+				const b = buckets.get(key) ?? { w: 0, sum: [0, 0, 0] as RGB };
+				b.w += wt;
+				b.sum[0] += d[i] * wt;
+				b.sum[1] += d[i + 1] * wt;
+				b.sum[2] += d[i + 2] * wt;
+				buckets.set(key, b);
+			}
+			const ranked = [...buckets.values()]
+				.sort((a, b) => b.w - a.w)
+				.map((b) => b.sum.map((v) => v / b.w) as RGB);
+			const picked: RGB[] = [];
+			for (const color of ranked) {
+				if (picked.every((p) => dist(p, color) > 70)) picked.push(color);
+				if (picked.length === 4) break;
+			}
+			return picked;
+		}
+
 		function applyCoverTint(src: string | undefined) {
 			if (!src) return;
 			const img = new Image();
 			img.decoding = "async";
 			img.onload = () => {
 				if (unmounted) return;
+				let palette: RGB[];
 				try {
-					const size = 24;
-					const c = document.createElement("canvas");
-					c.width = c.height = size;
-					const ctx = c.getContext("2d", { willReadFrequently: true });
-					if (!ctx) return;
-					ctx.drawImage(img, 0, 0, size, size);
-					const d = ctx.getImageData(0, 0, size, size).data;
-					let r = 0;
-					let g = 0;
-					let b = 0;
-					let w = 0;
-					for (let i = 0; i < d.length; i += 4) {
-						const max = Math.max(d[i], d[i + 1], d[i + 2]);
-						const min = Math.min(d[i], d[i + 1], d[i + 2]);
-						const sat = max ? (max - min) / max : 0;
-						const lum = (max + min) / 510;
-						// 偏好鲜艳、亮度适中的像素；过暗过亮（黑边、白字）权重很低
-						const wt = 0.04 + sat * Math.max(0, 1 - Math.abs(lum - 0.55) * 1.6);
-						r += d[i] * wt;
-						g += d[i + 1] * wt;
-						b += d[i + 2] * wt;
-						w += wt;
-					}
-					const k = Math.min(2.4, 225 / (Math.max(r, g, b) / w || 1));
-					const ch = (v: number) => Math.min(255, Math.round((v / w) * k));
-					root.style.setProperty("--cover-rgb", `${ch(r)} ${ch(g)} ${ch(b)}`);
+					palette = extractPalette(img);
 				} catch {
-					/* 跨域封面无法读取像素 */
+					return; // 跨域封面无法读取像素
 				}
+				if (!palette.length) return;
+				// 颜色不够 4 个（比如纯色封面）就用已有颜色的明暗变体补齐
+				const base = palette[0];
+				while (palette.length < 4) {
+					palette.push(toBrightness(base, palette.length % 2 ? 90 : 170));
+				}
+				const vivid = [...palette].sort((a, b) => {
+					const s = (c: RGB) => Math.max(...c) - Math.min(...c);
+					return s(b) - s(a);
+				})[0];
+				palette.forEach((color, i) => {
+					root.style.setProperty(`--c${i + 1}`, css(toBrightness(color, [190, 160, 140, 110][i])));
+				});
+				const glow = toBrightness(vivid, 225);
+				root.style.setProperty("--cover-rgb", `${glow[0]} ${glow[1]} ${glow[2]}`);
 			};
 			img.src = src;
 		}
@@ -601,21 +636,6 @@ function mount(): () => void {
 		let wavePhase = 0; // 背景波浪的累计相位
 		let lastWaveAt = performance.now();
 		let hueReadAt = 0;
-		const reducedMotion = window.matchMedia(
-			"(prefers-reduced-motion: reduce)",
-		).matches;
-
-		interface Paw {
-			x: number;
-			y: number;
-			vy: number;
-			size: number;
-			phase: number;
-			rot: number;
-			hueOff: number;
-			alpha: number;
-		}
-		const paws: Paw[] = [];
 
 		// 读取某个对数频带的能量（0-1）：窄频带插值，宽频带取最大/均值混合
 		function sampleBand(freq: Uint8Array, i: number): number {
@@ -679,66 +699,8 @@ function mount(): () => void {
 			if (playing && bass > bassAvg * 1.28 + 0.08 && now - lastBeatAt > 190) {
 				lastBeatAt = now;
 				kick = Math.min(1, 0.55 + (bass - bassAvg) * 1.8);
-				onBeat();
 			} else {
 				kick *= 0.9;
-			}
-		}
-
-		function onBeat() {
-			if (reducedMotion) return;
-			const w = canvas.clientWidth;
-			const h = canvas.clientHeight;
-			const count = kick > 0.8 ? 3 : 2;
-			for (let n = 0; n < count && paws.length < 36; n++) {
-				paws.push({
-					x: Math.random() * w,
-					y: h + 20,
-					vy: 1.3 + Math.random() * 1.9 + kick * 1.2,
-					size: 9 + Math.random() * 10,
-					phase: Math.random() * Math.PI * 2,
-					rot: (Math.random() - 0.5) * 0.8,
-					hueOff: Math.random() * 50 - 15,
-					alpha: 0.5 + Math.random() * 0.3,
-				});
-			}
-		}
-
-		// 小猫爪：1 个掌垫 + 4 个脚趾
-		function drawPaw(p: Paw, alpha: number, hue: number) {
-			const ctx = canvasCtx!;
-			const s = p.size;
-			ctx.save();
-			ctx.translate(p.x + Math.sin(p.phase) * 14, p.y);
-			ctx.rotate(p.rot + Math.sin(p.phase) * 0.25);
-			ctx.globalAlpha = alpha;
-			ctx.fillStyle = `hsl(${hue + p.hueOff}, 85%, 78%)`;
-			ctx.beginPath();
-			ctx.ellipse(0, s * 0.35, s * 0.55, s * 0.45, 0, 0, Math.PI * 2);
-			ctx.moveTo(-s * 0.72 + s * 0.2, -s * 0.05);
-			ctx.ellipse(-s * 0.72, -s * 0.05, s * 0.2, s * 0.28, -0.35, 0, Math.PI * 2);
-			ctx.moveTo(-s * 0.28 + s * 0.2, -s * 0.5);
-			ctx.ellipse(-s * 0.28, -s * 0.5, s * 0.2, s * 0.3, -0.1, 0, Math.PI * 2);
-			ctx.moveTo(s * 0.28 + s * 0.2, -s * 0.5);
-			ctx.ellipse(s * 0.28, -s * 0.5, s * 0.2, s * 0.3, 0.1, 0, Math.PI * 2);
-			ctx.moveTo(s * 0.72 + s * 0.2, -s * 0.05);
-			ctx.ellipse(s * 0.72, -s * 0.05, s * 0.2, s * 0.28, 0.35, 0, Math.PI * 2);
-			ctx.fill();
-			ctx.restore();
-		}
-
-		function drawPaws(h: number, hue: number) {
-			for (let i = paws.length - 1; i >= 0; i--) {
-				const p = paws[i];
-				p.y -= p.vy;
-				p.phase += 0.03;
-				// 越靠近顶部越透明
-				const fade = Math.min(1, Math.max(0, p.y / (h * 0.8)));
-				if (p.y < -30 || fade < 0.02) {
-					paws.splice(i, 1);
-					continue;
-				}
-				drawPaw(p, p.alpha * fade, hue);
 			}
 		}
 
@@ -794,8 +756,6 @@ function mount(): () => void {
 				ctx.fillStyle = grad;
 				ctx.fill();
 			}
-
-			drawPaws(h, hue);
 
 			// 节拍发光：冲量写入 --beat，驱动封面脉冲与歌名光晕（每 2 帧更新，避免频繁样式重算）
 			frameCount++;

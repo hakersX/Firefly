@@ -18,8 +18,14 @@ const playlistJson = JSON.stringify(playlist);
 ---
 
 <div class="music-page" style={`--hue: ${hue};`} data-playlist={playlistJson}>
-	{/* 背景层 */}
-	<div class="bg-layer" id="bg-layer"></div>
+	{/* 背景层：封面关键色的流动色块（颜色由 music-player.ts 取色写入 --c1~--c4）+ 磨砂颗粒 */}
+	<div class="bg-layer" aria-hidden="true">
+		<i class="bg-blob b1"></i>
+		<i class="bg-blob b2"></i>
+		<i class="bg-blob b3"></i>
+		<i class="bg-blob b4"></i>
+	</div>
+	<div class="bg-grain" aria-hidden="true"></div>
 
 	{/* 全屏 canvas：环形频谱 + 涟漪交互 */}
 	<canvas class="visualizer" id="visualizer"></canvas>
