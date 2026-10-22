@@ -20,6 +20,7 @@ Firefly is a feature-rich static blog theme built on **Astro 7** with **Svelte 5
 | `pnpm new-post <filename>` | Scaffold a new blog post |
 | `pnpm new-dynamic` (`new-d`) | Scaffold a new dynamic (microblog) entry |
 | `pnpm lqips` | Regenerate LQIP data into `src/constants/lqips.json` |
+| `pnpm vault` | Encrypt `private/*.txt` into `src/data/vault.json` for the `/vault/` page |
 
 Package manager is **pnpm** (enforced). Node.js >= 22 required.
 
@@ -99,6 +100,10 @@ The home, music and books pages use their own layouts without the MainGridLayout
 ### Local gallery admin (dev only)
 
 `src/integrations/gallery-admin.ts` (registered in `astro.config.mjs`) hooks `astro:server:setup` only, so it exists solely under `pnpm dev`: `/__admin/gallery` serves `gallery-admin.html` plus a JSON API that uploads / deletes images in `public/gallery/<id>/` and creates / edits / deletes albums in `src/data/gallery.json` (which `galleryConfig.ts` imports — don't move albums back into the TS file). It accepts loopback requests only, validates album ids and file names against path traversal, and re-runs `scripts/generate-lqips.ts` (debounced) after image changes. Nothing of it is emitted into `dist/`.
+
+### Private vault (`/vault/`)
+
+The repo is public, so secrets must never be committed in plaintext. `private/` is gitignored and holds the plaintext `.txt` files; `scripts/encrypt-vault.ts` (`pnpm vault`, passphrase from `VAULT_PASSWORD` or a hidden prompt, min 12 chars) encrypts all of them as one blob — AES-256-GCM, PBKDF2-SHA256 600k iterations, random salt/IV per run — into `src/data/vault.json`, which is the only thing committed. `src/pages/vault.astro` decrypts it in the browser with WebCrypto, renders via `textContent`, never stores the passphrase, auto-locks after 5 min idle and on swup navigation, and is kept out of the nav, sitemap, Pagefind (no `data-pagefind-body`) and search engines (`noindex`). Do not reuse the legacy encrypted-post mechanism (`crypto-utils.ts`) for secrets: its password lives in frontmatter and its salt is derived from the password.
 
 ## Deployment
 

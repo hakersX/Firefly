@@ -50,3 +50,6 @@ package/
 
 # admin 后台删除的文章回收站
 .trash/
+
+# 私密 txt 明文（只在本机；用 pnpm vault 加密成 src/data/vault.json 后才上线）
+private/

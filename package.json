@@ -17,7 +17,8 @@
     "format": "biome format --write ./src ./scripts",
     "lint": "biome check --write ./src ./scripts",
     "preinstall": "npx only-allow pnpm",
-    "lqips": "npx tsx scripts/generate-lqips.ts"
+    "lqips": "npx tsx scripts/generate-lqips.ts",
+    "vault": "npx tsx scripts/encrypt-vault.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
