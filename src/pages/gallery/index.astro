@@ -19,8 +19,12 @@ const description = i18n(I18nKey.galleryDescription);
 const albums = galleryConfig.albums.map((album) => {
 	const photos = scanAlbumPhotos(album.id);
 	const cover = getAlbumCover(album, photos);
-	return { ...album, cover, photoCount: photos.length };
+	// 卡片做成「一叠照片」：封面压在最上面，后面两层取相册里的其他照片（不够就是空白相纸）
+	const stack = photos.filter((p) => p !== cover).slice(0, 2);
+	return { ...album, cover, stack, photoCount: photos.length };
 });
+// 相册不多时，搜索框和标签筛选只会占地方，相册多起来再显示
+const showFilter = albums.length > 6;
 
 // 收集所有标签用于筛选
 const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
@@ -51,7 +55,7 @@ const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
       </div>
 
       <!-- 搜索框 + 标签筛选 -->
-      {albums.length > 0 && (
+      {showFilter && (
         <gallery-filter class="mb-6">
           <div class="relative mb-3">
             <Icon is:inline
@@ -90,12 +94,13 @@ const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
       <!-- 相册卡片网格 -->
       {albums.length > 0 ? (
         <>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-12 px-2 sm:px-4 pt-4 pb-2 my-4" data-gallery-motion>
             {albums.map((album) => (
               <AlbumCard
                 id={album.id}
                 name={album.name}
                 cover={album.cover}
+                stack={album.stack}
                 description={album.description}
                 date={album.date}
                 location={album.location}
@@ -119,6 +124,10 @@ const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
       )}
     </div>
   </div>
+
+  <script>
+    import "@/components/pages/gallery/gallery-motion";
+  </script>
 
   <script slot="head" is:inline>
     if (!customElements.get("gallery-filter")) {

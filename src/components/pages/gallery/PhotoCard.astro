@@ -18,7 +18,7 @@ const lqipProps = getLqipProps(src, undefined, true);
     data-fancybox={`gallery-${albumId}`}
     data-src={src}
     data-type="image"
-    class="block rounded-xl overflow-hidden relative group cursor-pointer"
+    class="block rounded-xl overflow-hidden relative group cursor-pointer shadow-sm transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-xl"
   >
     <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
     <img

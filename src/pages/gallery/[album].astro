@@ -39,28 +39,35 @@ const coverLqipProps = cover
 ---
 
 <MainGridLayout title={albumMeta.name} description={albumMeta.description || ""}>
-  <!-- 相册封面横幅 -->
+<div data-gallery-motion>
+  <!-- 相册封面横幅：封面虚化铺底 + 一张冲印出来的封面相片 + 标题 -->
   <div class="w-full rounded-(--radius-large) overflow-hidden relative">
     {cover ? (
-      <div class="relative w-full aspect-[3/1] min-h-[200px] max-h-[360px] overflow-hidden">
-        <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={coverLqipProps.style} aria-hidden="true"></div>
-        <img
-          src={cover}
-          alt={albumMeta.name}
-          class="w-full h-full object-cover opacity-0 transition-opacity duration-500 ease-out"
-        />
-        <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent" />
+      <div class="album-hero relative w-full overflow-hidden">
+        <div class="album-hero-bg absolute inset-0" style={`background-image: url("${cover}")`} aria-hidden="true"></div>
+        <div class="absolute inset-0 bg-linear-to-r from-black/75 via-black/50 to-black/25" />
         <!-- 返回按钮 -->
         <a
           href={url("/gallery/")}
-          class="absolute top-4 left-4 inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
+          class="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
         >
           <Icon is:inline name="material-symbols:arrow-back" class="text-base" />
           {i18n(I18nKey.galleryBackToAlbums)}
         </a>
-        <!-- 封面上的信息 -->
-        <div class="absolute bottom-0 left-0 right-0 p-6">
-          <div class="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-lg">
+        <div class="relative flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 px-6 sm:px-10 pt-16 pb-8">
+          <div class="album-hero-print shrink-0">
+            <div class="relative w-full h-full overflow-hidden rounded-md">
+              <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={coverLqipProps.style} aria-hidden="true"></div>
+              <img
+                src={cover}
+                alt={albumMeta.name}
+                class="w-full h-full object-cover opacity-0 transition-opacity duration-500 ease-out"
+              />
+            </div>
+          </div>
+        <!-- 封面旁的信息 -->
+        <div class="album-hero-text min-w-0 text-center sm:text-left">
+          <div class="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">
             {albumMeta.name}
           </div>
           {albumMeta.description && (
@@ -68,7 +75,7 @@ const coverLqipProps = cover
               {albumMeta.description}
             </p>
           )}
-          <div class="flex items-center gap-4 text-sm text-white/80 flex-wrap">
+          <div class="flex items-center justify-center sm:justify-start gap-4 text-sm text-white/80 flex-wrap">
             {albumMeta.date && (
               <span class="inline-flex items-center gap-1">
                 <Icon is:inline name="material-symbols:calendar-today" class="text-sm" />
@@ -87,7 +94,7 @@ const coverLqipProps = cover
             </span>
           </div>
           {albumMeta.tags && albumMeta.tags.length > 0 && (
-            <div class="flex flex-wrap gap-1.5 mt-2.5">
+            <div class="flex flex-wrap justify-center sm:justify-start gap-1.5 mt-2.5">
               {albumMeta.tags.map((tag) => (
                 <span class="text-xs px-2 py-0.5 rounded bg-white/20 text-white/90 backdrop-blur-sm">
                   {tag}
@@ -95,6 +102,7 @@ const coverLqipProps = cover
               ))}
             </div>
           )}
+        </div>
         </div>
       </div>
     ) : (
@@ -136,7 +144,7 @@ const coverLqipProps = cover
           <EncryptedContent password={albumMeta.password} slug={albumMeta.id} hint={albumMeta.passwordHint}>
             <div
               class="gallery-masonry"
-              style={`column-count: 2; column-gap: 0.75rem; --col-width: ${columnWidth}px;`}
+              style={`columns: ${columnWidth}px; column-gap: 0.9rem;`}
             >
               {photos.map((photo) => (
                 <PhotoCard src={photo} albumId={albumMeta.id} />
@@ -146,7 +154,7 @@ const coverLqipProps = cover
         ) : (
           <div
             class="gallery-masonry"
-            style={`column-count: 2; column-gap: 0.75rem; --col-width: ${columnWidth}px;`}
+            style={`columns: ${columnWidth}px; column-gap: 0.9rem;`}
           >
             {photos.map((photo) => (
               <PhotoCard src={photo} albumId={albumMeta.id} />
@@ -161,5 +169,50 @@ const coverLqipProps = cover
       )}
     </div>
   </div>
+</div>
 
+<script>
+  import "@/components/pages/gallery/gallery-motion";
+</script>
 </MainGridLayout>
+
+<style>
+  .album-hero {
+    min-height: 260px;
+  }
+  /* 封面放大虚化铺底，缓慢漂移 */
+  .album-hero-bg {
+    background-size: cover;
+    background-position: center;
+    filter: blur(28px) saturate(1.4) brightness(0.85);
+    transform: scale(1.25);
+    animation: album-hero-drift 30s ease-in-out infinite alternate;
+  }
+  @keyframes album-hero-drift {
+    from {
+      transform: scale(1.25) translate(-2%, 0);
+    }
+    to {
+      transform: scale(1.35) translate(2%, -2%);
+    }
+  }
+  /* 冲印出来的封面相片：相纸白边 + 微微倾斜 */
+  .album-hero-print {
+    width: clamp(150px, 22vw, 200px);
+    aspect-ratio: 4 / 5;
+    padding: 8px 8px 26px;
+    background: #fbf8f3;
+    border-radius: 6px;
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+    transform: rotate(-4deg);
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .album-hero-print:hover {
+    transform: rotate(0deg) scale(1.03);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .album-hero-bg {
+      animation: none;
+    }
+  }
+</style>
