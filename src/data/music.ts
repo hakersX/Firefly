@@ -28,12 +28,19 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	cover: "/assets/music/cover/那首没听过的歌.jpg",
 	// 	lrc: "/assets/music/lrc/那首没听过的歌.lrc",
 	// },
+	// {
+	// 	name: "旧城夜雨",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/旧城夜雨.m4a",
+	// 	cover: "/assets/music/cover/旧城夜雨.jpg",
+	// 	lrc: "/assets/music/lrc/旧城夜雨.lrc",
+	// },
 	{
-		name: "旧城夜雨",
+		name: "慢一点",
 		artist: "猫神X",
-		url: "/assets/music/旧城夜雨.m4a",
-		cover: "/assets/music/cover/旧城夜雨.jpg",
-		lrc: "/assets/music/lrc/旧城夜雨.lrc",
+		url: "/assets/music/慢一点.wav",
+		cover: "/assets/music/cover/慢一点.jpg",
+		lrc: "/assets/music/lrc/慢一点.lrc",
 	},
 	{
 		name: "电子布洛芬 Electronic ibuprofen",
