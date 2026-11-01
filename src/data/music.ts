@@ -38,7 +38,7 @@ export const musicPlaylist: MusicTrack[] = [
 	{
 		name: "慢一点",
 		artist: "猫神X",
-		url: "/assets/music/慢一点.wav",
+		url: "/assets/music/慢一点.mp3",
 		cover: "/assets/music/cover/慢一点.jpg",
 		lrc: "/assets/music/lrc/慢一点.lrc",
 	},
