@@ -53,6 +53,13 @@ export const toolsConfig: ToolCategory[] = [
 				url: "https://music.amamo.top/",
 				icon: "material-symbols:subtitles-rounded",
 			},
+			{
+				id: "pitchchanger",
+				name: "PitchChanger.io",
+				description: "免费在线变调工具：不改变速度即时调节歌曲音调",
+				url: "https://pitchchanger.io/zh",
+				icon: "material-symbols:tune-rounded",
+			},
 		],
 	},
 	{
