@@ -35,13 +35,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	cover: "/assets/music/cover/旧城夜雨.jpg",
 	// 	lrc: "/assets/music/lrc/旧城夜雨.lrc",
 	// },
-	{
-		name: "慢一点",
-		artist: "猫神X",
-		url: "/assets/music/慢一点.mp3",
-		cover: "/assets/music/cover/慢一点.jpg",
-		lrc: "/assets/music/lrc/慢一点.lrc",
-	},
+	// {
+	// 	name: "慢一点",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/慢一点.mp3",
+	// 	cover: "/assets/music/cover/慢一点.jpg",
+	// 	lrc: "/assets/music/lrc/慢一点.lrc",
+	// },
 	{
 		name: "电子布洛芬 Electronic ibuprofen",
 		artist: "BOY",
@@ -77,13 +77,13 @@ export const musicPlaylist: MusicTrack[] = [
 	// 	cover: "/assets/music/cover/这世上的雨.jpg",
 	// 	lrc: "/assets/music/lrc/这世上的雨.lrc",
 	// },
-	{
-		name: "茉莉信",
-		artist: "猫神X",
-		url: "/assets/music/茉莉信.mp3",
-		cover: "/assets/music/cover/茉莉信.jpg",
-		lrc: "/assets/music/lrc/茉莉信.lrc",
-	},
+	// {
+	// 	name: "茉莉信",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/茉莉信.mp3",
+	// 	cover: "/assets/music/cover/茉莉信.jpg",
+	// 	lrc: "/assets/music/lrc/茉莉信.lrc",
+	// },
 	{
 		name: "冬与你",
 		artist: "鱼骨妹",
@@ -91,13 +91,13 @@ export const musicPlaylist: MusicTrack[] = [
 		cover: "/assets/music/cover/冬与你.jpg",
 		lrc: "/assets/music/lrc/冬与你.lrc",
 	},
-	{
-		name: "微弱的信号",
-		artist: "猫神X",
-		url: "/assets/music/微弱的信号.mp3",
-		cover: "/assets/music/cover/65a7b5e3d0ce6f226a66887eeb7c7654.jpg",
-		lrc: "/assets/music/lrc/微弱的信号.lrc",
-	},
+	// {
+	// 	name: "微弱的信号",
+	// 	artist: "猫神X",
+	// 	url: "/assets/music/微弱的信号.mp3",
+	// 	cover: "/assets/music/cover/65a7b5e3d0ce6f226a66887eeb7c7654.jpg",
+	// 	lrc: "/assets/music/lrc/微弱的信号.lrc",
+	// },
 	// {
 	// 	name: "再靠近一点点",
 	// 	artist: "猫神X",
